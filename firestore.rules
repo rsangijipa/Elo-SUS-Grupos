@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isTherapist() {
+      return isAuthenticated() && getUserData().role == 'terapeuta';
+    }
+    
+    function isCoordinator() {
+      return isAuthenticated() && getUserData().role == 'coordenador';
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'administrador';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || request.auth.uid == userId;
+    }
+
+    // Unidades de Saude
+    match /unidadesSaude/{unidadeId} {
+      allow read: if isAuthenticated();
+      allow write: if isCoordinator() || isAdmin();
+    }
+
+    // Pacientes
+    match /pacientes/{pacienteId} {
+      allow read: if isAuthenticated();
+      // Therapists can create/update patients linked to their unit (simplified for now)
+      allow write: if isAuthenticated(); 
+    }
+
+    // Grupos
+    match /grupos/{grupoId} {
+      allow read: if isAuthenticated();
+      allow write: if isTherapist() || isCoordinator() || isAdmin();
+    }
+
+    // Inscricoes
+    match /inscricoesGrupo/{inscricaoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Sessoes
+    match /sessoesGrupo/{sessaoId} {
+      allow read: if isAuthenticated();
+      allow write: if isTherapist() || isCoordinator() || isAdmin();
+    }
+
+    // Presencas
+    match /presencasSessao/{presencaId} {
+      allow read: if isAuthenticated();
+      allow write: if isTherapist() || isCoordinator() || isAdmin();
+    }
+    
+    // Notificacoes
+    match /notificacoes/{notificacaoId} {
+      allow read: if isAuthenticated() && resource.data.destinatario == request.auth.token.phone_number; // Example
+      allow write: if false; // Only backend/functions should write notifications ideally
+    }
+  }
+}
