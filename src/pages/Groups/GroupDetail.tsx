@@ -9,6 +9,8 @@ import { patientService } from '../../services/patientService';
 import { subscriptionService } from '../../services/subscriptionService';
 import type { Subscription } from '../../services/subscriptionService';
 import { sessionService } from '../../services/sessionService';
+import { notificationService } from '../../services/notificationService';
+import type { Notification } from '../../types/notification';
 
 // Sub-components
 const ParticipantsTab = ({ groupId, unidadeSaudeId }: { groupId: string, unidadeSaudeId: string }) => {
@@ -42,7 +44,7 @@ const ParticipantsTab = ({ groupId, unidadeSaudeId }: { groupId: string, unidade
         try {
             await subscriptionService.create({
                 grupoId: groupId,
-                pacienteId,
+                pacienteId: patientId,
                 status: 'inscrito',
                 dataInscricao: new Date().toISOString(),
             });
@@ -121,8 +123,8 @@ const ParticipantsTab = ({ groupId, unidadeSaudeId }: { groupId: string, unidade
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${sub.status === 'inscrito' ? 'bg-green-100 text-green-800' :
-                                                sub.status === 'lista_espera' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-gray-100 text-gray-800'
+                                            sub.status === 'lista_espera' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-gray-100 text-gray-800'
                                             }`}>
                                             {sub.status === 'inscrito' ? 'Inscrito' :
                                                 sub.status === 'lista_espera' ? 'Lista de Espera' : sub.status}
@@ -252,8 +254,8 @@ const SessionsTab = ({ groupId }: { groupId: string }) => {
                                     {new Date(session.data).toLocaleDateString('pt-BR')}
                                 </span>
                                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${session.status === 'realizada' ? 'bg-green-100 text-green-800' :
-                                        session.status === 'cancelada' ? 'bg-red-100 text-red-800' :
-                                            'bg-blue-100 text-blue-800'
+                                    session.status === 'cancelada' ? 'bg-red-100 text-red-800' :
+                                        'bg-blue-100 text-blue-800'
                                     }`}>
                                     {session.status}
                                 </span>
@@ -276,12 +278,83 @@ const SessionsTab = ({ groupId }: { groupId: string }) => {
 };
 
 const NotificationsTab = ({ groupId }: { groupId: string }) => {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadNotifications();
+    }, [groupId]);
+
+    const loadNotifications = async () => {
+        try {
+            const data = await notificationService.getByGroup(groupId);
+            setNotifications(data);
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendNotification = async () => {
+        const message = prompt('Digite a mensagem para enviar ao grupo:');
+        if (!message) return;
+
+        try {
+            await notificationService.sendNotification(groupId, message);
+            alert('Notificação enviada com sucesso!');
+            loadNotifications();
+        } catch (error) {
+            console.error('Error sending notification:', error);
+            alert('Erro ao enviar notificação.');
+        }
+    };
+
     return (
         <div className="py-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Notificações Enviadas</h3>
-            <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500 border border-gray-200">
-                Histórico de notificações será implementado aqui.
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Notificações Enviadas ({notifications.length})</h3>
+                <button
+                    onClick={handleSendNotification}
+                    className="flex items-center gap-2 text-sm text-primary hover:text-primary-dark font-medium"
+                >
+                    <Bell size={16} />
+                    Nova Notificação
+                </button>
             </div>
+
+            {loading ? (
+                <div className="text-center py-8 text-gray-500">Carregando notificações...</div>
+            ) : notifications.length === 0 ? (
+                <div className="bg-gray-50 rounded-lg p-8 text-center text-gray-500 border border-gray-200">
+                    Nenhuma notificação enviada para este grupo.
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {notifications.map((notification) => (
+                        <div key={notification.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${notification.tipo === 'whatsapp' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                                    }`}>
+                                    {notification.tipo}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                    {new Date(notification.dataEnvio).toLocaleString('pt-BR')}
+                                </span>
+                            </div>
+                            <p className="text-gray-800 text-sm">{notification.mensagem}</p>
+                            <div className="mt-2 flex justify-end">
+                                <span className={`text-xs font-medium ${notification.status === 'enviada' ? 'text-green-600' :
+                                    notification.status === 'falha' ? 'text-red-600' : 'text-yellow-600'
+                                    }`}>
+                                    {notification.status === 'enviada' ? 'Enviada' :
+                                        notification.status === 'falha' ? 'Falha no envio' : 'Pendente'}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
@@ -369,8 +442,8 @@ const GroupDetail: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('participants')}
                             className={`flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm flex items-center justify-center gap-2 ${activeTab === 'participants'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <Users size={18} />
@@ -379,8 +452,8 @@ const GroupDetail: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('sessions')}
                             className={`flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm flex items-center justify-center gap-2 ${activeTab === 'sessions'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <Calendar size={18} />
@@ -389,8 +462,8 @@ const GroupDetail: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('notifications')}
                             className={`flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm flex items-center justify-center gap-2 ${activeTab === 'notifications'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <Bell size={18} />

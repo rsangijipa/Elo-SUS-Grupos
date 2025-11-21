@@ -44,7 +44,7 @@ export const sessionService = {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Session));
     },
 
-    getUpcoming: async (limitCount = 10) => {
+    getUpcoming: async (_limitCount = 10) => {
         // This requires a composite index in Firestore (status + data) or just client-side filtering for MVP
         // For MVP, let's fetch all future sessions
         const today = new Date().toISOString().split('T')[0];

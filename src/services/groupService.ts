@@ -11,7 +11,7 @@ import {
     getDoc
 } from 'firebase/firestore';
 import { db } from '../firebase_config';
-import { Group } from '../types/group';
+import type { Group } from '../types/group';
 
 const COLLECTION_NAME = 'grupos';
 
@@ -60,5 +60,14 @@ export const groupService = {
             return { id: snapshot.id, ...snapshot.data() } as Group;
         }
         return null;
+    },
+
+    getByTherapist: async (terapeutaId: string) => {
+        const q = query(collection(db, COLLECTION_NAME), where('terapeutaResponsavelId', '==', terapeutaId));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Group));
     }
 };

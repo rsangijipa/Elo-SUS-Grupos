@@ -1,67 +1,72 @@
-# EloSUS Grupos
+# Elo SUS Grupos
 
-Aplicação web para gestão de grupos terapêuticos no SUS (Sistema Único de Saúde), focada em padronização, qualidade clínica e indicadores de gestão.
+Sistema de Gestão de Grupos Terapêuticos e Educativos para Unidades Básicas de Saúde (UBS).
 
-## 🚀 Tecnologias
+## 📋 Sobre o Projeto
 
-- **Frontend**: React + Vite + TypeScript
-- **Estilização**: Tailwind CSS (Inspirado no gov.br)
-- **Backend**: Firebase (Auth, Firestore)
+O **Elo SUS Grupos** é uma aplicação web desenvolvida para facilitar o gerenciamento de grupos (tabagismo, saúde mental, gestantes, etc.) nas Unidades Básicas de Saúde. O sistema permite que terapeutas e coordenadores organizem sessões, gerenciem participantes, registrem presenças e acompanhem indicadores de desempenho.
+
+## ✨ Funcionalidades Principais
+
+- **Gestão de Grupos**: Criação e edição de grupos com campos dinâmicos (título, tipo, periodicidade, horários).
+- **Participantes**: Inscrição de pacientes, lista de espera e histórico.
+- **Sessões**: Geração automática de cronogramas, registro de presença e observações.
+- **Dashboard**: Visão geral com indicadores (KPIs), próximas sessões e gráficos de distribuição.
+- **Perfis de Acesso**:
+  - **Terapeuta**: Acesso aos seus grupos e sessões.
+  - **Coordenador/Admin**: Visão global da unidade e relatórios.
+
+## 🚀 Tecnologias Utilizadas
+
+- **Frontend**: React, Vite, TypeScript, Tailwind CSS
+- **Backend**: Firebase (Firestore, Authentication)
+- **Gráficos**: Recharts
 - **Ícones**: Lucide React
-- **Gráficos**: Recharts (preparado para uso)
 
-## 🛠️ Configuração
+## 🛠️ Configuração e Instalação
 
-1. **Instalar dependências**:
+1. **Clone o repositório**:
 
-   ```bash
-   npm install
-   ```
+    ```bash
+    git clone https://github.com/seu-usuario/elosus-grupos.git
+    cd elosus-grupos
+    ```
 
-2. **Configurar Firebase**:
-   - Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-   - Habilite **Authentication** (Email/Password).
-   - Habilite **Firestore Database**.
-   - Copie as credenciais do projeto.
-   - Crie um arquivo `.env` na raiz do projeto (baseado no `.env.example` ou `.env.local`) e preencha as variáveis:
+2. **Instale as dependências**:
 
-     ```env
-     VITE_FIREBASE_API_KEY=...
-     VITE_FIREBASE_AUTH_DOMAIN=...
-     VITE_FIREBASE_PROJECT_ID=...
-     ...
-     ```
+    ```bash
+    npm install
+    ```
 
-3. **Rodar o projeto**:
+3. **Configure o Firebase**:
+    - Crie um projeto no Firebase Console.
+    - Habilite Authentication e Firestore.
+    - Crie um arquivo `.env` na raiz do projeto com suas credenciais:
 
-   ```bash
-   npm run dev
-   ```
+      ```env
+      VITE_FIREBASE_API_KEY=sua_api_key
+      VITE_FIREBASE_AUTH_DOMAIN=seu_auth_domain
+      VITE_FIREBASE_PROJECT_ID=seu_project_id
+      VITE_FIREBASE_STORAGE_BUCKET=seu_storage_bucket
+      VITE_FIREBASE_MESSAGING_SENDER_ID=seu_messaging_sender_id
+      VITE_FIREBASE_APP_ID=seu_app_id
+      ```
+
+4. **Execute o projeto**:
+
+    ```bash
+    npm run dev
+    ```
 
 ## 📂 Estrutura do Projeto
 
-- `/src/components`: Componentes reutilizáveis e Layouts (Sidebar, Header).
-- `/src/pages`: Telas principais (Dashboard, Pacientes, Grupos, Agenda).
-- `/src/services`: Camada de comunicação com o Firebase e integrações.
-- `/src/contexts`: Gerenciamento de estado global (AuthContext).
-- `/src/types`: Definições de tipos TypeScript (User, Patient, Group, Session).
-- `/src/utils`: Utilitários e script de Seed Data.
+- `/src/components`: Componentes reutilizáveis (Layout, ProtectedRoute).
+- `/src/pages`: Páginas da aplicação (Dashboard, Grupos, Login).
+- `/src/services`: Serviços de integração com Firebase.
+- `/src/contexts`: Contextos globais (AuthContext).
+- `/src/types`: Definições de tipos TypeScript.
+- `/src/utils`: Utilitários e scripts (Seed Data).
 
-## 🔐 Segurança
+## 📄 Licença
 
-As regras de segurança do Firestore estão definidas em `firestore.rules`. Elas garantem que apenas usuários autenticados possam acessar os dados, com restrições adicionais baseadas no papel do usuário (terapeuta, coordenador, administrador).
-
-## 🧪 Dados de Demonstração
-
-Para popular o banco de dados com dados de teste:
-
-1. Faça login na aplicação.
-2. No Dashboard, clique no botão "Seed Data" no canto superior direito.
-3. Isso criará unidades de saúde, pacientes e grupos de exemplo.
-
-## 📱 Funcionalidades Principais
-
-- **Gestão de Pacientes**: Cadastro completo com dados do CNS e responsáveis.
-- **Grupos Terapêuticos**: Criação de grupos com campos dinâmicos por tipo (Tabagismo, Gestantes, etc.).
-- **Agenda**: Visualização de sessões e controle de presença.
-- **Notificações**: Integração simulada com WhatsApp para lembretes.
+Este projeto está sob a licença MIT.
