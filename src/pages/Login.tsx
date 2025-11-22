@@ -13,7 +13,8 @@ import {
     X,
     UserPlus,
     FileBadge,
-    BrainCircuit
+    BrainCircuit,
+    ShieldPlus
 } from 'lucide-react';
 
 // Componente de Logo
@@ -32,8 +33,6 @@ const LogoEloSUS = () => (
         </div>
     </div>
 );
-
-import { ShieldPlus } from 'lucide-react';
 
 interface FeatureCardProps {
     icon: React.ElementType;

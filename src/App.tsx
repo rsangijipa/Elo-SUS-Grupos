@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import MainLayout from './components/Layout/MainLayout';
+
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PatientList from './pages/Patients/PatientList';
@@ -10,62 +10,72 @@ import GroupList from './pages/Groups/GroupList';
 import GroupForm from './pages/Groups/GroupForm';
 import GroupDetail from './pages/Groups/GroupDetail';
 import Calendar from './pages/Schedule/Calendar';
+import Schedule from './pages/Schedule/Schedule';
+import Reports from './pages/Reports/Reports';
+import Profile from './pages/Profile/Profile';
+import Layout from './components/Layout/Layout';
 
-// Placeholder components for routes we haven't built yet
-// const Schedule = () => <div>Agenda (Em construção)</div>;
-const Reports = () => <div>Relatórios (Em construção)</div>;
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+// Protected Route Component
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return children;
 };
 
-import { useEffect } from 'react';
-import { setupDevEnvironment } from './services/devSeed';
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
 
-function App() {
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      setupDevEnvironment().catch(console.error);
-    }
-  }, []);
+      {/* Protected Routes */}
+      <Route path="/" element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
 
+        {/* Patients */}
+        <Route path="patients" element={<PatientList />} />
+        <Route path="patients/new" element={<PatientForm />} />
+        <Route path="patients/:id" element={<PatientForm />} />
+
+        {/* Groups */}
+        <Route path="groups" element={<GroupList />} />
+        <Route path="groups/new" element={<GroupForm />} />
+        <Route path="groups/:id" element={<GroupForm />} />
+
+        {/* New Pages */}
+        <Route path="schedule" element={<Schedule />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
+
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-
-          <Route path="/" element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="grupos" element={<GroupList />} />
-            <Route path="grupos/novo" element={<GroupForm />} />
-            <Route path="grupos/:id" element={<GroupDetail />} />
-            <Route path="grupos/editar/:id" element={<GroupForm />} />
-            <Route path="pacientes" element={<PatientList />} />
-            <Route path="pacientes/novo" element={<PatientForm />} />
-            <Route path="pacientes/:id" element={<PatientForm />} />
-            <Route path="agenda" element={<Calendar />} />
-            <Route path="relatorios" element={<Reports />} />
-          </Route>
-        </Routes>
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );
 }
-
-export default App;

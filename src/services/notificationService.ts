@@ -1,48 +1,59 @@
-import {
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    where,
-    serverTimestamp,
-    orderBy
-} from 'firebase/firestore';
-import { db } from '../firebase_config';
-import type { Notification } from '../types/notification';
+export interface Notification {
+    id: string;
+    type: 'alert' | 'info' | 'success'; // Map to colors (Red/Blue/Green)
+    title: string; // e.g., "Novo Paciente", "Lembrete de Grupo"
+    message: string;
+    read: boolean;
+    timestamp: Date;
+}
 
-const COLLECTION_NAME = 'notificacoes';
+const MOCK_NOTIFICATIONS: Notification[] = [
+    {
+        id: '1',
+        type: 'info',
+        title: 'Lembrete de Grupo',
+        message: 'Grupo de Gestantes amanhã às 09:00',
+        read: false,
+        timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
+    },
+    {
+        id: '2',
+        type: 'success',
+        title: 'Confirmação',
+        message: 'Paciente João confirmou presença',
+        read: false,
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3) // 3 hours ago
+    },
+    {
+        id: '3',
+        type: 'alert',
+        title: 'Relatório Pendente',
+        message: 'Evolução de Maria Oliveira pendente',
+        read: true,
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5) // 5 hours ago
+    }
+];
 
 export const notificationService = {
-    create: async (notification: Omit<Notification, 'id'>) => {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-            ...notification,
-            createdAt: serverTimestamp(),
+    getNotifications: async (): Promise<Notification[]> => {
+        // Simulate API call
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve([...MOCK_NOTIFICATIONS]);
+            }, 300);
         });
-        return docRef.id;
     },
 
-    getByGroup: async (grupoId: string) => {
-        const q = query(
-            collection(db, COLLECTION_NAME),
-            where('grupoId', '==', grupoId),
-            orderBy('dataEnvio', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+    markAsRead: async (id: string): Promise<void> => {
+        const index = MOCK_NOTIFICATIONS.findIndex(n => n.id === id);
+        if (index !== -1) {
+            MOCK_NOTIFICATIONS[index].read = true;
+        }
+        return Promise.resolve();
     },
 
-    // Mock function to simulate sending a notification
-    sendNotification: async (grupoId: string, message: string) => {
-        // In a real app, this would call an API (e.g., WhatsApp API)
-        console.log(`Sending notification to group ${grupoId}: ${message}`);
-
-        // Record the notification
-        await notificationService.create({
-            grupoId,
-            tipo: 'whatsapp',
-            status: 'enviada',
-            mensagem: message,
-            dataEnvio: new Date().toISOString()
-        });
+    markAllAsRead: async (): Promise<void> => {
+        MOCK_NOTIFICATIONS.forEach(n => n.read = true);
+        return Promise.resolve();
     }
 };

@@ -1,172 +1,149 @@
 import React from 'react';
-import { Calendar, MapPin, Video, BookOpen, Clock, XCircle, CheckCircle, FileText } from 'lucide-react';
+import { Calendar, Video, FileText, MapPin, Clock, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { MOCK_GROUPS } from '../../utils/seedData';
 
 const PatientDashboard: React.FC = () => {
     const { user } = useAuth();
 
-    // Safe check for patient data
-    if (!user || user.role !== 'patient') return null;
+    // Mock Data for Patient View
+    const nextAppointment = {
+        date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2), // 2 days from now
+        type: 'Grupo de Tabagismo',
+        professional: 'Dr. João Silva',
+        location: 'Sala 104 - UBS Central'
+    };
 
-    const nextAppointment = user.nextAppointment ? new Date(user.nextAppointment) : null;
-    const group = MOCK_GROUPS.find(g => g.id === 'g1'); // Mock linking to a group
+    const materials = [
+        { id: 1, title: 'Guia de Respiração.pdf', type: 'pdf', url: '#' },
+        { id: 2, title: 'Diário de Emoções.pdf', type: 'pdf', url: '#' },
+        { id: 3, title: 'Link: Meditação Guiada', type: 'link', url: '#' }
+    ];
+
+    // YouTube Video ID (could come from user profile in future)
+    const videoId = user?.youtubePlaylistId || 'dQw4w9WgXcQ'; // Default fallback or specific ID
 
     return (
-        <div className="space-y-8 max-w-5xl mx-auto">
-            {/* Welcome Section */}
+        <div className="space-y-8 animate-fade-in">
+            {/* Header */}
             <div>
-                <h2 className="text-2xl font-bold text-slate-900">Olá, {user.name.split(' ')[0]} 👋</h2>
-                <p className="text-slate-500 mt-1">Bem-vindo(a) ao seu espaço de cuidado.</p>
+                <h2 className="text-2xl font-bold text-slate-900">Olá, {user?.name?.split(' ')[0]}</h2>
+                <p className="text-slate-500 mt-1">Bem-vindo ao seu espaço de cuidado.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Next Appointment & Action */}
+                {/* Left Column: Appointment & Actions */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Hero Card: Next Appointment */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="bg-[#0054A6] p-6 text-white">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-3">
-                                        Seu Próximo Encontro
-                                    </span>
-                                    <h3 className="text-2xl font-bold">{group?.name || 'Grupo Terapêutico'}</h3>
-                                </div>
-                                <div className="p-3 bg-white/10 rounded-xl">
-                                    <Calendar size={32} />
-                                </div>
-                            </div>
-                        </div>
 
+                    {/* Next Appointment Card */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative">
+                        <div className="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
                         <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-blue-50 text-[#0054A6] rounded-lg">
-                                        <Calendar size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">Data</p>
-                                        <p className="text-slate-900 font-medium">
-                                            {nextAppointment?.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                        </p>
-                                    </div>
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <Calendar size={20} className="text-blue-600" /> Seu Próximo Encontro
+                                </h3>
+                                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full uppercase">
+                                    Confirmado
+                                </span>
+                            </div>
+
+                            <div className="flex flex-col md:flex-row gap-6 items-center">
+                                <div className="bg-blue-50 rounded-xl p-4 text-center min-w-[100px]">
+                                    <span className="block text-sm font-bold text-blue-400 uppercase">NOV</span>
+                                    <span className="block text-3xl font-bold text-slate-800">{nextAppointment.date.getDate()}</span>
+                                    <span className="block text-sm font-medium text-slate-500">Segunda</span>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-blue-50 text-[#0054A6] rounded-lg">
-                                        <Clock size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">Horário</p>
-                                        <p className="text-slate-900 font-medium">
-                                            {nextAppointment?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 md:col-span-2">
-                                    <div className="p-2.5 bg-blue-50 text-[#0054A6] rounded-lg">
-                                        <MapPin size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase">Local</p>
-                                        <p className="text-slate-900 font-medium">{group?.room || 'Sala a definir'}</p>
-                                    </div>
+                                <div className="flex-1 space-y-2 text-center md:text-left">
+                                    <h4 className="text-xl font-bold text-slate-900">{nextAppointment.type}</h4>
+                                    <p className="text-slate-600 flex items-center justify-center md:justify-start gap-2">
+                                        <MapPin size={16} /> {nextAppointment.location}
+                                    </p>
+                                    <p className="text-slate-500 flex items-center justify-center md:justify-start gap-2 text-sm">
+                                        <Clock size={16} /> 14:00 - 16:00
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100">
-                                <button className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-3 rounded-xl font-bold hover:bg-green-700 transition-colors shadow-sm hover:shadow-md">
-                                    <CheckCircle size={20} />
-                                    Confirmar Presença
+                            <div className="mt-6 flex gap-3 border-t border-slate-100 pt-4">
+                                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-50 text-green-700 font-bold rounded-xl hover:bg-green-100 transition-colors">
+                                    <CheckCircle size={18} /> Confirmar Presença
                                 </button>
-                                <button className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-4 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
-                                    <XCircle size={20} />
-                                    Não poderei ir
+                                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-700 font-bold rounded-xl hover:bg-red-100 transition-colors">
+                                    <XCircle size={18} /> Não poderei ir
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Psychoeducation Widget (YouTube) */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Video size={20} className="text-[#0054A6]" />
-                            <h3 className="text-lg font-bold text-slate-900">Vídeo da Semana</h3>
+                    {/* Psychoeducation / Video Widget */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-6 border-b border-slate-100">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Video size={20} className="text-purple-600" /> Conteúdo da Semana
+                            </h3>
                         </div>
-
-                        {user.recommendedVideo ? (
-                            <div className="space-y-3">
-                                <div className="aspect-video rounded-xl overflow-hidden bg-slate-900 shadow-md">
-                                    <iframe
-                                        width="100%"
-                                        height="100%"
-                                        src={`https://www.youtube.com/embed/${user.recommendedVideo.videoId}`}
-                                        title={user.recommendedVideo.title}
-                                        frameBorder="0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                                <p className="text-sm font-medium text-slate-900">{user.recommendedVideo.title}</p>
-                            </div>
-                        ) : (
-                            <div className="p-8 bg-slate-50 rounded-xl text-center text-slate-500">
-                                Nenhum vídeo recomendado para esta semana.
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Right Column: Materials & Info */}
-                <div className="space-y-6">
-                    {/* Materials Widget */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-2 mb-4">
-                            <BookOpen size={20} className="text-[#0054A6]" />
-                            <h3 className="text-lg font-bold text-slate-900">Materiais de Apoio</h3>
-                        </div>
-
-                        <div className="space-y-3">
-                            {user.materials && user.materials.length > 0 ? (
-                                user.materials.map(material => (
-                                    <a
-                                        key={material.id}
-                                        href={material.url}
-                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group border border-transparent hover:border-slate-100"
-                                    >
-                                        <div className="p-2 bg-red-50 text-red-500 rounded-lg group-hover:bg-red-100 transition-colors">
-                                            <FileText size={18} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate">{material.title}</p>
-                                            <p className="text-xs text-slate-500 uppercase">{material.type}</p>
-                                        </div>
-                                    </a>
-                                ))
+                        <div className="aspect-video w-full bg-slate-900">
+                            {videoId ? (
+                                <iframe
+                                    width="100%"
+                                    height="100%"
+                                    src={`https://www.youtube.com/embed/${videoId}`}
+                                    title="YouTube video player"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                ></iframe>
                             ) : (
-                                <p className="text-sm text-slate-500">Nenhum material disponível.</p>
+                                <div className="w-full h-full flex items-center justify-center text-slate-500">
+                                    <p>Nenhum vídeo recomendado esta semana.</p>
+                                </div>
                             )}
                         </div>
-
-                        <button className="w-full mt-4 py-2 text-sm text-[#0054A6] font-bold hover:bg-blue-50 rounded-lg transition-colors">
-                            Ver todos os materiais
-                        </button>
+                        <div className="p-4 bg-purple-50">
+                            <p className="text-sm text-purple-800 font-medium">
+                                Assista a este vídeo sobre técnicas de respiração para o nosso próximo encontro.
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Emergency Contact */}
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        <h3 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">Contato de Emergência</h3>
-                        {user.emergencyContact ? (
-                            <div>
-                                <p className="font-bold text-slate-900">{user.emergencyContact.name}</p>
-                                <p className="text-sm text-slate-500 mb-1">{user.emergencyContact.relation}</p>
-                                <p className="text-[#0054A6] font-bold">{user.emergencyContact.phone}</p>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-slate-500">Nenhum contato cadastrado.</p>
-                        )}
+                </div>
+
+                {/* Right Column: Resources */}
+                <div className="space-y-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-6 border-b border-slate-100">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <FileText size={20} className="text-amber-500" /> Materiais de Apoio
+                            </h3>
+                        </div>
+                        <div className="divide-y divide-slate-50">
+                            {materials.map(item => (
+                                <a
+                                    key={item.id}
+                                    href={item.url}
+                                    className="block p-4 hover:bg-slate-50 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors">
+                                            <FileText size={18} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
+                                                {item.title}
+                                            </p>
+                                            <p className="text-xs text-slate-400 uppercase font-bold mt-0.5">{item.type}</p>
+                                        </div>
+                                        <ExternalLink size={14} className="text-slate-300 group-hover:text-blue-400" />
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                        <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+                            <button className="text-sm font-bold text-blue-600 hover:underline">
+                                Ver biblioteca completa
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,20 +1,26 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type User, MOCK_PROFESSIONAL, MOCK_PATIENT } from '../utils/seedData';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+    INITIAL_PROFESSIONAL_STATE,
+    INITIAL_PATIENT_STATE,
+    MOCK_PROFESSIONAL,
+    MOCK_PATIENT,
+    type User
+} from '../utils/seedData';
 
-export interface AuthContextType {
+interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password?: string) => Promise<void>;
     register: (data: any) => Promise<void>;
     logout: () => void;
-    updateProfile: (data: Partial<User>) => void;
-    toggleRole: () => void; // Dev mode helper
+    updateProfile: (data: Partial<User>) => Promise<void>;
+    toggleRole: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -32,21 +38,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsLoading(false);
     }, []);
 
-    const login = async (email: string, _password: string) => {
+    const login = async (email: string, password?: string) => {
         setIsLoading(true);
-        // Simulate API delay
+        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Mock login logic:
-        // If email contains 'paciente', log in as patient, otherwise default to professional
-        const isPatient = email.toLowerCase().includes('paciente') || email.toLowerCase().includes('maria');
+        let loggedUser: User;
 
-        const baseUser = isPatient ? MOCK_PATIENT : MOCK_PROFESSIONAL;
-
-        const loggedUser: User = {
-            ...baseUser,
-            email: email // Use the entered email but keep other mock data
-        };
+        // DEMO LOGIC: Check for specific demo emails
+        if (email.toLowerCase() === MOCK_PROFESSIONAL.email.toLowerCase()) {
+            loggedUser = MOCK_PROFESSIONAL;
+        } else if (email.toLowerCase() === MOCK_PATIENT.email.toLowerCase()) {
+            loggedUser = MOCK_PATIENT;
+        } else {
+            // REAL USER LOGIC: Clean state
+            // Default to Professional state for new users unless specified otherwise
+            // In a real app, this would be determined by the registration flow
+            loggedUser = {
+                ...INITIAL_PROFESSIONAL_STATE,
+                id: `u${Date.now()}`,
+                email: email,
+                name: email.split('@')[0], // Temporary name from email
+                avatar: email.substring(0, 2).toUpperCase()
+            };
+        }
 
         setUser(loggedUser);
         localStorage.setItem('elosus_user', JSON.stringify(loggedUser));
@@ -55,16 +70,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const register = async (data: any) => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Default new registrations to professional for now, or infer from data
+        // Create new user with clean state based on selected role
+        const baseState = data.role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
+
         const newUser: User = {
+            ...baseState,
             id: `u${Date.now()}`,
             name: data.name,
             email: data.email,
-            role: 'professional', // Default role
-            crp: data.crp,
-            approach: data.approach,
+            role: data.role || 'professional',
             avatar: data.name.substring(0, 2).toUpperCase()
         };
 
@@ -78,33 +94,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('elosus_user');
     };
 
-    const updateProfile = (data: Partial<User>) => {
-        if (user) {
-            const updatedUser = { ...user, ...data };
-            setUser(updatedUser);
-            localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
-        }
+    const updateProfile = async (data: Partial<User>) => {
+        if (!user) return;
+
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+        localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
     };
 
     const toggleRole = () => {
         if (!user) return;
 
-        const newRole = user.role === 'professional' ? 'patient' : 'professional';
-        const newUserTemplate = newRole === 'professional' ? MOCK_PROFESSIONAL : MOCK_PATIENT;
+        // For development: switch between mock profiles or just toggle role property
+        if (user.email === MOCK_PROFESSIONAL.email) {
+            setUser(MOCK_PATIENT);
+            localStorage.setItem('elosus_user', JSON.stringify(MOCK_PATIENT));
+        } else if (user.email === MOCK_PATIENT.email) {
+            setUser(MOCK_PROFESSIONAL);
+            localStorage.setItem('elosus_user', JSON.stringify(MOCK_PROFESSIONAL));
+        } else {
+            // For real users, just toggle the role string and reset to initial state of that role
+            const newRole = user.role === 'professional' ? 'patient' : 'professional';
+            const baseState = newRole === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
 
-        // Preserve ID and Name if we want, or just swap completely for the mock
-        // Swapping completely is safer for the mock data structure consistency
-        const updatedUser = {
-            ...newUserTemplate,
-            // Optional: keep some session specific stuff if needed, but for now clean swap is better
-        };
+            const updatedUser = {
+                ...baseState,
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: newRole,
+                avatar: user.avatar
+            };
 
-        setUser(updatedUser);
-        localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
-
-        // Force reload to ensure all components re-render with correct role context if needed
-        // window.location.reload(); 
-        // Actually, React state update should be enough if components listen to user.role
+            setUser(updatedUser);
+            localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
+        }
     };
 
     return (
