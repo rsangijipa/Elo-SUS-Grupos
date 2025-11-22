@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedUser = {
             ...db.user,
             ...baseState,
-            role: newRole
+            role: newRole as 'professional' | 'patient'
         };
 
         const newDb = { ...db, user: updatedUser };

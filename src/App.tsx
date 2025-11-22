@@ -11,7 +11,7 @@ import SessionMode from './pages/Session/SessionMode';
 import Support from './pages/Support/Support';
 import Layout from './components/Layout/Layout';
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {

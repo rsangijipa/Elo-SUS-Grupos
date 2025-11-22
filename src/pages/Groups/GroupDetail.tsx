@@ -9,7 +9,7 @@ import { patientService } from '../../services/patientService';
 import { subscriptionService } from '../../services/subscriptionService';
 import type { Subscription } from '../../services/subscriptionService';
 import { sessionService } from '../../services/sessionService';
-import { notificationService } from '../../services/notificationService';
+import { groupNotificationService } from '../../services/groupNotificationService';
 import type { Notification } from '../../types/notification';
 
 // Sub-components
@@ -287,7 +287,7 @@ const NotificationsTab = ({ groupId }: { groupId: string }) => {
 
     const loadNotifications = async () => {
         try {
-            const data = await notificationService.getByGroup(groupId);
+            const data = await groupNotificationService.getByGroup(groupId);
             setNotifications(data);
         } catch (error) {
             console.error('Error loading notifications:', error);
@@ -301,7 +301,7 @@ const NotificationsTab = ({ groupId }: { groupId: string }) => {
         if (!message) return;
 
         try {
-            await notificationService.sendNotification(groupId, message);
+            await groupNotificationService.sendNotification(groupId, message);
             alert('Notificação enviada com sucesso!');
             loadNotifications();
         } catch (error) {

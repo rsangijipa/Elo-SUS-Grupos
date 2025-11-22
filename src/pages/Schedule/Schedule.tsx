@@ -15,10 +15,12 @@ const Schedule: React.FC = () => {
 
     const events = (db.appointments || []).map(apt => {
         const group = db.groups.find(g => g.id === apt.groupId);
+        const dateObj = new Date(apt.date);
         return {
             ...apt,
             title: group?.name || 'Sessão de Grupo',
-            location: group?.location || 'Sala Virtual'
+            location: (group as any)?.location || 'Sala Virtual',
+            time: `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`
         };
     });
 
