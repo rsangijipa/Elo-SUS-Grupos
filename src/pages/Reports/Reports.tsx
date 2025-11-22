@@ -1,141 +1,160 @@
 import React from 'react';
-import { BarChart, PieChart, TrendingUp, Users, AlertCircle, FileText } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { Users, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Reports: React.FC = () => {
+    const { user } = useAuth();
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    // Mock Data
+    const attendanceData = [
+        { name: 'Grupo Tabagismo', presentes: 12, faltas: 3 },
+        { name: 'Grupo Ansiedade', presentes: 15, faltas: 1 },
+        { name: 'Grupo Idosos', presentes: 8, faltas: 4 },
+        { name: 'Grupo Gestantes', presentes: 10, faltas: 2 },
+    ];
+
+    const outcomeData = [
+        { name: 'Alta', value: 12, color: '#22c55e' },
+        { name: 'Em Acompanhamento', value: 45, color: '#3b82f6' },
+        { name: 'Abandono', value: 5, color: '#ef4444' },
+        { name: 'Encaminhamento', value: 8, color: '#f59e0b' },
+    ];
+
+    const evolutionData = [
+        { month: 'Jan', atendimentos: 45 },
+        { month: 'Fev', atendimentos: 52 },
+        { month: 'Mar', atendimentos: 48 },
+        { month: 'Abr', atendimentos: 61 },
+        { month: 'Mai', atendimentos: 55 },
+        { month: 'Jun', atendimentos: 67 },
+    ];
+
     return (
         <div className="space-y-8 animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Relatórios e Indicadores</h2>
-                    <p className="text-slate-500 mt-1">Acompanhe o desempenho da sua unidade.</p>
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors">
-                    <FileText size={18} />
-                    Exportar PDF
-                </button>
+            <div>
+                <h2 className="text-2xl font-bold text-slate-900">Relatórios e Indicadores</h2>
+                <p className="text-slate-500 mt-1">Acompanhe o desempenho dos grupos e evolução dos pacientes.</p>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                            <TrendingUp size={20} />
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-slate-500 text-sm font-bold uppercase">Total Pacientes</p>
+                            <h3 className="text-3xl font-bold text-slate-900 mt-1">72</h3>
                         </div>
-                        <h3 className="font-bold text-slate-700">Adesão Média</h3>
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <Users size={24} />
+                        </div>
                     </div>
-                    <p className="text-3xl font-bold text-slate-900">85%</p>
-                    <p className="text-xs text-green-600 font-medium mt-1">+5% em relação ao mês anterior</p>
+                    <span className="text-green-600 text-xs font-bold flex items-center gap-1 mt-4">
+                        <TrendingUp size={12} /> +12% este mês
+                    </span>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-red-50 text-red-600 rounded-lg">
-                            <AlertCircle size={20} />
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-slate-500 text-sm font-bold uppercase">Taxa de Presença</p>
+                            <h3 className="text-3xl font-bold text-slate-900 mt-1">85%</h3>
                         </div>
-                        <h3 className="font-bold text-slate-700">Taxa de Evasão</h3>
+                        <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+                            <Calendar size={24} />
+                        </div>
                     </div>
-                    <p className="text-3xl font-bold text-slate-900">12%</p>
-                    <p className="text-xs text-slate-500 font-medium mt-1">Dentro da meta esperada (15%)</p>
+                    <span className="text-slate-400 text-xs font-bold mt-4 block">Média dos últimos 30 dias</span>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-50 text-green-600 rounded-lg">
-                            <Users size={20} />
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-slate-500 text-sm font-bold uppercase">Altas Clínicas</p>
+                            <h3 className="text-3xl font-bold text-slate-900 mt-1">12</h3>
                         </div>
-                        <h3 className="font-bold text-slate-700">Produção BPA</h3>
+                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                            <TrendingUp size={24} />
+                        </div>
                     </div>
-                    <p className="text-3xl font-bold text-slate-900">142</p>
-                    <p className="text-xs text-slate-500 font-medium mt-1">Procedimentos registrados este mês</p>
+                    <span className="text-green-600 text-xs font-bold flex items-center gap-1 mt-4">
+                        <TrendingUp size={12} /> +3 este mês
+                    </span>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-slate-500 text-sm font-bold uppercase">Abandonos</p>
+                            <h3 className="text-3xl font-bold text-slate-900 mt-1">5</h3>
+                        </div>
+                        <div className="p-3 bg-red-50 text-red-600 rounded-xl">
+                            <AlertCircle size={24} />
+                        </div>
+                    </div>
+                    <span className="text-red-600 text-xs font-bold flex items-center gap-1 mt-4">
+                        <TrendingUp size={12} /> +1 este mês
+                    </span>
                 </div>
             </div>
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Bar Chart Mock */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                            <BarChart size={20} className="text-slate-400" />
-                            Atendimentos por Grupo
-                        </h3>
-                    </div>
-                    <div className="h-64 flex items-end justify-between gap-4 px-4">
-                        {/* Bar 1 */}
-                        <div className="flex flex-col items-center gap-2 w-full">
-                            <div className="w-full bg-blue-500 rounded-t-lg hover:opacity-90 transition-opacity relative group" style={{ height: '60%' }}>
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    24
-                                </div>
-                            </div>
-                            <span className="text-xs font-medium text-slate-500">Tabagismo</span>
-                        </div>
-                        {/* Bar 2 */}
-                        <div className="flex flex-col items-center gap-2 w-full">
-                            <div className="w-full bg-blue-500 rounded-t-lg hover:opacity-90 transition-opacity relative group" style={{ height: '85%' }}>
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    32
-                                </div>
-                            </div>
-                            <span className="text-xs font-medium text-slate-500">Gestantes</span>
-                        </div>
-                        {/* Bar 3 */}
-                        <div className="flex flex-col items-center gap-2 w-full">
-                            <div className="w-full bg-blue-500 rounded-t-lg hover:opacity-90 transition-opacity relative group" style={{ height: '45%' }}>
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    18
-                                </div>
-                            </div>
-                            <span className="text-xs font-medium text-slate-500">Ansiedade</span>
-                        </div>
-                        {/* Bar 4 */}
-                        <div className="flex flex-col items-center gap-2 w-full">
-                            <div className="w-full bg-blue-300 rounded-t-lg hover:opacity-90 transition-opacity relative group" style={{ height: '30%' }}>
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    12
-                                </div>
-                            </div>
-                            <span className="text-xs font-medium text-slate-500">Outros</span>
-                        </div>
+                {/* Attendance Chart */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Presença por Grupo</h3>
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={attendanceData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: '#f8fafc' }} />
+                                <Bar dataKey="presentes" name="Presentes" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="faltas" name="Faltas" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Pie Chart Mock */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                            <PieChart size={20} className="text-slate-400" />
-                            Status dos Pacientes
-                        </h3>
-                    </div>
-                    <div className="flex items-center justify-center h-64">
-                        <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-100 flex items-center justify-center">
-                            {/* CSS Conic Gradient for Pie Chart */}
-                            <div className="absolute inset-0 rounded-full" style={{
-                                background: 'conic-gradient(#3b82f6 0% 65%, #22c55e 65% 85%, #ef4444 85% 100%)',
-                                maskImage: 'radial-gradient(transparent 55%, black 56%)',
-                                WebkitMaskImage: 'radial-gradient(transparent 55%, black 56%)'
-                            }}></div>
-                            <div className="text-center z-10">
-                                <p className="text-3xl font-bold text-slate-800">145</p>
-                                <p className="text-xs text-slate-500 uppercase font-bold">Total</p>
-                            </div>
-                        </div>
+                {/* Outcomes Pie Chart */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Desfechos Clínicos</h3>
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={outcomeData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={80}
+                                    outerRadius={120}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {outcomeData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
                     </div>
                     <div className="flex justify-center gap-6 mt-4">
-                        <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                            <span className="text-sm text-slate-600">Ativos (65%)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                            <span className="text-sm text-slate-600">Alta (20%)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                            <span className="text-sm text-slate-600">Inativos (15%)</span>
-                        </div>
+                        {outcomeData.map((entry, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                                <span className="text-xs font-bold text-slate-600">{entry.name}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

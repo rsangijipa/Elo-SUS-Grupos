@@ -1,39 +1,40 @@
 import React from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, RefreshCw } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, User, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Schedule: React.FC = () => {
-    const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
-    const hours = Array.from({ length: 10 }, (_, i) => i + 8); // 8h to 17h
+    const { user, db } = useAuth();
 
-    // Mock Events
-    const events = [
-        { id: 1, title: 'Grupo Tabagismo', day: 'Seg', hour: 9, duration: 2, type: 'group' },
-        { id: 2, title: 'Atendimento Individual', day: 'Ter', hour: 14, duration: 1, type: 'individual' },
-        { id: 3, title: 'Reunião Equipe', day: 'Qui', hour: 10, duration: 1, type: 'meeting' },
-    ];
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
-    const getEventStyle = (type: string) => {
-        switch (type) {
-            case 'group': return 'bg-blue-100 text-blue-700 border-blue-200';
-            case 'individual': return 'bg-green-100 text-green-700 border-green-200';
-            case 'meeting': return 'bg-purple-100 text-purple-700 border-purple-200';
-            default: return 'bg-slate-100 text-slate-700 border-slate-200';
-        }
-    };
+    const events = (db.appointments || []).map(apt => {
+        const group = db.groups.find(g => g.id === apt.groupId);
+        return {
+            ...apt,
+            title: group?.name || 'Sessão de Grupo',
+            location: group?.location || 'Sala Virtual'
+        };
+    });
 
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-8 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Agenda Semanal</h2>
+                    <h2 className="text-2xl font-bold text-slate-900">Minha Agenda</h2>
                     <p className="text-slate-500 mt-1">Gerencie seus atendimentos e grupos.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors">
-                        <RefreshCw size={18} />
-                        Sincronizar Google Agenda
+                    <button className="btn-secondary flex items-center gap-2">
+                        <CalendarIcon size={18} />
+                        Sincronizar Agenda
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition-colors shadow-sm">
+                    <button className="btn-primary flex items-center gap-2">
                         <Plus size={18} />
                         Novo Agendamento
                     </button>
@@ -41,66 +42,68 @@ const Schedule: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                {/* Calendar Header */}
-                <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button className="p-1 hover:bg-slate-200 rounded-full transition-colors">
-                            <ChevronLeft size={20} className="text-slate-500" />
-                        </button>
-                        <span className="font-bold text-slate-700">Novembro 2025</span>
-                        <button className="p-1 hover:bg-slate-200 rounded-full transition-colors">
-                            <ChevronRight size={20} className="text-slate-500" />
-                        </button>
+                        <h3 className="text-lg font-bold text-slate-800">Novembro 2025</h3>
+                        <div className="flex gap-1">
+                            <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                                <ChevronLeft size={20} className="text-slate-500" />
+                            </button>
+                            <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                                <ChevronRight size={20} className="text-slate-500" />
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
-                            <span className="w-2 h-2 rounded-full bg-blue-500"></span> Grupo
-                        </span>
-                        <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span> Individual
-                        </span>
+                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                        <button className="px-3 py-1 text-sm font-bold text-slate-600 rounded-md hover:bg-white hover:shadow-sm transition-all">Dia</button>
+                        <button className="px-3 py-1 text-sm font-bold text-blue-700 bg-white shadow-sm rounded-md transition-all">Semana</button>
+                        <button className="px-3 py-1 text-sm font-bold text-slate-600 rounded-md hover:bg-white hover:shadow-sm transition-all">Mês</button>
                     </div>
                 </div>
 
-                {/* Calendar Grid */}
-                <div className="overflow-x-auto">
-                    <div className="min-w-[800px]">
-                        {/* Header Row */}
-                        <div className="grid grid-cols-6 border-b border-slate-200">
-                            <div className="p-4 text-center text-xs font-bold text-slate-400 uppercase border-r border-slate-100">
-                                Horário
-                            </div>
-                            {weekDays.map(day => (
-                                <div key={day} className="p-4 text-center text-sm font-bold text-slate-700 border-r border-slate-100 last:border-r-0">
-                                    {day}
+                <div className="grid grid-cols-8 border-b border-slate-100">
+                    <div className="p-4 border-r border-slate-100 bg-slate-50"></div>
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day, i) => (
+                        <div key={day} className="p-4 text-center border-r border-slate-100 last:border-r-0">
+                            <span className="block text-xs font-bold text-slate-500 uppercase">{day}</span>
+                            <span className={`block text-lg font-bold mt-1 ${i === 0 ? 'text-blue-600 bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center mx-auto' : 'text-slate-800'}`}>
+                                {20 + i}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="h-[600px] overflow-y-auto relative">
+                    <div className="grid grid-cols-8 min-h-full">
+                        <div className="border-r border-slate-100 bg-slate-50">
+                            {[9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(hour => (
+                                <div key={hour} className="h-24 border-b border-slate-100 p-2 text-xs font-bold text-slate-400 text-right">
+                                    {hour}:00
                                 </div>
                             ))}
                         </div>
 
-                        {/* Time Rows */}
-                        {hours.map(hour => (
-                            <div key={hour} className="grid grid-cols-6 border-b border-slate-100 last:border-b-0 h-20">
-                                <div className="p-2 text-center text-xs font-medium text-slate-400 border-r border-slate-100 flex items-center justify-center">
-                                    {hour}:00
+                        {/* Mock Events Grid */}
+                        <div className="col-span-7 relative">
+                            {[9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(hour => (
+                                <div key={hour} className="h-24 border-b border-slate-100"></div>
+                            ))}
+
+                            {/* Event Card */}
+                            {events.map((event, index) => (
+                                <div key={index} className="absolute top-24 left-[14.28%] w-[14.28%] p-1">
+                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-2 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer h-20">
+                                        <p className="text-xs font-bold text-blue-700 truncate">{event.title}</p>
+                                        <p className="text-[10px] text-blue-600 flex items-center gap-1 mt-1">
+                                            <Clock size={10} /> {event.time}
+                                        </p>
+                                        <p className="text-[10px] text-blue-600 flex items-center gap-1">
+                                            <MapPin size={10} /> {event.location}
+                                        </p>
+                                    </div>
                                 </div>
-                                {weekDays.map(day => {
-                                    const event = events.find(e => e.day === day && e.hour === hour);
-                                    return (
-                                        <div key={`${day}-${hour}`} className="relative border-r border-slate-100 last:border-r-0 p-1">
-                                            {event && (
-                                                <div
-                                                    className={`absolute top-1 left-1 right-1 bottom-1 rounded-lg p-2 border text-xs font-bold cursor-pointer hover:opacity-90 transition-opacity overflow-hidden ${getEventStyle(event.type)}`}
-                                                    style={{ height: `calc(${event.duration * 100}% - 8px)`, zIndex: 10 }}
-                                                >
-                                                    <div className="truncate">{event.title}</div>
-                                                    <div className="font-normal opacity-80">{event.hour}:00 - {event.hour + event.duration}:00</div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

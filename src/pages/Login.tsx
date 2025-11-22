@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -54,7 +54,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, descriptio
 );
 
 export default function Login() {
-    const { login, register } = useAuth();
+    const { login, register, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
     const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
@@ -72,16 +72,22 @@ export default function Login() {
     const [approach, setApproach] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
+    // Redirect when authenticated
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        }
+    }, [isAuthenticated, navigate]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
         try {
             await login(email, password);
-            navigate('/dashboard');
+            // Navigation handled by useEffect
         } catch (err) {
             setError('Falha ao fazer login. Verifique suas credenciais.');
-        } finally {
             setIsLoading(false);
         }
     };
@@ -104,7 +110,7 @@ export default function Login() {
         try {
             await register({ name, email, password, crp, approach });
             setSuccessMsg('Cadastro realizado com sucesso! Entrando...');
-            setTimeout(() => navigate('/dashboard'), 1500);
+            // Navigation handled by useEffect
         } catch (err) {
             setError('Erro ao criar conta. Tente novamente.');
             setIsLoading(false);

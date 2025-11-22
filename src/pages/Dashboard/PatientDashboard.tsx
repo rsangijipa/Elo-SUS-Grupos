@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const PatientDashboard: React.FC = () => {
     const { user } = useAuth();
+    const [mood, setMood] = React.useState<string | null>(null);
 
     // Mock Data for Patient View
     const nextAppointment = {
@@ -20,7 +21,15 @@ const PatientDashboard: React.FC = () => {
     ];
 
     // YouTube Video ID (could come from user profile in future)
-    const videoId = user?.youtubePlaylistId || 'dQw4w9WgXcQ'; // Default fallback or specific ID
+    const videoId = (user as any)?.youtubePlaylistId || 'dQw4w9WgXcQ'; // Default fallback or specific ID
+
+    const moods = [
+        { emoji: '😔', label: 'Triste', color: 'bg-blue-100 hover:bg-blue-200' },
+        { emoji: '😰', label: 'Ansioso', color: 'bg-purple-100 hover:bg-purple-200' },
+        { emoji: '😐', label: 'Neutro', color: 'bg-slate-100 hover:bg-slate-200' },
+        { emoji: '🙂', label: 'Bem', color: 'bg-green-100 hover:bg-green-200' },
+        { emoji: '🤩', label: 'Ótimo', color: 'bg-yellow-100 hover:bg-yellow-200' }
+    ];
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -33,6 +42,31 @@ const PatientDashboard: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Appointment & Actions */}
                 <div className="lg:col-span-2 space-y-6">
+
+                    {/* Mood Tracker Card */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">Como você está se sentindo hoje?</h3>
+                        <div className="flex justify-between gap-2">
+                            {moods.map((m) => (
+                                <button
+                                    key={m.label}
+                                    onClick={() => setMood(m.label)}
+                                    className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${mood === m.label
+                                            ? 'ring-2 ring-blue-500 transform scale-105 ' + m.color.replace('hover:', '')
+                                            : m.color
+                                        }`}
+                                >
+                                    <span className="text-3xl">{m.emoji}</span>
+                                    <span className="text-xs font-bold text-slate-600">{m.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        {mood && (
+                            <div className="mt-4 p-3 bg-blue-50 text-blue-700 text-sm rounded-lg text-center animate-fade-in">
+                                Obrigado por compartilhar! Isso ajuda seu terapeuta a preparar o encontro.
+                            </div>
+                        )}
+                    </div>
 
                     {/* Next Appointment Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative">

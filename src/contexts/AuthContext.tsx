@@ -4,13 +4,27 @@ import {
     INITIAL_PATIENT_STATE,
     MOCK_PROFESSIONAL,
     MOCK_PATIENT,
-    type User
+    MOCK_GROUPS,
+    MOCK_PATIENTS,
+    MOCK_APPOINTMENTS,
+    type User,
+    type Group,
+    type Patient,
+    type Appointment
 } from '../utils/seedData';
+
+interface Database {
+    user: User | null;
+    groups: Group[];
+    patients: Patient[];
+    appointments: Appointment[];
+}
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    db: Database;
     login: (email: string, password?: string) => Promise<void>;
     register: (data: any) => Promise<void>;
     logout: () => void;
@@ -20,59 +34,90 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'elosus_db';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [db, setDb] = useState<Database>({
+        user: null,
+        groups: [],
+        patients: [],
+        appointments: []
+    });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check localStorage for persisted session
-        const storedUser = localStorage.getItem('elosus_user');
-        if (storedUser) {
+        // Load from localStorage on mount
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        if (storedData) {
             try {
-                setUser(JSON.parse(storedUser));
+                setDb(JSON.parse(storedData));
             } catch (error) {
-                console.error('Failed to parse stored user', error);
-                localStorage.removeItem('elosus_user');
+                console.error('Failed to parse stored DB', error);
+                localStorage.removeItem(STORAGE_KEY);
             }
         }
         setIsLoading(false);
     }, []);
 
+    // Helper to save DB to state and localStorage
+    const saveDb = (newDb: Database) => {
+        setDb(newDb);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
+    };
+
     const login = async (email: string, password?: string) => {
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API
 
-        let loggedUser: User;
+        let newDb: Database;
 
-        // DEMO LOGIC: Check for specific demo emails
+        // DEMO LOGIC
         if (email.toLowerCase() === MOCK_PROFESSIONAL.email.toLowerCase()) {
-            loggedUser = MOCK_PROFESSIONAL;
-        } else if (email.toLowerCase() === MOCK_PATIENT.email.toLowerCase()) {
-            loggedUser = MOCK_PATIENT;
-        } else {
-            // REAL USER LOGIC: Clean state
-            // Default to Professional state for new users unless specified otherwise
-            // In a real app, this would be determined by the registration flow
-            loggedUser = {
-                ...INITIAL_PROFESSIONAL_STATE,
-                id: `u${Date.now()}`,
-                email: email,
-                name: email.split('@')[0], // Temporary name from email
-                avatar: email.substring(0, 2).toUpperCase()
+            newDb = {
+                user: MOCK_PROFESSIONAL,
+                groups: MOCK_GROUPS,
+                patients: MOCK_PATIENTS,
+                appointments: MOCK_APPOINTMENTS
             };
+        } else if (email.toLowerCase() === MOCK_PATIENT.email.toLowerCase()) {
+            newDb = {
+                user: MOCK_PATIENT,
+                groups: [], // Patients don't manage groups
+                patients: [],
+                appointments: MOCK_APPOINTMENTS // In real app, filter for this patient
+            };
+        } else {
+            // REAL USER LOGIC - Check if we already have data for this user in our "DB" (localStorage)
+            // For this MVP, we are just checking if the *current* stored user matches. 
+            // In a real app, we'd look up by email in a users array.
+            if (db.user && db.user.email === email) {
+                newDb = { ...db }; // Keep existing state
+            } else {
+                // Completely new session/user -> Clean State
+                const newUser: User = {
+                    ...INITIAL_PROFESSIONAL_STATE,
+                    id: `u${Date.now()}`,
+                    email: email,
+                    name: email.split('@')[0],
+                    avatar: email.substring(0, 2).toUpperCase()
+                };
+                newDb = {
+                    user: newUser,
+                    groups: [],
+                    patients: [],
+                    appointments: []
+                };
+            }
         }
 
-        setUser(loggedUser);
-        localStorage.setItem('elosus_user', JSON.stringify(loggedUser));
+        saveDb(newDb);
         setIsLoading(false);
     };
 
     const register = async (data: any) => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        // Create new user with clean state based on selected role
         const baseState = data.role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
 
         const newUser: User = {
@@ -84,58 +129,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             avatar: data.name.substring(0, 2).toUpperCase()
         };
 
-        setUser(newUser);
-        localStorage.setItem('elosus_user', JSON.stringify(newUser));
+        // Initialize with EMPTY arrays
+        const newDb: Database = {
+            user: newUser,
+            groups: [],
+            patients: [],
+            appointments: []
+        };
+
+        saveDb(newDb);
         setIsLoading(false);
     };
 
     const logout = () => {
-        setUser(null);
-        localStorage.removeItem('elosus_user');
+        // We might want to keep the DB in localStorage even after logout for persistence across sessions,
+        // but clear the 'user' object to signify logged out. 
+        // However, for this simple auth flow, let's just clear the user from state.
+        // If we want to support multiple users on same browser, we'd need a better structure.
+        // For now, let's clear the current session user but keep data if we wanted (omitted for simplicity).
+
+        // Actually, to be safe and simple:
+        setDb(prev => ({ ...prev, user: null }));
+        // We update localStorage to reflect logged out state
+        const newDb = { ...db, user: null };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
     };
 
     const updateProfile = async (data: Partial<User>) => {
-        if (!user) return;
-
-        const updatedUser = { ...user, ...data };
-        setUser(updatedUser);
-        localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
+        if (!db.user) return;
+        const updatedUser = { ...db.user, ...data };
+        const newDb = { ...db, user: updatedUser };
+        saveDb(newDb);
     };
 
     const toggleRole = () => {
-        if (!user) return;
+        if (!db.user) return;
 
-        // For development: switch between mock profiles or just toggle role property
-        if (user.email === MOCK_PROFESSIONAL.email) {
-            setUser(MOCK_PATIENT);
-            localStorage.setItem('elosus_user', JSON.stringify(MOCK_PATIENT));
-        } else if (user.email === MOCK_PATIENT.email) {
-            setUser(MOCK_PROFESSIONAL);
-            localStorage.setItem('elosus_user', JSON.stringify(MOCK_PROFESSIONAL));
-        } else {
-            // For real users, just toggle the role string and reset to initial state of that role
-            const newRole = user.role === 'professional' ? 'patient' : 'professional';
-            const baseState = newRole === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
+        // Simple toggle for dev purposes
+        const newRole = db.user.role === 'professional' ? 'patient' : 'professional';
+        const baseState = newRole === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
 
-            const updatedUser = {
-                ...baseState,
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: newRole,
-                avatar: user.avatar
-            };
+        const updatedUser = {
+            ...db.user,
+            ...baseState,
+            role: newRole
+        };
 
-            setUser(updatedUser);
-            localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
-        }
+        const newDb = { ...db, user: updatedUser };
+        saveDb(newDb);
     };
 
     return (
         <AuthContext.Provider value={{
-            user,
-            isAuthenticated: !!user,
+            user: db.user,
+            isAuthenticated: !!db.user,
             isLoading,
+            db,
             login,
             register,
             logout,
