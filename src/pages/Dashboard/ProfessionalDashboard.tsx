@@ -1,14 +1,26 @@
 import React from 'react';
 import { Users, Calendar, FileText, AlertCircle, Clock } from 'lucide-react';
 import { MOCK_GROUPS, MOCK_PATIENTS, MOCK_APPOINTMENTS } from '../../utils/seedData';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProfessionalDashboard: React.FC = () => {
-    const activeGroups = MOCK_GROUPS.filter(g => g.status === 'active').length;
-    const totalPatients = MOCK_PATIENTS.length;
-    const waitingList = MOCK_PATIENTS.filter(p => p.status === 'waiting').length;
+    const { user } = useAuth();
+
+    // Filter data based on the current user
+    // If it's the demo user (u1), they get the mock data.
+    // New users will have no groups initially.
+    const myGroups = MOCK_GROUPS.filter(g => g.facilitatorId === user?.id);
+    const myGroupIds = myGroups.map(g => g.id);
+
+    const myPatients = MOCK_PATIENTS.filter(p => p.groupId && myGroupIds.includes(p.groupId));
+    const myAppointments = MOCK_APPOINTMENTS.filter(a => myGroupIds.includes(a.groupId));
+
+    const activeGroups = myGroups.filter(g => g.status === 'active').length;
+    const totalPatients = myPatients.length;
+    const waitingList = myPatients.filter(p => p.status === 'waiting').length;
 
     // Filter appointments for "today" (mock logic: just take the first 2 for demo)
-    const todaysAppointments = MOCK_APPOINTMENTS.slice(0, 2);
+    const todaysAppointments = myAppointments.slice(0, 2);
 
     return (
         <div className="space-y-8">
@@ -37,7 +49,7 @@ const ProfessionalDashboard: React.FC = () => {
                         </span>
                     </div>
                     <h3 className="text-slate-500 text-sm font-medium">Grupos Terapêuticos</h3>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{MOCK_GROUPS.length}</p>
+                    <p className="text-3xl font-bold text-slate-900 mt-1">{myGroups.length}</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -81,7 +93,7 @@ const ProfessionalDashboard: React.FC = () => {
                                 <div className="w-1 bg-blue-200 self-stretch rounded-full"></div>
                                 <div className="flex-1">
                                     <h4 className="font-bold text-slate-900">
-                                        {MOCK_GROUPS.find(g => g.id === apt.groupId)?.name || 'Sessão de Grupo'}
+                                        {myGroups.find(g => g.id === apt.groupId)?.name || 'Sessão de Grupo'}
                                     </h4>
                                     <p className="text-sm text-slate-600 mt-1">{apt.topic}</p>
                                     <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">

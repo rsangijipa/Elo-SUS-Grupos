@@ -122,6 +122,27 @@ export const MOCK_PATIENT: User = {
     }
 };
 
+// Initial states for new users
+export const INITIAL_PROFESSIONAL_STATE: Omit<User, 'id' | 'name' | 'email'> = {
+    role: 'professional',
+    crp: '',
+    approach: '',
+    specialty: 'Psicologia',
+    bio: ''
+};
+
+export const INITIAL_PATIENT_STATE: Omit<User, 'id' | 'name' | 'email'> = {
+    role: 'patient',
+    cns: '',
+    phone: '',
+    materials: [],
+    emergencyContact: {
+        name: '',
+        phone: '',
+        relation: ''
+    }
+};
+
 // Default export for backward compatibility if needed, but prefer named exports
 export const MOCK_USER = MOCK_PROFESSIONAL;
 
