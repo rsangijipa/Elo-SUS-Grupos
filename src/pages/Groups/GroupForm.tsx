@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Info } from 'lucide-react';
 import { groupService } from '../../services/groupService';
 import { GROUP_TYPES } from '../../types/group';
 import type { Group } from '../../types/group';
@@ -75,43 +75,26 @@ const GroupForm: React.FC = () => {
         switch (formData.tipoGrupo) {
             case 'tabagismo':
                 return (
-                    <div className="col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <h4 className="font-medium text-blue-900 mb-3">Campos Específicos: Tabagismo</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* These are just visual placeholders for the group configuration, 
-                  actual patient data is stored in inscriptions. 
-                  But if the group needs specific settings, they go here.
-                  Wait, the prompt said "For each type of group, have specific fields...".
-                  It listed patient-specific fields (consumption pattern, etc.).
-                  Those should probably be in the PATIENT'S enrollment or profile, not the group definition.
-                  However, the prompt says "Create and edit groups... For each type of group, have specific fields".
-                  Maybe it means "Define which fields are required for patients in this group"?
-                  Or maybe it means the group itself has specific metadata?
-                  The examples "Gestational age", "Consumption pattern" are definitely patient data.
-                  So here in GroupForm, maybe we just define the structure?
-                  Or maybe the prompt implies that when adding a patient to this group, those fields appear.
-                  I will assume these are NOT group fields, but I will add a note or configuration if needed.
-                  Actually, re-reading: "For each type of group, have specific fields, for example: Smoking cessation: consumption pattern..."
-                  This likely refers to the Patient's data context within that group.
-                  But for the Group Creation itself, maybe we just select the type.
-                  I will stick to standard group fields here.
-              */}
-                            <p className="text-sm text-blue-700 col-span-2">
-                                Este tipo de grupo habilitará campos específicos na ficha do paciente:
-                                <br />- Padrão de consumo
-                                <br />- Tentativas prévias
-                                <br />- Uso de medicamentos
+                    <div className="col-span-1 md:col-span-2 bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3">
+                        <Info className="text-[#0054A6] flex-shrink-0 mt-0.5" size={20} />
+                        <div>
+                            <h4 className="font-bold text-[#0054A6] text-sm mb-1">Campos Específicos: Tabagismo</h4>
+                            <p className="text-sm text-blue-700">
+                                Este tipo de grupo habilitará campos específicos na ficha do paciente, como padrão de consumo, tentativas prévias e uso de medicamentos.
                             </p>
                         </div>
                     </div>
                 );
             case 'gestantes':
                 return (
-                    <div className="col-span-2 bg-pink-50 p-4 rounded-lg border border-pink-100">
-                        <h4 className="font-medium text-pink-900 mb-3">Campos Específicos: Gestantes</h4>
-                        <p className="text-sm text-pink-700">
-                            Habilitará campos: Idade gestacional, UBS de referência, Risco gestacional.
-                        </p>
+                    <div className="col-span-1 md:col-span-2 bg-pink-50 p-4 rounded-xl border border-pink-100 flex gap-3">
+                        <Info className="text-pink-600 flex-shrink-0 mt-0.5" size={20} />
+                        <div>
+                            <h4 className="font-bold text-pink-700 text-sm mb-1">Campos Específicos: Gestantes</h4>
+                            <p className="text-sm text-pink-600">
+                                Habilitará campos como idade gestacional, UBS de referência e risco gestacional na ficha do paciente.
+                            </p>
+                        </div>
                     </div>
                 );
             default:
@@ -120,38 +103,48 @@ const GroupForm: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+            {/* Header */}
             <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/grupos')} className="text-gray-500 hover:text-gray-700">
+                <button
+                    onClick={() => navigate('/grupos')}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-colors"
+                >
                     <ArrowLeft size={24} />
                 </button>
-                <h2 className="text-2xl font-bold text-gray-800">
-                    {id ? 'Editar Grupo' : 'Novo Grupo Terapêutico'}
-                </h2>
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                        {id ? 'Editar Grupo' : 'Novo Grupo Terapêutico'}
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                        Cadastre as informações do grupo e configure seus encontros.
+                    </p>
+                </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
+            {/* Form Card */}
+            <form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-2xl border border-slate-100 p-6 md:p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Título do Grupo *</label>
+                    <div className="col-span-1 md:col-span-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Título do Grupo *</label>
                         <input
                             type="text"
                             name="titulo"
                             required
                             value={formData.titulo}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
                             placeholder="Ex: Grupo de Tabagismo - UBS Central"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Tipo de Grupo *</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Tipo de Grupo *</label>
                         <select
                             name="tipoGrupo"
                             value={formData.tipoGrupo}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         >
                             {Object.entries(GROUP_TYPES).map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
@@ -160,46 +153,47 @@ const GroupForm: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Capacidade Máxima</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Capacidade Máxima</label>
                         <input
                             type="number"
                             name="capacidadeMaxima"
                             value={formData.capacidadeMaxima}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         />
                     </div>
 
-                    <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Descrição / Objetivos</label>
+                    <div className="col-span-1 md:col-span-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Descrição / Objetivos</label>
                         <textarea
                             name="descricao"
-                            rows={3}
+                            rows={4}
                             value={formData.descricao}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                            placeholder="Descreva os objetivos terapêuticos e público-alvo..."
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Data de Início</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Data de Início *</label>
                         <input
                             type="date"
                             name="dataInicio"
                             required
                             value={formData.dataInicio}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Periodicidade</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Periodicidade</label>
                         <select
                             name="periodicidade"
                             value={formData.periodicidade}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         >
                             <option value="semanal">Semanal</option>
                             <option value="quinzenal">Quinzenal</option>
@@ -208,12 +202,12 @@ const GroupForm: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Dia da Semana Padrão</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Dia da Semana Padrão</label>
                         <select
                             name="diaSemanaPadrao"
                             value={formData.diaSemanaPadrao}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         >
                             <option value={1}>Segunda-feira</option>
                             <option value={2}>Terça-feira</option>
@@ -226,32 +220,31 @@ const GroupForm: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Horário Início</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Horário Início</label>
                         <input
                             type="time"
                             name="horarioInicioPadrao"
                             value={formData.horarioInicioPadrao}
                             onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm border p-2"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         />
                     </div>
 
                     {renderDynamicFields()}
-
                 </div>
 
-                <div className="flex justify-end gap-4">
+                <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
                     <button
                         type="button"
                         onClick={() => navigate('/grupos')}
-                        className="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                        className="px-6 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-[#0054A6] hover:bg-[#004080] rounded-lg shadow-sm transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Save size={18} />
                         {loading ? 'Salvando...' : 'Salvar'}

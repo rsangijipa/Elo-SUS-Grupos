@@ -8,18 +8,18 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#1351B4', // Institutional Blue
+          DEFAULT: '#0054A6', // EloSUS Blue
           light: '#2670E8',
-          dark: '#0C326F',
+          dark: '#004080',
         },
         secondary: {
-          DEFAULT: '#008000', // Green
+          DEFAULT: '#0B8A4D', // EloSUS Green
           light: '#28A745',
         },
         accent: {
-          DEFAULT: '#F9D000', // Yellow
+          DEFAULT: '#FFC857', // EloSUS Yellow
         },
-        background: '#F8F9FA',
+        background: '#F4F7FF', // Soft Blue/Gray Background
         surface: '#FFFFFF',
       },
       fontFamily: {

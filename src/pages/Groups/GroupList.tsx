@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, ArrowRight, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { groupService } from '../../services/groupService';
 import { GROUP_TYPES } from '../../types/group';
@@ -34,68 +34,91 @@ const GroupList: React.FC = () => {
     );
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-800">Grupos Terapêuticos</h2>
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Grupos Terapêuticos</h2>
+                    <p className="text-slate-500 mt-1">
+                        Gerencie os grupos ativos e suas configurações.
+                    </p>
+                </div>
                 <button
                     onClick={() => navigate('/grupos/novo')}
-                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
+                    className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-medium"
                 >
                     <Plus size={20} />
                     Novo Grupo
                 </button>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+            {/* Search */}
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Buscar por título ou tipo..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="Buscar por título ou tipo de grupo..."
+                        className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none transition-all bg-slate-50 focus:bg-white placeholder:text-slate-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
             </div>
 
+            {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    <div className="col-span-full text-center py-10 text-gray-500">Carregando grupos...</div>
+                    <div className="col-span-full flex justify-center py-12">
+                        <div className="w-8 h-8 border-2 border-slate-200 border-t-[#0054A6] rounded-full animate-spin"></div>
+                    </div>
                 ) : filteredGroups.length === 0 ? (
-                    <div className="col-span-full text-center py-10 text-gray-500">Nenhum grupo encontrado.</div>
+                    <div className="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-100 border-dashed">
+                        <div className="mx-auto w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                            <Users className="text-slate-400" size={24} />
+                        </div>
+                        <p className="text-slate-500 font-medium">Nenhum grupo encontrado.</p>
+                        <p className="text-sm text-slate-400 mt-1">Tente buscar com outros termos ou crie um novo grupo.</p>
+                    </div>
                 ) : (
                     filteredGroups.map((group) => (
-                        <div key={group.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="p-5">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">
-                                            {GROUP_TYPES[group.tipoGrupo]}
-                                        </span>
-                                        <h3 className="text-lg font-bold text-gray-900">{group.titulo}</h3>
-                                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{group.descricao}</p>
-                                    </div>
+                        <div key={group.id} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-blue-100 transition-all duration-200 flex flex-col">
+                            <div className="p-6 flex-1">
+                                <div className="flex items-start justify-between mb-4">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0054A6] uppercase tracking-wide">
+                                        {GROUP_TYPES[group.tipoGrupo]}
+                                    </span>
+                                    <span className={`w-2.5 h-2.5 rounded-full ${group.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300'}`} title={group.ativo ? 'Ativo' : 'Inativo'}></span>
                                 </div>
 
-                                <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
-                                    <div className="flex items-center gap-1">
-                                        <Users size={16} />
-                                        <span>{group.capacidadeMaxima} vagas</span>
+                                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-[#0054A6] transition-colors">
+                                    {group.titulo}
+                                </h3>
+                                <p className="text-sm text-slate-500 line-clamp-2 mb-4 leading-relaxed">
+                                    {group.descricao || 'Sem descrição definida.'}
+                                </p>
+
+                                <div className="flex items-center gap-4 text-sm text-slate-500 pt-4 border-t border-slate-50">
+                                    <div className="flex items-center gap-1.5">
+                                        <Users size={16} className="text-slate-400" />
+                                        <span className="font-medium text-slate-700">{group.capacidadeMaxima}</span> vagas
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        <span className={`w-2 h-2 rounded-full ${group.ativo ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                        <span>{group.ativo ? 'Ativo' : 'Inativo'}</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <Activity size={16} className="text-slate-400" />
+                                        <span className="capitalize">{group.periodicidade}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 px-5 py-3 border-t border-gray-200 flex justify-end gap-2">
+                            <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-between items-center group-hover:bg-blue-50/30 transition-colors">
+                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                    {group.diaSemanaPadrao !== undefined ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][group.diaSemanaPadrao] : '-'} • {group.horarioInicioPadrao}
+                                </span>
                                 <button
                                     onClick={() => navigate(`/grupos/${group.id}`)}
-                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                    className="flex items-center gap-1 text-sm font-bold text-[#0054A6] hover:text-[#004080] transition-colors"
                                 >
-                                    Gerenciar
+                                    Gerenciar <ArrowRight size={16} />
                                 </button>
                             </div>
                         </div>
