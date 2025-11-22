@@ -11,7 +11,7 @@ import {
     getDoc
 } from 'firebase/firestore';
 import { db } from '../firebase_config';
-import { Patient } from '../types/patient';
+import type { Patient } from '../types/patient';
 
 const COLLECTION_NAME = 'pacientes';
 

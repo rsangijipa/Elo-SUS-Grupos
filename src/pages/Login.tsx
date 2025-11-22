@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase_config';
-import { Users } from 'lucide-react';
+import { Users, Database } from 'lucide-react';
+import { seedDatabase } from '../utils/seedData';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -113,6 +114,16 @@ const Login: React.FC = () => {
                                     Acesso restrito a profissionais autorizados
                                 </span>
                             </div>
+                        </div>
+                        <div className="mt-4 text-center">
+                            <button
+                                type="button"
+                                onClick={seedDatabase}
+                                className="text-xs text-purple-600 hover:text-purple-800 flex items-center justify-center gap-1 mx-auto"
+                            >
+                                <Database size={12} />
+                                Seed Data (Dev Only)
+                            </button>
                         </div>
                     </div>
                 </div>

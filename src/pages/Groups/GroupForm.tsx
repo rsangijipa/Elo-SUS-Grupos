@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { groupService } from '../../services/groupService';
-import { Group, GroupType, GROUP_TYPES } from '../../types/group';
+import { GROUP_TYPES } from '../../types/group';
+import type { Group } from '../../types/group';
 import { useAuth } from '../../contexts/AuthContext';
 
 const GroupForm: React.FC = () => {

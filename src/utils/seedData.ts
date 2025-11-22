@@ -1,9 +1,9 @@
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, auth } from '../firebase_config';
-import { UserProfile } from '../types/user';
-import { Group } from '../types/group';
-import { Patient } from '../types/patient';
+// import type { UserProfile } from '../types/user';
+import type { Group } from '../types/group';
+import type { Patient } from '../types/patient';
 
 export const seedDatabase = async () => {
     console.log('Starting seed...');
@@ -13,13 +13,13 @@ export const seedDatabase = async () => {
         try {
             // Note: This might fail if user already exists, which is fine.
             // Ideally we check first, but for a seed script, try/catch is acceptable.
-            const adminAuth = await createUserWithEmailAndPassword(auth, 'doll.ricardoll@gmail.com', '123456789');
+            const adminAuth = await createUserWithEmailAndPassword(auth, 'doll.ricardoll+test@gmail.com', '123456789');
             await updateProfile(adminAuth.user, { displayName: 'Ricardo Admin' });
 
             await setDoc(doc(db, 'users', adminAuth.user.uid), {
                 uid: adminAuth.user.uid,
                 nome: 'Ricardo Admin',
-                email: 'doll.ricardoll@gmail.com',
+                email: 'doll.ricardoll+test@gmail.com',
                 role: 'administrador',
                 unidadeSaudeId: 'all',
                 createdAt: new Date(),

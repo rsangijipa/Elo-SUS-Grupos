@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { patientService } from '../../services/patientService';
-import { Patient } from '../../types/patient';
+import type { Patient } from '../../types/patient';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PatientForm: React.FC = () => {

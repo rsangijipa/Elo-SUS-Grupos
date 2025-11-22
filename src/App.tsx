@@ -12,7 +12,7 @@ import GroupDetail from './pages/Groups/GroupDetail';
 import Calendar from './pages/Schedule/Calendar';
 
 // Placeholder components for routes we haven't built yet
-const Schedule = () => <div>Agenda (Em construção)</div>;
+// const Schedule = () => <div>Agenda (Em construção)</div>;
 const Reports = () => <div>Relatórios (Em construção)</div>;
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {

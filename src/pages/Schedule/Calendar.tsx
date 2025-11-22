@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, Users } from 'lucide-react';
+import { Clock, MapPin, Users } from 'lucide-react';
 import { sessionService } from '../../services/sessionService';
-import { Session } from '../../types/session';
+import type { Session } from '../../types/session';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -63,8 +63,8 @@ const Calendar: React.FC = () => {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${session.status === 'realizada' ? 'bg-green-100 text-green-800' :
-                                                session.status === 'cancelada' ? 'bg-red-100 text-red-800' :
-                                                    'bg-yellow-100 text-yellow-800'
+                                            session.status === 'cancelada' ? 'bg-red-100 text-red-800' :
+                                                'bg-yellow-100 text-yellow-800'
                                             }`}>
                                             {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                                         </span>

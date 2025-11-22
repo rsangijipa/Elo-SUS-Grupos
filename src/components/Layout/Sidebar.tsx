@@ -3,10 +3,8 @@ import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
-    MessageSquare,
     Calendar,
     FileText,
-    Settings,
     LogOut,
     Activity
 } from 'lucide-react';

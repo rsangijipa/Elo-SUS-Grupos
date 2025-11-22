@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Edit, Trash2, Users } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { groupService } from '../../services/groupService';
-import { Group, GROUP_TYPES } from '../../types/group';
+import { GROUP_TYPES } from '../../types/group';
+import type { Group } from '../../types/group';
 import { useAuth } from '../../contexts/AuthContext';
 
 const GroupList: React.FC = () => {
