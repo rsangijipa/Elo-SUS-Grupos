@@ -8,6 +8,7 @@ import Schedule from './pages/Schedule/Schedule';
 import Reports from './pages/Reports/Reports';
 import Profile from './pages/Profile/Profile';
 import SessionMode from './pages/Session/SessionMode';
+import Support from './pages/Support/Support';
 import Layout from './components/Layout/Layout';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -34,6 +35,7 @@ function App() {
       <NotificationProvider>
         <Router>
           <Routes>
+            <Route path="/support" element={<Support />} />
             <Route path="/login" element={<Login />} />
 
             <Route path="/" element={

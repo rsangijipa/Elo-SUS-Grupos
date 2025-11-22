@@ -20,9 +20,7 @@ import {
 // Componente de Logo
 const LogoEloSUS = () => (
     <div className="flex items-center gap-3 mb-6">
-        <div className="relative w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-md p-1">
-            <ShieldPlus className="w-8 h-8 text-blue-700" />
-        </div>
+        <img src="/elosusgrupos_logo.png" alt="EloSUS Grupos" className="h-12 w-auto" />
         <div className="flex flex-col">
             <h1 className="text-2xl font-bold text-blue-900 leading-none">
                 EloSUS <span className="font-light">Grupos</span>
@@ -296,6 +294,13 @@ export default function Login() {
                             <CheckCircle2 className="text-emerald-500 w-5 h-5 flex-shrink-0 mt-0.5" />
                             <p className="text-xs text-emerald-700 leading-tight">
                                 Ambiente seguro e restrito a profissionais autorizados.
+                            </p>
+                        </div>
+
+                        {/* Support Link */}
+                        <div className="mt-4 text-center">
+                            <p className="text-xs text-slate-400">
+                                Precisa de ajuda? <a href="/support" className="text-blue-500 hover:underline">doll.ricardoll@gmail.com</a>
                             </p>
                         </div>
                     </div>

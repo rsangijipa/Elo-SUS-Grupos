@@ -22,8 +22,44 @@ const ProfessionalDashboard: React.FC = () => {
     // Filter appointments for "today" (mock logic: just take the first 2 for demo)
     const todaysAppointments = myAppointments.slice(0, 2);
 
+    // Empty State Logic
+    const isEmptyState = totalPatients === 0 && activeGroups === 0;
+
+    if (isEmptyState) {
+        return (
+            <div className="space-y-8 animate-fade-in">
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center max-w-2xl mx-auto mt-10">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Users size={40} className="text-blue-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-3">Bem-vindo ao EloSUS Grupos!</h2>
+                    <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                        Sua conta foi criada com sucesso. Para começar a explorar a plataforma, você pode gerar dados de demonstração ou cadastrar seu primeiro paciente.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                            onClick={() => window.location.reload()} // Simulating data generation refresh for now, or we could call a function
+                            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                        >
+                            <FileText size={20} />
+                            Gerar Dados de Demonstração
+                        </button>
+                        <button className="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                            <Users size={20} />
+                            Cadastrar Paciente
+                        </button>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-6">
+                        * A geração de dados criará grupos e pacientes fictícios para teste.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">

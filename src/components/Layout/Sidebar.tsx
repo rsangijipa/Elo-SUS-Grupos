@@ -44,9 +44,7 @@ export default function Sidebar() {
         <aside className="w-64 bg-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-50 transition-all">
             {/* Brand Header */}
             <div className="h-20 flex items-center gap-3 px-6 border-b border-slate-100">
-                <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/20 text-white flex-shrink-0">
-                    <ShieldPlus size={24} />
-                </div>
+                <img src="/elosusgrupos_logo.png" alt="EloSUS" className="h-10 w-auto" />
                 <div className="flex flex-col">
                     <span className="font-bold text-slate-800 text-lg leading-tight">EloSUS</span>
                     <span className="text-[10px] font-bold text-blue-600 tracking-wider uppercase">Grupos</span>
