@@ -13,13 +13,14 @@ import { getFirestore } from 'firebase/firestore';
 // };
 
 // Use environment variables if available, otherwise fall back to placeholders (or empty)
+// Use environment variables if available, otherwise fall back to placeholders (or empty)
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB0vR_uVzadv3Ppjj0GNqXjOFuQKnP6fgk",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "elosusgrupos.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "elosusgrupos",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "elosusgrupos.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "257423216168",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:257423216168:web:370b3675515bf2a8f86f1d"
 };
 
 const app = initializeApp(firebaseConfig);

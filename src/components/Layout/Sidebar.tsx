@@ -28,7 +28,7 @@ export default function Sidebar() {
     const patientItems = [
         { path: '/dashboard', label: 'Início', icon: LayoutDashboard },
         { path: '/schedule', label: 'Minha Agenda', icon: Calendar },
-        { path: '/materials', label: 'Materiais', icon: FileText },
+        { path: '/resources', label: 'Materiais', icon: FileText },
     ];
 
     const menuItems = user?.role === 'patient' ? patientItems : professionalItems;
