@@ -6,11 +6,13 @@ import {
     Calendar,
     FileText,
     LogOut,
-    ShieldPlus,
     Stethoscope,
     Settings,
     RefreshCw,
-    MessageCircle
+    MessageCircle,
+    Heart,
+    Activity,
+    LifeBuoy
 } from 'lucide-react';
 import { whatsappService } from '../../services/integrations/whatsappService';
 
@@ -29,8 +31,10 @@ export default function Sidebar() {
 
     const patientItems = [
         { path: '/dashboard', label: 'Início', icon: LayoutDashboard },
+        { path: '/wellbeing', label: 'Bem-Estar', icon: Heart },
+        { path: '/reports', label: 'Meu Progresso', icon: Activity },
+        { path: '/materials', label: 'Meus Documentos', icon: FileText },
         { path: '/schedule', label: 'Minha Agenda', icon: Calendar },
-        { path: '/resources', label: 'Materiais', icon: FileText },
     ];
 
     const menuItems = user?.role === 'patient' ? patientItems : professionalItems;
@@ -71,6 +75,23 @@ export default function Sidebar() {
                         {item.label}
                     </Link>
                 ))}
+
+                {/* Support Link (Bottom of Nav) */}
+                <div className="pt-4 mt-4 border-t border-slate-100">
+                    <Link
+                        to="/support"
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${isActive('/support')
+                            ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                    >
+                        <LifeBuoy
+                            size={20}
+                            className={isActive('/support') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}
+                        />
+                        Central de Ajuda
+                    </Link>
+                </div>
             </nav>
 
             {/* User Footer */}
@@ -99,16 +120,6 @@ export default function Sidebar() {
                                 }
                             </p>
                         </div>
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                whatsappService.getSupportLink();
-                            }}
-                            className="p-1 hover:bg-green-100 rounded-full text-slate-300 hover:text-green-600 transition-colors"
-                            title="Fale com a Unidade (WhatsApp)"
-                        >
-                            <MessageCircle size={16} />
-                        </button>
                         <Settings size={14} className="text-slate-300 group-hover:text-slate-500" />
                     </div>
                 </Link>

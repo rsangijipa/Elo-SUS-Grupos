@@ -13,6 +13,15 @@ export interface Material {
     url: string;
 }
 
+export interface ClinicalDocument {
+    id: string;
+    title: string;
+    type: 'laudo' | 'encaminhamento' | 'receita';
+    date: string;
+    doctorName: string;
+    specialty: string;
+}
+
 // Mock Data
 const RECOMMENDED_VIDEOS: Video[] = [
     {
@@ -39,9 +48,28 @@ const RECOMMENDED_VIDEOS: Video[] = [
 ];
 
 const PDF_MATERIALS: Material[] = [
-    { id: '1', title: 'Guia de Ansiedade.pdf', type: 'pdf', url: '#' },
+    { id: '1', title: 'Cartilha Tabagismo - Sessão 1.pdf', type: 'pdf', url: '#' },
     { id: '2', title: 'Diário de Emoções.pdf', type: 'pdf', url: '#' },
     { id: '3', title: 'Direitos do Usuário SUS.pdf', type: 'pdf', url: '#' }
+];
+
+const CLINICAL_DOCUMENTS: ClinicalDocument[] = [
+    {
+        id: 'd1',
+        title: 'Encaminhamento Psiquiatria',
+        type: 'encaminhamento',
+        date: '2023-10-15',
+        doctorName: 'Dr. João Silva',
+        specialty: 'Psicologia'
+    },
+    {
+        id: 'd2',
+        title: 'Relatório de Evolução - Outubro',
+        type: 'laudo',
+        date: '2023-10-30',
+        doctorName: 'Dr. João Silva',
+        specialty: 'Psicologia'
+    }
 ];
 
 export const contentService = {
@@ -52,5 +80,9 @@ export const contentService = {
 
     getMaterials: (tag?: string): Promise<Material[]> => {
         return Promise.resolve(PDF_MATERIALS);
+    },
+
+    getClinicalDocuments: (): Promise<ClinicalDocument[]> => {
+        return Promise.resolve(CLINICAL_DOCUMENTS);
     }
 };

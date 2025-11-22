@@ -14,7 +14,8 @@ import {
     UserPlus,
     FileBadge,
     BrainCircuit,
-    ShieldPlus
+    ShieldPlus,
+    LifeBuoy
 } from 'lucide-react';
 
 // Componente de Logo
@@ -59,6 +60,7 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [showSupportModal, setShowSupportModal] = useState(false);
 
     // Form States
     const [email, setEmail] = useState('');
@@ -300,12 +302,66 @@ export default function Login() {
                         {/* Support Link */}
                         <div className="mt-4 text-center">
                             <p className="text-xs text-slate-400">
-                                Precisa de ajuda? <a href="/support" className="text-blue-500 hover:underline">doll.ricardoll@gmail.com</a>
+                                Precisa de ajuda? <button onClick={() => setShowSupportModal(true)} className="text-blue-500 hover:underline">Fale com o Suporte</button>
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Support Modal */}
+            {showSupportModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <LifeBuoy size={20} className="text-blue-600" />
+                                Central de Ajuda
+                            </h3>
+                            <button onClick={() => setShowSupportModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            <p className="text-sm text-slate-500 mb-4">
+                                Está com dificuldades para acessar? Envie uma mensagem para nossa equipe de suporte técnico.
+                            </p>
+
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                // Mock send
+                                alert('Mensagem enviada para doll.ricardoll@gmail.com! Entraremos em contato em breve.');
+                                setShowSupportModal(false);
+                            }} className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Seu Nome</label>
+                                    <input type="text" className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="Digite seu nome" required />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Seu Email</label>
+                                    <input type="email" className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all" placeholder="email@exemplo.com" required />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Mensagem</label>
+                                    <textarea className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all h-24 resize-none" placeholder="Descreva seu problema..." required></textarea>
+                                </div>
+
+                                <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2">
+                                    <Mail size={18} />
+                                    Enviar Solicitação
+                                </button>
+                            </form>
+
+                            <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+                                <p className="text-xs text-slate-400">
+                                    Tempo médio de resposta: <span className="font-bold text-slate-600">2 horas</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

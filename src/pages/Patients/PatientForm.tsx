@@ -59,6 +59,18 @@ const PatientForm: React.FC = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+
+        if (name === 'cpf') {
+            // Apply CPF Mask: 000.000.000-00
+            let v = value.replace(/\D/g, '');
+            if (v.length > 11) v = v.slice(0, 11);
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            setFormData(prev => ({ ...prev, [name]: v }));
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 

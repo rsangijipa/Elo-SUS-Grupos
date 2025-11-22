@@ -173,19 +173,6 @@ export const MOCK_GROUPS: Group[] = [
     }
 ];
 
-export const MOCK_PATIENTS: Patient[] = [
-    { id: 'p1', name: 'Maria Aparecida Santos', cns: '700.1234.5678.9012', birthDate: '1980-05-12', status: 'active', groupId: 'g1', phone: '(11) 99999-1111' },
-    { id: 'p2', name: 'José Carlos Oliveira', cns: '700.2345.6789.0123', birthDate: '1975-08-20', status: 'active', groupId: 'g1', phone: '(11) 98888-2222' },
-    { id: 'p3', name: 'Ana Beatriz Souza', cns: '700.3456.7890.1234', birthDate: '1992-03-15', status: 'active', groupId: 'g2', phone: '(11) 97777-3333' },
-    { id: 'p4', name: 'Carlos Eduardo Lima', cns: '700.4567.8901.2345', birthDate: '1988-11-30', status: 'waiting', groupId: 'g3', phone: '(11) 96666-4444' },
-    { id: 'p5', name: 'Fernanda Costa', cns: '700.5678.9012.3456', birthDate: '1995-07-08', status: 'waiting', groupId: 'g3', phone: '(11) 95555-5555' },
-    { id: 'p6', name: 'Roberto Almeida', cns: '700.6789.0123.4567', birthDate: '1960-01-25', status: 'active', groupId: 'g1', phone: '(11) 94444-6666' },
-    { id: 'p7', name: 'Luciana Pereira', cns: '700.7890.1234.5678', birthDate: '1985-09-10', status: 'active', groupId: 'g2', phone: '(11) 93333-7777' },
-    { id: 'p8', name: 'Paulo Mendes', cns: '700.8901.2345.6789', birthDate: '1990-12-05', status: 'waiting', groupId: 'g1', phone: '(11) 92222-8888' },
-    { id: 'p9', name: 'Juliana Rocha', cns: '700.9012.3456.7890', birthDate: '1998-04-22', status: 'active', groupId: 'g3', phone: '(11) 91111-9999' },
-    { id: 'p10', name: 'Marcos Vinícius', cns: '700.0123.4567.8901', birthDate: '2000-06-18', status: 'waiting', groupId: 'g4', phone: '(11) 90000-0000' },
-];
-
 export const MOCK_APPOINTMENTS: Appointment[] = [
     {
         id: 'a1',
@@ -222,3 +209,29 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
         topic: 'Prevenção de recaídas'
     }
 ];
+
+export const DEMO_PATIENTS: Patient[] = Array.from({ length: 20 }, (_, i) => ({
+    id: `p${i + 1}`,
+    name: [
+        'Ana Silva', 'Carlos Santos', 'Maria Oliveira', 'João Souza', 'Fernanda Lima',
+        'Roberto Costa', 'Patricia Pereira', 'Lucas Ferreira', 'Juliana Alves', 'Marcos Rocha',
+        'Camila Gomes', 'Ricardo Martins', 'Sandra Ribeiro', 'Paulo Barbosa', 'Beatriz Lopes',
+        'Gabriel Dias', 'Larissa Castro', 'Felipe Moraes', 'Renata Cardoso', 'Thiago Nunes'
+    ][i],
+    cns: `700.${Math.floor(Math.random() * 10000)}.${Math.floor(Math.random() * 10000)}.${Math.floor(Math.random() * 10000)}`,
+    birthDate: new Date(1970 + Math.floor(Math.random() * 30), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)).toISOString(),
+    status: i < 15 ? 'active' : 'waiting',
+    groupId: i < 15 ? ['g1', 'g2', 'g3'][i % 3] : undefined,
+    phone: `(11) 9${Math.floor(Math.random() * 10000)}-${Math.floor(Math.random() * 10000)}`
+}));
+
+// Alias for backward compatibility if needed, or just use DEMO_PATIENTS
+export const MOCK_PATIENTS = DEMO_PATIENTS;
+
+export const generateDemoData = () => {
+    localStorage.setItem('elosus_patients', JSON.stringify(DEMO_PATIENTS));
+    localStorage.setItem('elosus_groups', JSON.stringify(MOCK_GROUPS));
+    localStorage.setItem('elosus_appointments', JSON.stringify(MOCK_APPOINTMENTS));
+    localStorage.setItem('elosus_referrals', JSON.stringify([])); // Initialize empty referrals
+    window.location.reload();
+};

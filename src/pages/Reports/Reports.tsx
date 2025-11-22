@@ -1,19 +1,10 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Users, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import PatientReports from './PatientReports';
 
-const Reports: React.FC = () => {
-    const { user } = useAuth();
-
-    if (!user) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
-
+const ProfessionalReports: React.FC = () => {
     // Mock Data
     const attendanceData = [
         { name: 'Grupo Tabagismo', presentes: 12, faltas: 3 },
@@ -27,15 +18,6 @@ const Reports: React.FC = () => {
         { name: 'Em Acompanhamento', value: 45, color: '#3b82f6' },
         { name: 'Abandono', value: 5, color: '#ef4444' },
         { name: 'Encaminhamento', value: 8, color: '#f59e0b' },
-    ];
-
-    const evolutionData = [
-        { month: 'Jan', atendimentos: 45 },
-        { month: 'Fev', atendimentos: 52 },
-        { month: 'Mar', atendimentos: 48 },
-        { month: 'Abr', atendimentos: 61 },
-        { month: 'Mai', atendimentos: 55 },
-        { month: 'Jun', atendimentos: 67 },
     ];
 
     return (
@@ -160,6 +142,24 @@ const Reports: React.FC = () => {
             </div>
         </div>
     );
+};
+
+const Reports: React.FC = () => {
+    const { user } = useAuth();
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (user.role === 'patient') {
+        return <PatientReports />;
+    }
+
+    return <ProfessionalReports />;
 };
 
 export default Reports;
