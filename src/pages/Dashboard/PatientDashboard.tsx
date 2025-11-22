@@ -52,8 +52,8 @@ const PatientDashboard: React.FC = () => {
                                     key={m.label}
                                     onClick={() => setMood(m.label)}
                                     className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl transition-all ${mood === m.label
-                                            ? 'ring-2 ring-blue-500 transform scale-105 ' + m.color.replace('hover:', '')
-                                            : m.color
+                                        ? 'ring-2 ring-blue-500 transform scale-105 ' + m.color.replace('hover:', '')
+                                        : m.color
                                         }`}
                                 >
                                     <span className="text-3xl">{m.emoji}</span>
@@ -68,44 +68,59 @@ const PatientDashboard: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Next Appointment Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
+                    {/* Journey Timeline */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-6 border-b border-slate-100">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <MapPin size={20} className="text-blue-600" /> Sua Jornada
+                            </h3>
+                            <p className="text-slate-500 text-sm">Você está no encontro 3 de 8 do Grupo de Tabagismo.</p>
+                        </div>
+
                         <div className="p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                    <Calendar size={20} className="text-blue-600" /> Seu Próximo Encontro
-                                </h3>
-                                <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full uppercase">
-                                    Confirmado
-                                </span>
-                            </div>
-
-                            <div className="flex flex-col md:flex-row gap-6 items-center">
-                                <div className="bg-blue-50 rounded-xl p-4 text-center min-w-[100px]">
-                                    <span className="block text-sm font-bold text-blue-400 uppercase">NOV</span>
-                                    <span className="block text-3xl font-bold text-slate-800">{nextAppointment.date.getDate()}</span>
-                                    <span className="block text-sm font-medium text-slate-500">Segunda</span>
+                            <div className="relative border-l-2 border-slate-200 ml-3 space-y-8">
+                                {/* Past Session */}
+                                <div className="relative pl-8 opacity-60">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-4 border-white shadow-sm"></div>
+                                    <h4 className="font-bold text-slate-700">Encontro 1: Introdução</h4>
+                                    <p className="text-sm text-slate-500">Concluído em 01/11</p>
                                 </div>
 
-                                <div className="flex-1 space-y-2 text-center md:text-left">
-                                    <h4 className="text-xl font-bold text-slate-900">{nextAppointment.type}</h4>
-                                    <p className="text-slate-600 flex items-center justify-center md:justify-start gap-2">
-                                        <MapPin size={16} /> {nextAppointment.location}
-                                    </p>
-                                    <p className="text-slate-500 flex items-center justify-center md:justify-start gap-2 text-sm">
-                                        <Clock size={16} /> 14:00 - 16:00
-                                    </p>
+                                {/* Past Session */}
+                                <div className="relative pl-8 opacity-60">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-4 border-white shadow-sm"></div>
+                                    <h4 className="font-bold text-slate-700">Encontro 2: Gatilhos</h4>
+                                    <p className="text-sm text-slate-500">Concluído em 08/11</p>
                                 </div>
-                            </div>
 
-                            <div className="mt-6 flex gap-3 border-t border-slate-100 pt-4">
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-50 text-green-700 font-bold rounded-xl hover:bg-green-100 transition-colors">
-                                    <CheckCircle size={18} /> Confirmar Presença
-                                </button>
-                                <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-700 font-bold rounded-xl hover:bg-red-100 transition-colors">
-                                    <XCircle size={18} /> Não poderei ir
-                                </button>
+                                {/* Current Session (Active) */}
+                                <div className="relative pl-8">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-sm animate-pulse"></div>
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-bold text-blue-900">Encontro 3: Estratégias</h4>
+                                            <span className="px-2 py-0.5 bg-blue-200 text-blue-800 text-xs font-bold rounded-full">Atual</span>
+                                        </div>
+                                        <p className="text-sm text-blue-700 mb-3">
+                                            <Calendar size={14} className="inline mr-1" /> 15/11 às 14:00
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <button className="flex-1 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                                                Confirmar Presença
+                                            </button>
+                                            <button className="px-3 py-2 bg-white text-slate-600 text-sm font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+                                                Não vou
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Future Session */}
+                                <div className="relative pl-8 opacity-40">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-300 border-4 border-white shadow-sm"></div>
+                                    <h4 className="font-bold text-slate-700">Encontro 4: Manutenção</h4>
+                                    <p className="text-sm text-slate-500">Agendado para 22/11</p>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -65,8 +65,8 @@ const Profile: React.FC = () => {
                 <button
                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${isEditing
-                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                         }`}
                 >
                     {isEditing ? <Save size={18} /> : <User size={18} />}
@@ -83,9 +83,34 @@ const Profile: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 {/* Header / Cover */}
                 <div className="h-32 bg-gradient-to-r from-blue-600 to-blue-400 relative">
-                    <div className="absolute -bottom-12 left-8">
-                        <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-500 shadow-md">
-                            {user.avatar || user.name.substring(0, 2).toUpperCase()}
+                    <div className="absolute -bottom-12 left-8 group">
+                        <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-500 shadow-md overflow-hidden relative">
+                            {formData.avatar || user.avatar ? (
+                                <img src={formData.avatar || user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                user.name.substring(0, 2).toUpperCase()
+                            )}
+
+                            {isEditing && (
+                                <label className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-white text-xs font-bold">Alterar</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setFormData((prev: any) => ({ ...prev, avatar: reader.result }));
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            )}
                         </div>
                     </div>
                 </div>

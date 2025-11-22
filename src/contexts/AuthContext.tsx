@@ -71,35 +71,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         let newDb: Database;
 
-        // DEMO LOGIC
-        if (email.toLowerCase() === MOCK_PROFESSIONAL.email.toLowerCase()) {
+        // 🚨 DEMO MODE (Admin / Dev)
+        if (email.toLowerCase() === 'admin@elosus.gov.br' || email.toLowerCase() === 'doll.ricardoll@gmail.com') {
+            console.log("🔐 LOGGING IN AS DEMO ADMIN");
             newDb = {
                 user: MOCK_PROFESSIONAL,
                 groups: MOCK_GROUPS,
                 patients: MOCK_PATIENTS,
                 appointments: MOCK_APPOINTMENTS
             };
-        } else if (email.toLowerCase() === MOCK_PATIENT.email.toLowerCase()) {
+        }
+        // 🚨 DEMO PATIENT
+        else if (email.toLowerCase() === 'paciente@elosus.gov.br') {
+            console.log("👤 LOGGING IN AS DEMO PATIENT");
             newDb = {
                 user: MOCK_PATIENT,
-                groups: [], // Patients don't manage groups
+                groups: [],
                 patients: [],
-                appointments: MOCK_APPOINTMENTS // In real app, filter for this patient
+                appointments: MOCK_APPOINTMENTS
             };
-        } else {
-            // REAL USER LOGIC - Check if we already have data for this user in our "DB" (localStorage)
-            // For this MVP, we are just checking if the *current* stored user matches. 
-            // In a real app, we'd look up by email in a users array.
+        }
+        // 🌍 REAL USER (PRODUCTION)
+        else {
+            console.log("🌍 LOGGING IN AS REAL USER (CLEAN STATE)");
+
+            // Check if we already have data for this user in our "Local DB"
             if (db.user && db.user.email === email) {
                 newDb = { ...db }; // Keep existing state
             } else {
-                // Completely new session/user -> Clean State
+                // NEW USER -> CLEAN SLATE (No Dr. Joao's patients!)
                 const newUser: User = {
                     ...INITIAL_PROFESSIONAL_STATE,
                     id: `u${Date.now()}`,
                     email: email,
                     name: email.split('@')[0],
-                    avatar: email.substring(0, 2).toUpperCase()
+                    avatar: undefined // No avatar initially
                 };
                 newDb = {
                     user: newUser,

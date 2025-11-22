@@ -10,6 +10,10 @@ import Profile from './pages/Profile/Profile';
 import SessionMode from './pages/Session/SessionMode';
 import Support from './pages/Support/Support';
 import Layout from './components/Layout/Layout';
+import NetworkManager from './pages/Network/NetworkManager';
+import GroupProtocols from './pages/Protocols/GroupProtocols';
+import Resources from './pages/Resources/Resources';
+import PatientDetail from './pages/Patients/PatientDetail';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -49,6 +53,12 @@ function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="profile" element={<Profile />} />
               <Route path="session/:id" element={<SessionMode />} />
+
+              {/* New Routes */}
+              <Route path="network" element={<NetworkManager />} />
+              <Route path="protocols" element={<GroupProtocols />} />
+              <Route path="resources" element={<Resources />} />
+              <Route path="patients/:id" element={<PatientDetail />} />
             </Route>
 
             {/* Catch all */}
