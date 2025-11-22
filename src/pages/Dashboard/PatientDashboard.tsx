@@ -1,6 +1,9 @@
 import React from 'react';
 import { Calendar, Video, FileText, MapPin, Clock, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { calendarService } from '../../services/integrations/calendarService';
+import { locationService } from '../../services/integrations/locationService';
+import { contentService } from '../../services/integrations/contentService';
 
 const PatientDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -30,6 +33,29 @@ const PatientDashboard: React.FC = () => {
         { emoji: '🙂', label: 'Bem', color: 'bg-green-100 hover:bg-green-200' },
         { emoji: '🤩', label: 'Ótimo', color: 'bg-yellow-100 hover:bg-yellow-200' }
     ];
+
+    // Integration with Services
+    const handleAddToCalendar = () => {
+        calendarService.addToCalendar({
+            title: nextAppointment.type,
+            start: nextAppointment.date,
+            end: new Date(nextAppointment.date.getTime() + 1000 * 60 * 60), // 1 hour duration
+            location: nextAppointment.location,
+            details: `Facilitador: ${nextAppointment.professional}`
+        });
+    };
+
+    const handleOpenRoute = () => {
+        locationService.openRoute(nextAppointment.location);
+    };
+
+    const [video, setVideo] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        contentService.getVideos().then(videos => {
+            if (videos.length > 0) setVideo(videos[0]);
+        });
+    }, []);
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -105,11 +131,19 @@ const PatientDashboard: React.FC = () => {
                                             <Calendar size={14} className="inline mr-1" /> 15/11 às 14:00
                                         </p>
                                         <div className="flex gap-2">
-                                            <button className="flex-1 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-                                                Confirmar Presença
+                                            <button
+                                                onClick={handleAddToCalendar}
+                                                className="flex-1 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                                            >
+                                                <Calendar size={16} />
+                                                Adicionar à Agenda
                                             </button>
-                                            <button className="px-3 py-2 bg-white text-slate-600 text-sm font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
-                                                Não vou
+                                            <button
+                                                onClick={handleOpenRoute}
+                                                className="px-3 py-2 bg-white text-slate-600 text-sm font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                                            >
+                                                <MapPin size={16} />
+                                                Ver Rota
                                             </button>
                                         </div>
                                     </div>
@@ -133,25 +167,25 @@ const PatientDashboard: React.FC = () => {
                             </h3>
                         </div>
                         <div className="aspect-video w-full bg-slate-900">
-                            {videoId ? (
+                            {video ? (
                                 <iframe
                                     width="100%"
                                     height="100%"
-                                    src={`https://www.youtube.com/embed/${videoId}`}
-                                    title="YouTube video player"
+                                    src={`https://www.youtube.com/embed/${video.videoId}`}
+                                    title={video.title}
                                     frameBorder="0"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
                                 ></iframe>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-slate-500">
-                                    <p>Nenhum vídeo recomendado esta semana.</p>
+                                    <p>Carregando vídeo...</p>
                                 </div>
                             )}
                         </div>
                         <div className="p-4 bg-purple-50">
                             <p className="text-sm text-purple-800 font-medium">
-                                Assista a este vídeo sobre técnicas de respiração para o nosso próximo encontro.
+                                {video ? video.title : 'Conteúdo selecionado para o seu grupo.'}
                             </p>
                         </div>
                     </div>

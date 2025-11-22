@@ -31,11 +31,7 @@ export interface User {
         videoId: string;
     };
     materials?: Resource[];
-    emergencyContact?: {
-        name: string;
-        phone: string;
-        relation: string;
-    };
+    emergencyContact?: string; // Name + Phone
     phone?: string;
     address?: string;
 }
@@ -115,11 +111,7 @@ export const MOCK_PATIENT: User = {
         { id: 'm1', title: 'Guia de Respiração.pdf', type: 'pdf', url: '#' },
         { id: 'm2', title: 'Diário de Emoções.pdf', type: 'pdf', url: '#' }
     ],
-    emergencyContact: {
-        name: 'Carlos Oliveira',
-        phone: '(11) 98888-7777',
-        relation: 'Marido'
-    }
+    emergencyContact: 'Carlos Oliveira (Marido) - (11) 98888-7777'
 };
 
 // Initial states for new users
@@ -136,11 +128,7 @@ export const INITIAL_PATIENT_STATE: Omit<User, 'id' | 'name' | 'email'> = {
     cns: '',
     phone: '',
     materials: [],
-    emergencyContact: {
-        name: '',
-        phone: '',
-        relation: ''
-    }
+    emergencyContact: ''
 };
 
 // Default export for backward compatibility if needed, but prefer named exports

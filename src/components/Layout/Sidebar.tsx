@@ -9,8 +9,10 @@ import {
     ShieldPlus,
     Stethoscope,
     Settings,
-    RefreshCw
+    RefreshCw,
+    MessageCircle
 } from 'lucide-react';
+import { whatsappService } from '../../services/integrations/whatsappService';
 
 export default function Sidebar() {
     const location = useLocation();
@@ -97,6 +99,16 @@ export default function Sidebar() {
                                 }
                             </p>
                         </div>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                whatsappService.getSupportLink();
+                            }}
+                            className="p-1 hover:bg-green-100 rounded-full text-slate-300 hover:text-green-600 transition-colors"
+                            title="Fale com a Unidade (WhatsApp)"
+                        >
+                            <MessageCircle size={16} />
+                        </button>
                         <Settings size={14} className="text-slate-300 group-hover:text-slate-500" />
                     </div>
                 </Link>
