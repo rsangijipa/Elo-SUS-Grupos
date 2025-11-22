@@ -7,19 +7,19 @@ import type { Group } from '../../types/group';
 import { useAuth } from '../../contexts/AuthContext';
 
 const GroupList: React.FC = () => {
+    const { user } = useAuth();
     const [groups, setGroups] = useState<Group[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const { userProfile } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
         loadGroups();
-    }, [userProfile]);
+    }, [user]);
 
     const loadGroups = async () => {
         try {
-            const data = await groupService.getAll(userProfile?.unidadeSaudeId);
+            const data = await groupService.getAll('ubs-centro');
             setGroups(data);
         } catch (error) {
             console.error('Error loading groups:', error);

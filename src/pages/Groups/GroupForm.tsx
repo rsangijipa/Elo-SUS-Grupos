@@ -9,14 +9,14 @@ import { useAuth } from '../../contexts/AuthContext';
 const GroupForm: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { userProfile } = useAuth();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<Partial<Group>>({
         titulo: '',
         tipoGrupo: 'saude_mental_geral',
         descricao: '',
-        unidadeSaudeId: userProfile?.unidadeSaudeId || '',
-        terapeutaResponsavelId: userProfile?.uid || '',
+        unidadeSaudeId: 'ubs-centro',
+        terapeutaResponsavelId: user?.id || '',
         capacidadeMaxima: 15,
         publicoAlvo: '',
         dataInicio: '',
@@ -220,7 +220,7 @@ const GroupForm: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Horário Início</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Horário de Início</label>
                         <input
                             type="time"
                             name="horarioInicioPadrao"
@@ -228,6 +228,33 @@ const GroupForm: React.FC = () => {
                             onChange={handleChange}
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Duração (minutos)</label>
+                        <input
+                            type="number"
+                            name="duracaoMinutos"
+                            value={formData.duracaoMinutos}
+                            onChange={handleChange}
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
+                        />
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2">
+                        <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input
+                                type="checkbox"
+                                name="ativo"
+                                checked={formData.ativo}
+                                onChange={(e) => setFormData(prev => ({ ...prev, ativo: e.target.checked }))}
+                                className="w-5 h-5 text-[#0054A6] rounded focus:ring-[#0054A6] border-gray-300"
+                            />
+                            <div>
+                                <span className="block text-sm font-bold text-slate-900">Grupo Ativo</span>
+                                <span className="block text-xs text-slate-500">Se desmarcado, o grupo não aparecerá na lista de ativos.</span>
+                            </div>
+                        </label>
                     </div>
 
                     {renderDynamicFields()}

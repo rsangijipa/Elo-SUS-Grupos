@@ -8,7 +8,6 @@ import { useAuth } from '../../contexts/AuthContext';
 const PatientForm: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { userProfile } = useAuth();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<Partial<Patient>>({
         nomeCompleto: '',
@@ -20,7 +19,7 @@ const PatientForm: React.FC = () => {
         whatsappResponsavel: '',
         nomeResponsavel: '',
         observacoes: '',
-        unidadeSaudeId: userProfile?.unidadeSaudeId || '',
+        unidadeSaudeId: 'ubs-centro',
     });
 
     useEffect(() => {

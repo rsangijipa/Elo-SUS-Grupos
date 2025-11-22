@@ -6,19 +6,19 @@ import type { Patient } from '../../types/patient';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PatientList: React.FC = () => {
+    const { user } = useAuth();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const { userProfile } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
         loadPatients();
-    }, [userProfile]);
+    }, [user]);
 
     const loadPatients = async () => {
         try {
-            const data = await patientService.getAll(userProfile?.unidadeSaudeId);
+            const data = await patientService.getAll('ubs-centro');
             setPatients(data);
         } catch (error) {
             console.error('Error loading patients:', error);

@@ -1,67 +1,94 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import type { User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase_config';
-import type { UserProfile } from '../types/user';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { type User, MOCK_USER } from '../utils/seedData';
 
-interface AuthContextType {
+export interface AuthContextType {
     user: User | null;
-    userProfile: UserProfile | null;
-    loading: boolean;
-    error: string | null;
-    logout: () => Promise<void>;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    login: (email: string, password: string) => Promise<void>;
+    register: (data: any) => Promise<void>;
+    logout: () => void;
+    updateProfile: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setUser(firebaseUser);
-            if (firebaseUser) {
-                try {
-                    const userDocRef = doc(db, 'users', firebaseUser.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        setUserProfile(userDoc.data() as UserProfile);
-                    } else {
-                        // Handle case where user exists in Auth but not in Firestore
-                        // For now, we can set a default or leave it null
-                        console.warn('User profile not found in Firestore');
-                        setUserProfile(null);
-                    }
-                } catch (err) {
-                    console.error('Error fetching user profile:', err);
-                    setError('Falha ao carregar perfil do usuário.');
-                }
-            } else {
-                setUserProfile(null);
+        // Check localStorage for persisted session
+        const storedUser = localStorage.getItem('elosus_user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (error) {
+                console.error('Failed to parse stored user', error);
+                localStorage.removeItem('elosus_user');
             }
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
+        }
+        setIsLoading(false);
     }, []);
 
-    const logout = async () => {
-        try {
-            await firebaseSignOut(auth);
-            setUser(null);
-            setUserProfile(null);
-        } catch (err) {
-            console.error('Logout error:', err);
-            setError('Erro ao sair.');
+    const login = async (email: string, _password: string) => {
+        setIsLoading(true);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Mock login success - In a real app, validate credentials here
+        const loggedUser: User = {
+            ...MOCK_USER,
+            email: email // Use the entered email
+        };
+
+        setUser(loggedUser);
+        localStorage.setItem('elosus_user', JSON.stringify(loggedUser));
+        setIsLoading(false);
+    };
+
+    const register = async (data: any) => {
+        setIsLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const newUser: User = {
+            id: `u${Date.now()}`,
+            name: data.name,
+            email: data.email,
+            role: 'psychologist',
+            crp: data.crp,
+            approach: data.approach,
+            avatar: data.name.substring(0, 2).toUpperCase()
+        };
+
+        setUser(newUser);
+        localStorage.setItem('elosus_user', JSON.stringify(newUser));
+        setIsLoading(false);
+    };
+
+    const logout = () => {
+        setUser(null);
+        localStorage.removeItem('elosus_user');
+    };
+
+    const updateProfile = (data: Partial<User>) => {
+        if (user) {
+            const updatedUser = { ...user, ...data };
+            setUser(updatedUser);
+            localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, userProfile, loading, error, logout }}>
+        <AuthContext.Provider value={{
+            user,
+            isAuthenticated: !!user,
+            isLoading,
+            login,
+            register,
+            logout,
+            updateProfile
+        }}>
             {children}
         </AuthContext.Provider>
     );

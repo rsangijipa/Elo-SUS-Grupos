@@ -1,109 +1,155 @@
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { db, auth } from '../firebase_config';
-// import type { UserProfile } from '../types/user';
-import type { Group } from '../types/group';
-import type { Patient } from '../types/patient';
+// import * as dateFns from 'date-fns';
+// const { addDays, format, setHours, setMinutes } = dateFns;
 
-export const seedDatabase = async () => {
-    console.log('Starting seed...');
+// --- Interfaces ---
 
-    try {
-        // 0. Create Admin User (Authentication & Firestore)
-        try {
-            // Note: This might fail if user already exists, which is fine.
-            // Ideally we check first, but for a seed script, try/catch is acceptable.
-            const adminAuth = await createUserWithEmailAndPassword(auth, 'doll.ricardoll+test@gmail.com', '123456789');
-            await updateProfile(adminAuth.user, { displayName: 'Ricardo Admin' });
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: 'admin' | 'psychologist' | 'coordinator';
+    crp?: string; // Conselho Regional de Psicologia
+    approach?: string; // Abordagem (TCC, Psicanálise, etc.)
+    avatar?: string;
+}
 
-            await setDoc(doc(db, 'users', adminAuth.user.uid), {
-                uid: adminAuth.user.uid,
-                nome: 'Ricardo Admin',
-                email: 'doll.ricardoll+test@gmail.com',
-                role: 'administrador',
-                unidadeSaudeId: 'all',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-            console.log('Admin user created');
-        } catch (error: any) {
-            if (error.code === 'auth/email-already-in-use') {
-                console.log('Admin user already exists, skipping creation.');
-            } else {
-                console.error('Error creating admin user:', error);
-            }
-        }
+export interface Group {
+    id: string;
+    name: string;
+    description: string;
+    schedule: string; // e.g., "Segundas, 14h"
+    room: string;
+    status: 'active' | 'completed' | 'paused';
+    facilitatorId: string;
+}
 
-        // 1. Create Units
-        const units = [
-            { nome: 'UBS Central', tipo: 'UBS', cidade: 'São Paulo', estado: 'SP' },
-            { nome: 'CAPS Esperança', tipo: 'CAPS', cidade: 'São Paulo', estado: 'SP' }
-        ];
+export interface Patient {
+    id: string;
+    name: string;
+    cns: string; // Cartão Nacional de Saúde
+    birthDate: string;
+    status: 'active' | 'waiting' | 'inactive';
+    groupId?: string; // Linked to a Group
+    phone: string;
+}
 
-        const unitRefs = [];
-        for (const unit of units) {
-            const ref = await addDoc(collection(db, 'unidadesSaude'), { ...unit, ativo: true });
-            unitRefs.push({ id: ref.id, ...unit });
-        }
+export interface Appointment {
+    id: string;
+    groupId: string;
+    date: Date;
+    room: string;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    topic?: string;
+}
 
-        console.log('Units created:', unitRefs);
+// --- Mock Data ---
 
-        // 2. Create Patients
-        const patients: Partial<Patient>[] = [
-            { nomeCompleto: 'Maria Silva', dataNascimento: '1980-05-15', sexo: 'F', telefone: '11999990001', unidadeSaudeId: unitRefs[0].id },
-            { nomeCompleto: 'João Santos', dataNascimento: '1992-10-20', sexo: 'M', telefone: '11999990002', unidadeSaudeId: unitRefs[0].id },
-            { nomeCompleto: 'Ana Oliveira', dataNascimento: '2015-03-10', sexo: 'F', telefone: '11999990003', nomeResponsavel: 'Clara Oliveira', unidadeSaudeId: unitRefs[1].id },
-            { nomeCompleto: 'Pedro Costa', dataNascimento: '1975-12-05', sexo: 'M', telefone: '11999990004', unidadeSaudeId: unitRefs[0].id },
-            { nomeCompleto: 'Lucas Pereira', dataNascimento: '2005-07-25', sexo: 'M', telefone: '11999990005', unidadeSaudeId: unitRefs[1].id }
-        ];
-
-        for (const p of patients) {
-            await addDoc(collection(db, 'pacientes'), { ...p, createdAt: new Date() });
-        }
-        console.log('Patients created');
-
-        // 3. Create Groups
-        const groups: Partial<Group>[] = [
-            {
-                titulo: 'Grupo de Tabagismo - Manhã',
-                tipoGrupo: 'tabagismo',
-                descricao: 'Apoio para cessação do tabagismo com abordagem cognitivo-comportamental.',
-                unidadeSaudeId: unitRefs[0].id,
-                terapeutaResponsavelId: 'demo-therapist-id',
-                capacidadeMaxima: 15,
-                publicoAlvo: 'Adultos fumantes',
-                dataInicio: '2023-11-01',
-                periodicidade: 'semanal',
-                diaSemanaPadrao: 2, // Terça
-                horarioInicioPadrao: '09:00',
-                duracaoMinutos: 90,
-                ativo: true
-            },
-            {
-                titulo: 'Grupo de Gestantes',
-                tipoGrupo: 'gestantes',
-                descricao: 'Acompanhamento pré-natal psicológico.',
-                unidadeSaudeId: unitRefs[0].id,
-                terapeutaResponsavelId: 'demo-therapist-id',
-                capacidadeMaxima: 10,
-                publicoAlvo: 'Gestantes a partir do 2º trimestre',
-                dataInicio: '2023-11-05',
-                periodicidade: 'quinzenal',
-                diaSemanaPadrao: 4, // Quinta
-                horarioInicioPadrao: '14:00',
-                duracaoMinutos: 60,
-                ativo: true
-            }
-        ];
-
-        for (const g of groups) {
-            await addDoc(collection(db, 'grupos'), { ...g, createdAt: new Date() });
-        }
-        console.log('Groups created');
-
-        alert('Dados de demonstração criados com sucesso!');
-    } catch (error) {
-        console.error('Error seeding database:', error);
-        alert('Erro ao criar dados de demonstração. Verifique o console.');
-    }
+export const MOCK_USER: User = {
+    id: 'u1',
+    name: 'Dr. João Silva',
+    email: 'joao.silva@elosus.saude.gov.br',
+    role: 'psychologist',
+    crp: '12/34567',
+    approach: 'TCC - Terapia Cognitivo Comportamental',
+    avatar: 'JS'
 };
+
+export const MOCK_GROUPS: Group[] = [
+    {
+        id: 'g1',
+        name: 'Grupo de Tabagismo (PNCT)',
+        description: 'Apoio para cessação do tabagismo com abordagem cognitivo-comportamental.',
+        schedule: 'Segundas, 14:00',
+        room: 'Sala 04 - UBS Centro',
+        status: 'active',
+        facilitatorId: 'u1'
+    },
+    {
+        id: 'g2',
+        name: 'Grupo de Gestantes',
+        description: 'Acompanhamento pré-natal psicológico e troca de experiências.',
+        schedule: 'Quartas, 09:00',
+        room: 'Auditório - UBS Centro',
+        status: 'active',
+        facilitatorId: 'u1'
+    },
+    {
+        id: 'g3',
+        name: 'Regulação Emocional (Ansiedade)',
+        description: 'Estratégias de coping para transtornos de ansiedade leve a moderada.',
+        schedule: 'Sextas, 16:00',
+        room: 'Sala 02 - CAPS II',
+        status: 'active',
+        facilitatorId: 'u1'
+    },
+    {
+        id: 'g4',
+        name: 'Famílias TEA',
+        description: 'Suporte para familiares de crianças no espectro autista.',
+        schedule: 'Terças, 18:00',
+        room: 'Sala de Reuniões - CRAS',
+        status: 'paused',
+        facilitatorId: 'u1'
+    }
+];
+
+export const MOCK_PATIENTS: Patient[] = [
+    { id: 'p1', name: 'Maria Aparecida Santos', cns: '700.1234.5678.9012', birthDate: '1980-05-12', status: 'active', groupId: 'g1', phone: '(11) 99999-1111' },
+    { id: 'p2', name: 'José Carlos Oliveira', cns: '700.2345.6789.0123', birthDate: '1975-08-20', status: 'active', groupId: 'g1', phone: '(11) 98888-2222' },
+    { id: 'p3', name: 'Ana Beatriz Souza', cns: '700.3456.7890.1234', birthDate: '1992-03-15', status: 'active', groupId: 'g2', phone: '(11) 97777-3333' },
+    { id: 'p4', name: 'Carlos Eduardo Lima', cns: '700.4567.8901.2345', birthDate: '1988-11-30', status: 'waiting', groupId: 'g3', phone: '(11) 96666-4444' },
+    { id: 'p5', name: 'Fernanda Costa', cns: '700.5678.9012.3456', birthDate: '1995-07-08', status: 'waiting', groupId: 'g3', phone: '(11) 95555-5555' },
+    { id: 'p6', name: 'Roberto Almeida', cns: '700.6789.0123.4567', birthDate: '1960-01-25', status: 'active', groupId: 'g1', phone: '(11) 94444-6666' },
+    { id: 'p7', name: 'Luciana Pereira', cns: '700.7890.1234.5678', birthDate: '1985-09-10', status: 'active', groupId: 'g2', phone: '(11) 93333-7777' },
+    { id: 'p8', name: 'Paulo Mendes', cns: '700.8901.2345.6789', birthDate: '1990-12-05', status: 'waiting', groupId: 'g1', phone: '(11) 92222-8888' },
+    { id: 'p9', name: 'Juliana Rocha', cns: '700.9012.3456.7890', birthDate: '1998-04-22', status: 'active', groupId: 'g3', phone: '(11) 91111-9999' },
+    { id: 'p10', name: 'Marcos Vinícius', cns: '700.0123.4567.8901', birthDate: '2000-06-18', status: 'waiting', groupId: 'g4', phone: '(11) 90000-0000' },
+];
+
+const today = new Date();
+const addDays = (date: Date, days: number) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+};
+
+const setTime = (date: Date, hours: number, minutes: number) => {
+    const result = new Date(date);
+    result.setHours(hours, minutes, 0, 0);
+    return result;
+};
+
+export const MOCK_APPOINTMENTS: Appointment[] = [
+    {
+        id: 'a1',
+        groupId: 'g1',
+        date: setTime(addDays(today, 1), 14, 0), // Tomorrow 14:00
+        room: 'Sala 04 - UBS Centro',
+        status: 'scheduled',
+        topic: 'Estratégias para lidar com a fissura'
+    },
+    {
+        id: 'a2',
+        groupId: 'g2',
+        date: setTime(addDays(today, 3), 9, 0), // In 3 days 09:00
+        room: 'Auditório - UBS Centro',
+        status: 'scheduled',
+        topic: 'Mudanças emocionais na gestação'
+    },
+    {
+        id: 'a3',
+        groupId: 'g3',
+        date: setTime(addDays(today, 5), 16, 0), // In 5 days 16:00
+        room: 'Sala 02 - CAPS II',
+        status: 'scheduled',
+        topic: 'Técnicas de respiração diafragmática'
+    },
+    {
+        id: 'a4',
+        groupId: 'g1',
+        date: setTime(addDays(today, 8), 14, 0), // Next week
+        room: 'Sala 04 - UBS Centro',
+        status: 'scheduled',
+        topic: 'Prevenção de recaídas'
+    }
+];
