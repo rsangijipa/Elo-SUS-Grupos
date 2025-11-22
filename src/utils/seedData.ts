@@ -3,14 +3,41 @@
 
 // --- Interfaces ---
 
+export interface Resource {
+    id: string;
+    title: string;
+    type: 'pdf' | 'video';
+    url: string;
+}
+
 export interface User {
     id: string;
     name: string;
     email: string;
-    role: 'admin' | 'psychologist' | 'coordinator';
-    crp?: string; // Conselho Regional de Psicologia
-    approach?: string; // Abordagem (TCC, Psicanálise, etc.)
+    role: 'professional' | 'patient';
     avatar?: string;
+
+    // Professional specific
+    crp?: string; // Conselho Regional de Psicologia
+    specialty?: string;
+    approach?: string; // Abordagem (TCC, Psicanálise, etc.)
+    bio?: string;
+
+    // Patient specific
+    cns?: string; // Cartão Nacional de Saúde
+    nextAppointment?: Date;
+    recommendedVideo?: {
+        title: string;
+        videoId: string;
+    };
+    materials?: Resource[];
+    emergencyContact?: {
+        name: string;
+        phone: string;
+        relation: string;
+    };
+    phone?: string;
+    address?: string;
 }
 
 export interface Group {
@@ -40,19 +67,63 @@ export interface Appointment {
     room: string;
     status: 'scheduled' | 'completed' | 'cancelled';
     topic?: string;
+    googleCalendarId?: string;
+    meetLink?: string;
 }
 
 // --- Mock Data ---
 
-export const MOCK_USER: User = {
+const today = new Date();
+const addDays = (date: Date, days: number) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+};
+
+const setTime = (date: Date, hours: number, minutes: number) => {
+    const result = new Date(date);
+    result.setHours(hours, minutes, 0, 0);
+    return result;
+};
+
+export const MOCK_PROFESSIONAL: User = {
     id: 'u1',
     name: 'Dr. João Silva',
     email: 'joao.silva@elosus.saude.gov.br',
-    role: 'psychologist',
+    role: 'professional',
     crp: '12/34567',
     approach: 'TCC - Terapia Cognitivo Comportamental',
-    avatar: 'JS'
+    specialty: 'Psicologia Clínica',
+    avatar: 'JS',
+    bio: 'Especialista em terapia de grupo e saúde mental coletiva.'
 };
+
+export const MOCK_PATIENT: User = {
+    id: 'p1',
+    name: 'Maria Oliveira',
+    email: 'maria.oliveira@email.com',
+    role: 'patient',
+    cns: '700.1234.5678.9012',
+    phone: '(11) 99999-8888',
+    avatar: 'MO',
+    nextAppointment: setTime(addDays(today, 2), 14, 0), // 2 days from now at 14:00
+    recommendedVideo: {
+        title: "Como lidar com a ansiedade",
+        videoId: "dQw4w9WgXcQ"
+    },
+    materials: [
+        { id: 'm1', title: 'Guia de Respiração.pdf', type: 'pdf', url: '#' },
+        { id: 'm2', title: 'Diário de Emoções.pdf', type: 'pdf', url: '#' }
+    ],
+    emergencyContact: {
+        name: 'Carlos Oliveira',
+        phone: '(11) 98888-7777',
+        relation: 'Marido'
+    }
+};
+
+// Default export for backward compatibility if needed, but prefer named exports
+export const MOCK_USER = MOCK_PROFESSIONAL;
 
 export const MOCK_GROUPS: Group[] = [
     {
@@ -106,27 +177,16 @@ export const MOCK_PATIENTS: Patient[] = [
     { id: 'p10', name: 'Marcos Vinícius', cns: '700.0123.4567.8901', birthDate: '2000-06-18', status: 'waiting', groupId: 'g4', phone: '(11) 90000-0000' },
 ];
 
-const today = new Date();
-const addDays = (date: Date, days: number) => {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-};
-
-const setTime = (date: Date, hours: number, minutes: number) => {
-    const result = new Date(date);
-    result.setHours(hours, minutes, 0, 0);
-    return result;
-};
-
 export const MOCK_APPOINTMENTS: Appointment[] = [
     {
         id: 'a1',
         groupId: 'g1',
-        date: setTime(addDays(today, 1), 14, 0), // Tomorrow 14:00
+        date: setTime(today, 14, 0), // Today 14:00
         room: 'Sala 04 - UBS Centro',
         status: 'scheduled',
-        topic: 'Estratégias para lidar com a fissura'
+        topic: 'Estratégias para lidar com a fissura',
+        googleCalendarId: 'evt_123',
+        meetLink: 'https://meet.google.com/abc-defg-hij'
     },
     {
         id: 'a2',

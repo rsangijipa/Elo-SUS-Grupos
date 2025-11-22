@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type User, MOCK_USER } from '../utils/seedData';
+import { type User, MOCK_PROFESSIONAL, MOCK_PATIENT } from '../utils/seedData';
 
 export interface AuthContextType {
     user: User | null;
@@ -9,6 +9,7 @@ export interface AuthContextType {
     register: (data: any) => Promise<void>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => void;
+    toggleRole: () => void; // Dev mode helper
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,10 +37,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Mock login success - In a real app, validate credentials here
+        // Mock login logic:
+        // If email contains 'paciente', log in as patient, otherwise default to professional
+        const isPatient = email.toLowerCase().includes('paciente') || email.toLowerCase().includes('maria');
+
+        const baseUser = isPatient ? MOCK_PATIENT : MOCK_PROFESSIONAL;
+
         const loggedUser: User = {
-            ...MOCK_USER,
-            email: email // Use the entered email
+            ...baseUser,
+            email: email // Use the entered email but keep other mock data
         };
 
         setUser(loggedUser);
@@ -51,11 +57,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 1500));
 
+        // Default new registrations to professional for now, or infer from data
         const newUser: User = {
             id: `u${Date.now()}`,
             name: data.name,
             email: data.email,
-            role: 'psychologist',
+            role: 'professional', // Default role
             crp: data.crp,
             approach: data.approach,
             avatar: data.name.substring(0, 2).toUpperCase()
@@ -79,6 +86,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const toggleRole = () => {
+        if (!user) return;
+
+        const newRole = user.role === 'professional' ? 'patient' : 'professional';
+        const newUserTemplate = newRole === 'professional' ? MOCK_PROFESSIONAL : MOCK_PATIENT;
+
+        // Preserve ID and Name if we want, or just swap completely for the mock
+        // Swapping completely is safer for the mock data structure consistency
+        const updatedUser = {
+            ...newUserTemplate,
+            // Optional: keep some session specific stuff if needed, but for now clean swap is better
+        };
+
+        setUser(updatedUser);
+        localStorage.setItem('elosus_user', JSON.stringify(updatedUser));
+
+        // Force reload to ensure all components re-render with correct role context if needed
+        // window.location.reload(); 
+        // Actually, React state update should be enough if components listen to user.role
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -87,7 +115,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             login,
             register,
             logout,
-            updateProfile
+            updateProfile,
+            toggleRole
         }}>
             {children}
         </AuthContext.Provider>
