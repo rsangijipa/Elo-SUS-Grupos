@@ -29,7 +29,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+import { useEffect } from 'react';
+import { setupDevEnvironment } from './services/devSeed';
+
 function App() {
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      setupDevEnvironment().catch(console.error);
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
