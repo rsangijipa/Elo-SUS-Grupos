@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Save, ArrowLeft, FileText, Coffee, BookOpen, Loader2 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import ProtocolRenderer from '../../components/ProtocolRenderer';
 
 const SessionMode: React.FC = () => {
     const { id } = useParams();
@@ -21,6 +22,8 @@ const SessionMode: React.FC = () => {
     });
     const [isAutosaving, setIsAutosaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+    const [selectedPatientForProtocol, setSelectedPatientForProtocol] = useState<string | null>(null);
 
     // Autosave Effect
     useEffect(() => {
@@ -58,12 +61,44 @@ const SessionMode: React.FC = () => {
         navigate('/dashboard');
     };
 
+    const handleSaveProtocolData = (data: any) => {
+        console.log('Protocol Data Saved:', data);
+        alert('Dados do protocolo salvos com sucesso!');
+        setSelectedPatientForProtocol(null);
+    };
+
     if (!sessionGroup) {
         return <div className="p-8 text-center">Grupo não encontrado.</div>;
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-20">
+        <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-20 relative">
+            {/* Protocol Modal */}
+            {selectedPatientForProtocol && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                            <h3 className="font-bold text-slate-800 text-lg">
+                                Ficha Clínica - {patients.find(p => p.id === selectedPatientForProtocol)?.name}
+                            </h3>
+                            <button
+                                onClick={() => setSelectedPatientForProtocol(null)}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                            >
+                                <XCircle size={24} className="text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <ProtocolRenderer
+                                protocol={sessionGroup.protocol}
+                                patientId={selectedPatientForProtocol}
+                                onSave={handleSaveProtocolData}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
                 <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -73,6 +108,11 @@ const SessionMode: React.FC = () => {
                     <h1 className="text-2xl font-bold text-slate-900">{sessionGroup.name} - Encontro #4</h1>
                     <p className="text-slate-500 flex items-center gap-2">
                         <Clock size={16} /> {sessionGroup.schedule} • <Users size={16} /> {sessionPatients.length} Pacientes
+                        {sessionGroup.protocol && sessionGroup.protocol !== 'STANDARD' && (
+                            <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">
+                                Protocolo: {sessionGroup.protocol}
+                            </span>
+                        )}
                     </p>
                 </div>
             </div>
@@ -104,6 +144,17 @@ const SessionMode: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
+                                        {/* Protocol Button */}
+                                        {sessionGroup.protocol && sessionGroup.protocol !== 'STANDARD' && (
+                                            <button
+                                                onClick={() => setSelectedPatientForProtocol(patient.id)}
+                                                className="p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-all mr-2"
+                                                title="Abrir Ficha Clínica"
+                                            >
+                                                <FileText size={20} />
+                                            </button>
+                                        )}
+
                                         <button
                                             onClick={() => handleAttendance(patient.id, 'present')}
                                             className={`p-2 rounded-lg transition-all ${attendance[patient.id] === 'present' ? 'bg-green-100 text-green-700 ring-2 ring-green-500' : 'bg-slate-100 text-slate-400 hover:bg-green-50 hover:text-green-600'}`}

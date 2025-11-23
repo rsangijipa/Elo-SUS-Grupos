@@ -8,10 +8,10 @@ import {
     MOCK_PATIENTS,
     MOCK_APPOINTMENTS,
     type User,
-    type Group,
     type Patient,
     type Appointment
 } from '../utils/seedData';
+import { Group } from '../types/group';
 
 interface Database {
     user: User | null;

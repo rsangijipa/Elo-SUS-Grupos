@@ -1,41 +1,19 @@
-export type GroupType =
-    | 'tabagismo'
-    | 'gestantes'
-    | 'familiares_TEA'
-    | 'ansiedade'
-    | 'depressao'
-    | 'adolescentes'
-    | 'saude_mental_geral'
-    | 'outros';
+export type GroupProtocol = 'STANDARD' | 'TABAGISMO' | 'GESTANTE' | 'ANSIEDADE_DEPRESSAO';
 
-export const GROUP_TYPES: { [key in GroupType]: string } = {
-    tabagismo: 'Tabagismo',
-    gestantes: 'Gestantes',
-    familiares_TEA: 'Familiares de TEA',
-    ansiedade: 'Ansiedade',
-    depressao: 'Depressão',
-    adolescentes: 'Adolescentes',
-    saude_mental_geral: 'Saúde Mental Geral',
-    outros: 'Outros'
-};
+export type GroupStatus = 'active' | 'completed' | 'archived' | 'planned' | 'paused';
 
 export interface Group {
-    id?: string;
-    titulo: string;
-    tipoGrupo: GroupType;
-    descricao: string;
-    unidadeSaudeId: string;
-    terapeutaResponsavelId: string;
-    capacidadeMaxima: number;
-    publicoAlvo: string;
-    dataInicio: string; // YYYY-MM-DD
-    dataFimPrevista?: string;
-    periodicidade: 'semanal' | 'quinzenal' | 'mensal';
-    diaSemanaPadrao: number; // 0-6
-    horarioInicioPadrao: string; // HH:mm
-    duracaoMinutos: number;
-    camposEspecificos?: Record<string, any>;
-    ativo: boolean;
-    createdAt?: any;
-    updatedAt?: any;
+    id: string;
+    name: string;
+    description: string;
+    facilitatorId: string;
+    schedule: string;
+    room: string;
+    protocol: GroupProtocol;
+    status: GroupStatus;
+    metrics?: Record<string, any>; // For protocol-specific aggregated data
+    protocolConfig?: {
+        totalSessions?: number;
+        materials?: string[];
+    };
 }

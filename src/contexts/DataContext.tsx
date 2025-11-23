@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
-    Group,
     Patient,
     Appointment,
     MOCK_GROUPS,
     DEMO_PATIENTS,
     MOCK_APPOINTMENTS
 } from '../utils/seedData';
+import { Group } from '../types/group';
 import { useAuth } from './AuthContext';
 
 interface DataContextType {

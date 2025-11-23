@@ -71,35 +71,41 @@ export default function Login() {
             <div className="w-full max-w-6xl bg-white rounded-[32px] shadow-2xl shadow-[#0054A6]/10 overflow-hidden flex flex-col md:flex-row min-h-[650px] relative z-10">
 
                 {/* LEFT SIDE: Hero / Emotional Connection */}
-                <div className="md:w-1/2 bg-gradient-to-br from-[#6C4FFE] via-[#F5A3D3] to-[#0054A6] p-12 flex flex-col justify-between relative overflow-hidden text-white">
-                    {/* Decorative Blobs */}
-                    <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-white/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#FFC857]/20 rounded-full blur-3xl"></div>
+                <div className="md:w-1/2 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#F0F4FF] via-[#F6F8FE] to-[#E0E7FF] p-12 flex flex-col justify-between relative overflow-hidden text-[#1E293B]">
 
-                    <div className="relative z-10">
-                        <LogoEloSUS light />
-                        <div className="mt-16 space-y-6">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-medium text-white mb-4">
-                                <Sparkles size={16} className="text-[#FFC857]" />
-                                <span>Nova Experiência EloSUS</span>
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+                    <div className="relative z-10 animate-fade-in">
+                        <LogoEloSUS />
+                        <div className="mt-12 space-y-6">
+                            <h2 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight text-[#1E293B]">
                                 Cuidar de você <br /> começa aqui.
                             </h2>
-                            <p className="text-white/90 text-lg font-medium max-w-md leading-relaxed">
+                            <p className="text-[#1E293B]/80 text-lg font-medium max-w-md leading-relaxed">
                                 Seu espaço pessoal de saúde mental no SUS, feito para acompanhar sua jornada com leveza e acolhimento.
                             </p>
                         </div>
                     </div>
 
-                    <div className="relative z-10 mt-12">
-                        <div className="flex items-center gap-2">
-                            <div className="flex -space-x-4">
-                                <div className="w-10 h-10 rounded-full border-2 border-white bg-[#FFC857] flex items-center justify-center text-xs font-bold text-[#0054A6]">A</div>
-                                <div className="w-10 h-10 rounded-full border-2 border-white bg-[#F5A3D3] flex items-center justify-center text-xs font-bold text-[#0054A6]">B</div>
-                                <div className="w-10 h-10 rounded-full border-2 border-white bg-[#6C4FFE] flex items-center justify-center text-xs font-bold text-white">C</div>
+                    {/* Hero Image */}
+                    <div className="relative z-10 flex-1 flex items-center justify-center py-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                        <div className="relative w-full max-w-sm">
+                            <div className="absolute inset-0 bg-blue-200/20 blur-3xl rounded-full"></div>
+                            <img
+                                src="/elosusgrupos_setting_login.png"
+                                alt="Ambiente acolhedor"
+                                className="relative z-10 w-full h-auto object-contain drop-shadow-xl rounded-2xl transform hover:scale-105 transition-transform duration-700"
+                                loading="lazy"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 mt-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                        <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm p-3 rounded-2xl w-fit shadow-sm border border-white/50">
+                            <div className="flex -space-x-3">
+                                <div className="w-8 h-8 rounded-full border-2 border-white bg-[#FFC857] flex items-center justify-center text-[10px] font-bold text-[#0054A6]">A</div>
+                                <div className="w-8 h-8 rounded-full border-2 border-white bg-[#F5A3D3] flex items-center justify-center text-[10px] font-bold text-[#0054A6]">B</div>
+                                <div className="w-8 h-8 rounded-full border-2 border-white bg-[#6C4FFE] flex items-center justify-center text-[10px] font-bold text-white">C</div>
                             </div>
-                            <div className="text-sm font-medium text-white/90 ml-2">
+                            <div className="text-xs font-bold text-[#1E293B] ml-2">
                                 +12k pacientes conectados
                             </div>
                         </div>

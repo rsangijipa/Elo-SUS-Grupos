@@ -16,8 +16,35 @@
 }
 
 @layer utilities {
-  .text-sus-blue { color: var(--color-sus-blue); }
-  .bg-sus-blue { background-color: var(--color-sus-blue); }
-  .text-wellness-purple { color: var(--color-wellness-purple); }
-  .bg-wellness-purple { background-color: var(--color-wellness-purple); }
+  .text-sus-blue {
+    color: var(--color-sus-blue);
+  }
+
+  .bg-sus-blue {
+    background-color: var(--color-sus-blue);
+  }
+
+  .text-wellness-purple {
+    color: var(--color-wellness-purple);
+  }
+
+  .bg-wellness-purple {
+    background-color: var(--color-wellness-purple);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

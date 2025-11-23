@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Users, Clock, MapPin, FileText, Save } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { PROTOCOLS } from '../../config/protocols';
+import { GroupProtocol } from '../../types/group';
 
 interface AddGroupModalProps {
     isOpen: boolean;
@@ -13,7 +15,8 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
         name: '',
         description: '',
         schedule: '',
-        room: ''
+        room: '',
+        protocol: 'STANDARD' as GroupProtocol
     });
 
     if (!isOpen) return null;
@@ -26,10 +29,11 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
             schedule: formData.schedule,
             room: formData.room,
             status: 'active',
-            facilitatorId: 'u1' // Default to current user or mock
+            facilitatorId: 'u1', // Default to current user or mock
+            protocol: formData.protocol
         });
         onClose();
-        setFormData({ name: '', description: '', schedule: '', room: '' });
+        setFormData({ name: '', description: '', schedule: '', room: '', protocol: 'STANDARD' });
     };
 
     return (
@@ -63,6 +67,23 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
+                    </div>
+
+
+                    {/* Protocol */}
+                    <div className="space-y-1">
+                        <label className="text-sm font-bold text-slate-700">Protocolo Clínico</label>
+                        <select
+                            value={formData.protocol}
+                            onChange={e => setFormData({ ...formData, protocol: e.target.value as GroupProtocol })}
+                            className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none bg-white"
+                        >
+                            {Object.values(PROTOCOLS).map(protocol => (
+                                <option key={protocol.id} value={protocol.id}>
+                                    {protocol.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Description */}
@@ -132,7 +153,7 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

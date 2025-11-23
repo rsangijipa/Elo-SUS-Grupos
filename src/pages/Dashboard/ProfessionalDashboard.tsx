@@ -3,6 +3,7 @@ import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Plus, X, 
 import { MOCK_GROUPS, DEMO_PATIENTS, MOCK_APPOINTMENTS } from '../../utils/seedData';
 import { useAuth } from '../../contexts/AuthContext';
 import { referralService, Referral } from '../../services/referralService';
+import TobaccoInsightsWidget from '../../components/Widgets/TobaccoInsightsWidget';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -143,6 +144,13 @@ const ProfessionalDashboard: React.FC = () => {
                             <p className="text-3xl font-bold text-slate-900 mt-1">{waitingList}</p>
                         </div>
                     </div>
+
+                    {/* Insights Widget */}
+                    <div className="w-full">
+                        <TobaccoInsightsWidget />
+                    </div>
+
+
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Calendar Widget */}

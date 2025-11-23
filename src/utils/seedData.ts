@@ -36,15 +36,7 @@ export interface User {
     address?: string;
 }
 
-export interface Group {
-    id: string;
-    name: string;
-    description: string;
-    schedule: string; // e.g., "Segundas, 14h"
-    room: string;
-    status: 'active' | 'completed' | 'paused';
-    facilitatorId: string;
-}
+import { Group } from '../types/group';
 
 export interface Patient {
     id: string;
@@ -145,7 +137,8 @@ export const MOCK_GROUPS: Group[] = [
         schedule: 'Segundas, 14:00',
         room: 'Sala 04 - UBS Centro',
         status: 'active',
-        facilitatorId: 'u1'
+        facilitatorId: 'u1',
+        protocol: 'TABAGISMO'
     },
     {
         id: 'g2',
@@ -154,7 +147,8 @@ export const MOCK_GROUPS: Group[] = [
         schedule: 'Quartas, 09:00',
         room: 'Auditório - UBS Centro',
         status: 'active',
-        facilitatorId: 'u1'
+        facilitatorId: 'u1',
+        protocol: 'GESTANTE'
     },
     {
         id: 'g3',
@@ -163,7 +157,8 @@ export const MOCK_GROUPS: Group[] = [
         schedule: 'Sextas, 16:00',
         room: 'Sala 02 - CAPS II',
         status: 'active',
-        facilitatorId: 'u1'
+        facilitatorId: 'u1',
+        protocol: 'ANSIEDADE_DEPRESSAO'
     },
     {
         id: 'g4',
@@ -172,7 +167,8 @@ export const MOCK_GROUPS: Group[] = [
         schedule: 'Terças, 18:00',
         room: 'Sala de Reuniões - CRAS',
         status: 'paused',
-        facilitatorId: 'u1'
+        facilitatorId: 'u1',
+        protocol: 'STANDARD'
     }
 ];
 
