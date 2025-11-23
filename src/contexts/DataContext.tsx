@@ -25,9 +25,9 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-    GROUPS: 'elosus_groups',
-    PATIENTS: 'elosus_patients',
-    APPOINTMENTS: 'elosus_appointments'
+    GROUPS: 'elosus_groups_v2',
+    PATIENTS: 'elosus_patients_v2',
+    APPOINTMENTS: 'elosus_appointments_v2'
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

@@ -25,7 +25,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     db: Database;
-    login: (email: string, password?: string) => Promise<void>;
+    login: (email: string, password?: string, role?: 'professional' | 'patient') => Promise<void>;
     register: (data: any) => Promise<void>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
     };
 
-    const login = async (email: string, password?: string) => {
+    const login = async (email: string, password?: string, role?: 'professional' | 'patient') => {
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API
 
@@ -101,10 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
                 // NEW USER -> CLEAN SLATE (No Dr. Joao's patients!)
                 const newUser: User = {
-                    ...INITIAL_PROFESSIONAL_STATE,
+                    ...(role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE),
                     id: `u${Date.now()}`,
                     email: email,
                     name: email.split('@')[0],
+                    role: role || 'professional',
                     avatar: undefined // No avatar initially
                 };
                 newDb = {

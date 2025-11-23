@@ -150,8 +150,6 @@ const ProfessionalDashboard: React.FC = () => {
                         <TobaccoInsightsWidget />
                     </div>
 
-
-
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Calendar Widget */}
                         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import RoleGuard from '../Auth/RoleGuard';
 import {
     LayoutDashboard,
     Users,
@@ -9,7 +10,6 @@ import {
     Stethoscope,
     Settings,
     RefreshCw,
-    MessageCircle,
     Heart,
     Activity,
     LifeBuoy

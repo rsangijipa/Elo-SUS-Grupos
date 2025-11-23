@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard';
 import Schedule from './pages/Schedule/Schedule';
@@ -42,41 +43,43 @@ import { DataProvider } from './contexts/DataContext';
 function App() {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <DataProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="schedule" element={<Schedule />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="session/:id" element={<SessionMode />} />
-                <Route path="support" element={<Support />} />
+      <ThemeProvider>
+        <NotificationProvider>
+          <DataProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Navigate to="/dashboard" replace />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="schedule" element={<Schedule />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="session/:id" element={<SessionMode />} />
+                  <Route path="support" element={<Support />} />
 
-                {/* New Routes */}
-                <Route path="network" element={<NetworkManager />} />
-                <Route path="protocols" element={<GroupProtocols />} />
-                <Route path="resources" element={<Resources />} />
-                <Route path="materials" element={<Materials />} />
-                <Route path="wellbeing" element={<WellbeingCenter />} />
-                <Route path="patients/:id" element={<PatientDetail />} />
-                <Route path="groups" element={<GroupList />} />
-                <Route path="patients" element={<PatientList />} />
-              </Route>
+                  {/* New Routes */}
+                  <Route path="network" element={<NetworkManager />} />
+                  <Route path="protocols" element={<GroupProtocols />} />
+                  <Route path="resources" element={<Resources />} />
+                  <Route path="materials" element={<Materials />} />
+                  <Route path="wellbeing" element={<WellbeingCenter />} />
+                  <Route path="patients/:id" element={<PatientDetail />} />
+                  <Route path="groups" element={<GroupList />} />
+                  <Route path="patients" element={<PatientList />} />
+                </Route>
 
-              {/* Catch all */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Router>
-        </DataProvider>
-      </NotificationProvider>
+                {/* Catch all */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </Router>
+          </DataProvider>
+        </NotificationProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
