@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, User, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
+import AddAppointmentModal from '../../components/Modals/AddAppointmentModal';
 
 const Schedule: React.FC = () => {
-    const { user, db } = useAuth();
+    const { appointments, groups, loading } = useData();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-    if (!user) {
+    if (loading) {
         return (
             <div className="flex items-center justify-center h-96">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -13,16 +16,23 @@ const Schedule: React.FC = () => {
         );
     }
 
-    const events = (db.appointments || []).map(apt => {
-        const group = db.groups.find(g => g.id === apt.groupId);
+    const events = appointments.map(apt => {
+        const group = groups.find(g => g.id === apt.groupId);
         const dateObj = new Date(apt.date);
         return {
             ...apt,
             title: group?.name || 'Sessão de Grupo',
-            location: (group as any)?.location || 'Sala Virtual',
+            location: group?.room || 'Sala Virtual',
             time: `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`
         };
     });
+
+    const handleSlotClick = (hour: number) => {
+        const today = new Date(); // In a real app, use the currently viewed date
+        today.setHours(hour, 0, 0, 0);
+        setSelectedDate(today);
+        setIsModalOpen(true);
+    };
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -36,7 +46,13 @@ const Schedule: React.FC = () => {
                         <CalendarIcon size={18} />
                         Sincronizar Agenda
                     </button>
-                    <button className="btn-primary flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            setSelectedDate(undefined);
+                            setIsModalOpen(true);
+                        }}
+                        className="btn-primary flex items-center gap-2 bg-[#0054A6] text-white px-4 py-2 rounded-lg hover:bg-[#004080] transition-colors"
+                    >
                         <Plus size={18} />
                         Novo Agendamento
                     </button>
@@ -88,13 +104,21 @@ const Schedule: React.FC = () => {
                         {/* Mock Events Grid */}
                         <div className="col-span-7 relative">
                             {[9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(hour => (
-                                <div key={hour} className="h-24 border-b border-slate-100"></div>
+                                <div
+                                    key={hour}
+                                    className="h-24 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer relative group"
+                                    onClick={() => handleSlotClick(hour)}
+                                >
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                                        <Plus className="text-slate-300" size={24} />
+                                    </div>
+                                </div>
                             ))}
 
                             {/* Event Card */}
                             {events.map((event, index) => (
-                                <div key={index} className="absolute top-24 left-[14.28%] w-[14.28%] p-1">
-                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-2 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer h-20">
+                                <div key={index} className="absolute top-24 left-[14.28%] w-[14.28%] p-1 pointer-events-none">
+                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-2 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer h-20 pointer-events-auto" onClick={(e) => { e.stopPropagation(); alert('Detalhes do agendamento: ' + event.topic); }}>
                                         <p className="text-xs font-bold text-blue-700 truncate">{event.title}</p>
                                         <p className="text-[10px] text-blue-600 flex items-center gap-1 mt-1">
                                             <Clock size={10} /> {event.time}
@@ -109,6 +133,12 @@ const Schedule: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <AddAppointmentModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                initialDate={selectedDate}
+            />
         </div>
     );
 };

@@ -16,6 +16,8 @@ import Resources from './pages/Resources/Resources';
 import Materials from './pages/Materials/Materials';
 import WellbeingCenter from './pages/Wellbeing/WellbeingCenter';
 import PatientDetail from './pages/Patients/PatientDetail';
+import GroupList from './pages/Groups/GroupList';
+import PatientList from './pages/Patients/PatientList';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -65,6 +67,8 @@ function App() {
                 <Route path="materials" element={<Materials />} />
                 <Route path="wellbeing" element={<WellbeingCenter />} />
                 <Route path="patients/:id" element={<PatientDetail />} />
+                <Route path="groups" element={<GroupList />} />
+                <Route path="patients" element={<PatientList />} />
               </Route>
 
               {/* Catch all */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight } from 'lucide-react';
 import { patientService } from '../../services/patientService';
 import type { Patient } from '../../types/patient';
 
@@ -100,8 +100,8 @@ const PatientDetail: React.FC = () => {
                 <button
                     onClick={() => setActiveTab('overview')}
                     className={`pb-3 px-2 text-sm font-bold transition-all relative ${activeTab === 'overview'
-                            ? 'text-[#0054A6]'
-                            : 'text-slate-400 hover:text-slate-600'
+                        ? 'text-[#0054A6]'
+                        : 'text-slate-400 hover:text-slate-600'
                         }`}
                 >
                     Visão Geral
@@ -110,8 +110,8 @@ const PatientDetail: React.FC = () => {
                 <button
                     onClick={() => setActiveTab('documents')}
                     className={`pb-3 px-2 text-sm font-bold transition-all relative ${activeTab === 'documents'
-                            ? 'text-[#0054A6]'
-                            : 'text-slate-400 hover:text-slate-600'
+                        ? 'text-[#0054A6]'
+                        : 'text-slate-400 hover:text-slate-600'
                         }`}
                 >
                     Documentos do Paciente
@@ -186,7 +186,27 @@ const PatientDetail: React.FC = () => {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-bold text-slate-800">Documentos Enviados pelo Paciente</h2>
-                        <button className="text-sm font-bold text-[#0054A6] hover:underline">Baixar Todos</button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.onchange = (e) => {
+                                        const file = (e.target as HTMLInputElement).files?.[0];
+                                        if (file) {
+                                            alert(`Documento "${file.name}" enviado com sucesso!`);
+                                            // In a real app, we would upload this file
+                                        }
+                                    };
+                                    input.click();
+                                }}
+                                className="text-sm font-bold text-white bg-[#0054A6] px-4 py-2 rounded-lg hover:bg-[#004080] transition-colors flex items-center gap-2"
+                            >
+                                <Plus size={16} />
+                                Enviar Documento
+                            </button>
+                            <button className="text-sm font-bold text-[#0054A6] hover:underline">Baixar Todos</button>
+                        </div>
                     </div>
 
                     <div className="space-y-4">

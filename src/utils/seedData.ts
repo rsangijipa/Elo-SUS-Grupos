@@ -60,6 +60,8 @@ export interface Patient {
 export interface Appointment {
     id: string;
     groupId: string;
+    patientId?: string;
+    type: 'group' | 'individual';
     date: Date;
     room: string;
     status: 'scheduled' | 'completed' | 'cancelled';
@@ -181,6 +183,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
         date: setTime(today, 14, 0), // Today 14:00
         room: 'Sala 04 - UBS Centro',
         status: 'scheduled',
+        type: 'group',
         topic: 'Estratégias para lidar com a fissura',
         googleCalendarId: 'evt_123',
         meetLink: 'https://meet.google.com/abc-defg-hij'
@@ -191,6 +194,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
         date: setTime(addDays(today, 3), 9, 0), // In 3 days 09:00
         room: 'Auditório - UBS Centro',
         status: 'scheduled',
+        type: 'group',
         topic: 'Mudanças emocionais na gestação'
     },
     {
@@ -199,6 +203,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
         date: setTime(addDays(today, 5), 16, 0), // In 5 days 16:00
         room: 'Sala 02 - CAPS II',
         status: 'scheduled',
+        type: 'group',
         topic: 'Técnicas de respiração diafragmática'
     },
     {
@@ -207,6 +212,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
         date: setTime(addDays(today, 8), 14, 0), // Next week
         room: 'Sala 04 - UBS Centro',
         status: 'scheduled',
+        type: 'group',
         topic: 'Prevenção de recaídas'
     }
 ];

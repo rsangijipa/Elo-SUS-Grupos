@@ -13,7 +13,7 @@ const PatientList: React.FC = () => {
     const filteredPatients = patients.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.cns?.includes(searchTerm) ||
-        (p as any).cpf?.includes(searchTerm) // Handle potential missing type definition
+        p.cpf?.includes(searchTerm)
     );
 
     return (
@@ -102,8 +102,8 @@ const PatientList: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 py-1 rounded-full text-xs font-bold ${patient.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                    patient.status === 'waiting' ? 'bg-yellow-100 text-yellow-700' :
-                                                        'bg-slate-100 text-slate-500'
+                                                patient.status === 'waiting' ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-slate-100 text-slate-500'
                                                 }`}>
                                                 {patient.status === 'active' ? 'Ativo' :
                                                     patient.status === 'waiting' ? 'Aguardando' : 'Inativo'}
