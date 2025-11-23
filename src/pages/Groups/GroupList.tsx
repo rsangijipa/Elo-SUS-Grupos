@@ -1,36 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Search, Users, ArrowRight, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Search, Users, ArrowRight, MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { groupService } from '../../services/groupService';
-import { GROUP_TYPES } from '../../types/group';
-import type { Group } from '../../types/group';
-import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
+import AddGroupModal from '../../components/Modals/AddGroupModal';
 
 const GroupList: React.FC = () => {
-    const { user } = useAuth();
-    const [groups, setGroups] = useState<Group[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { groups, loading } = useData();
     const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        loadGroups();
-    }, [user]);
-
-    const loadGroups = async () => {
-        try {
-            const data = await groupService.getAll('ubs-centro');
-            setGroups(data);
-        } catch (error) {
-            console.error('Error loading groups:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const filteredGroups = groups.filter(g =>
-        g.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        GROUP_TYPES[g.tipoGrupo].toLowerCase().includes(searchTerm.toLowerCase())
+        g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        g.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -44,7 +26,7 @@ const GroupList: React.FC = () => {
                     </p>
                 </div>
                 <button
-                    onClick={() => navigate('/grupos/novo')}
+                    onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-medium"
                 >
                     <Plus size={20} />
@@ -58,7 +40,7 @@ const GroupList: React.FC = () => {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Buscar por título ou tipo de grupo..."
+                        placeholder="Buscar por nome ou descrição..."
                         className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none transition-all bg-slate-50 focus:bg-white placeholder:text-slate-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -86,33 +68,33 @@ const GroupList: React.FC = () => {
                             <div className="p-6 flex-1">
                                 <div className="flex items-start justify-between mb-4">
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0054A6] uppercase tracking-wide">
-                                        {GROUP_TYPES[group.tipoGrupo]}
+                                        Grupo Terapêutico
                                     </span>
-                                    <span className={`w-2.5 h-2.5 rounded-full ${group.ativo ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300'}`} title={group.ativo ? 'Ativo' : 'Inativo'}></span>
+                                    <span className={`w-2.5 h-2.5 rounded-full ${group.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300'}`} title={group.status === 'active' ? 'Ativo' : 'Inativo'}></span>
                                 </div>
 
                                 <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-[#0054A6] transition-colors">
-                                    {group.titulo}
+                                    {group.name}
                                 </h3>
                                 <p className="text-sm text-slate-500 line-clamp-2 mb-4 leading-relaxed">
-                                    {group.descricao || 'Sem descrição definida.'}
+                                    {group.description || 'Sem descrição definida.'}
                                 </p>
 
                                 <div className="flex items-center gap-4 text-sm text-slate-500 pt-4 border-t border-slate-50">
                                     <div className="flex items-center gap-1.5">
-                                        <Users size={16} className="text-slate-400" />
-                                        <span className="font-medium text-slate-700">{group.capacidadeMaxima}</span> vagas
+                                        <MapPin size={16} className="text-slate-400" />
+                                        <span className="font-medium text-slate-700">{group.room}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <Activity size={16} className="text-slate-400" />
-                                        <span className="capitalize">{group.periodicidade}</span>
+                                        <Clock size={16} className="text-slate-400" />
+                                        <span className="capitalize">{group.schedule}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-between items-center group-hover:bg-blue-50/30 transition-colors">
                                 <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                                    {group.diaSemanaPadrao !== undefined ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][group.diaSemanaPadrao] : '-'} • {group.horarioInicioPadrao}
+                                    Ver Detalhes
                                 </span>
                                 <button
                                     onClick={() => navigate(`/grupos/${group.id}`)}
@@ -125,6 +107,8 @@ const GroupList: React.FC = () => {
                     ))
                 )}
             </div>
+
+            <AddGroupModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </div>
     );
 };

@@ -1,7 +1,23 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    @apply bg-slate-50 text-slate-800 antialiased;
+  :root {
+    --color-sus-blue: #0054A6;
+    --color-wellness-purple: #6C4FFE;
+    --color-soft-pink: #F5A3D3;
+    --color-health-green: #0B8A4D;
+    --color-optimism-yellow: #FFC857;
+    --color-bg-neutral: #F6F8FE;
   }
+
+  body {
+    @apply bg-[#F6F8FE] text-slate-800 antialiased;
+  }
+}
+
+@layer utilities {
+  .text-sus-blue { color: var(--color-sus-blue); }
+  .bg-sus-blue { background-color: var(--color-sus-blue); }
+  .text-wellness-purple { color: var(--color-wellness-purple); }
+  .bg-wellness-purple { background-color: var(--color-wellness-purple); }
 }

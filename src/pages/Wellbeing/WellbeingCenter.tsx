@@ -28,11 +28,17 @@ const WellbeingCenter: React.FC = () => {
     const loadNews = () => {
         setLoadingNews(true);
         const audience = user?.role === 'professional' ? 'professional' : 'patient';
-        newsService.getNews(audience, page).then(newItems => {
-            setNews(prev => [...prev, ...newItems]);
-            setPage(prev => prev + 1);
-            setLoadingNews(false);
-        });
+
+        // Simulate network delay and shuffle
+        setTimeout(() => {
+            newsService.getNews(audience, page).then(newItems => {
+                // Shuffle to simulate fresh content
+                const shuffled = [...newItems].sort(() => Math.random() - 0.5);
+                setNews(prev => page === 1 ? shuffled : [...prev, ...shuffled]);
+                setPage(prev => prev + 1);
+                setLoadingNews(false);
+            });
+        }, 1000);
     };
 
     return (

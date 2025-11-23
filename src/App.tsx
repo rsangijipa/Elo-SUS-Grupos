@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import Login from './pages/Login';
+import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard';
 import Schedule from './pages/Schedule/Schedule';
 import Reports from './pages/Reports/Reports';
@@ -35,39 +35,43 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
+import { DataProvider } from './contexts/DataContext';
+
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="schedule" element={<Schedule />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="session/:id" element={<SessionMode />} />
-              <Route path="support" element={<Support />} />
+        <DataProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="schedule" element={<Schedule />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="session/:id" element={<SessionMode />} />
+                <Route path="support" element={<Support />} />
 
-              {/* New Routes */}
-              <Route path="network" element={<NetworkManager />} />
-              <Route path="protocols" element={<GroupProtocols />} />
-              <Route path="resources" element={<Resources />} />
-              <Route path="materials" element={<Materials />} />
-              <Route path="wellbeing" element={<WellbeingCenter />} />
-              <Route path="patients/:id" element={<PatientDetail />} />
-            </Route>
+                {/* New Routes */}
+                <Route path="network" element={<NetworkManager />} />
+                <Route path="protocols" element={<GroupProtocols />} />
+                <Route path="resources" element={<Resources />} />
+                <Route path="materials" element={<Materials />} />
+                <Route path="wellbeing" element={<WellbeingCenter />} />
+                <Route path="patients/:id" element={<PatientDetail />} />
+              </Route>
 
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Router>
+              {/* Catch all */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </Router>
+        </DataProvider>
       </NotificationProvider>
     </AuthProvider>
   );

@@ -24,10 +24,10 @@ const NetworkManager: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Gestão de Rede</h2>
+                    <h2 className="text-2xl font-bold text-[#0054A6]">Gestão de Rede</h2>
                     <p className="text-slate-500 mt-1">Gerenciamento de Unidades de Saúde e Territórios.</p>
                 </div>
-                <button className="btn-primary flex items-center gap-2">
+                <button className="bg-[#0054A6] text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-900/10 hover:bg-[#004080] transition-all flex items-center gap-2">
                     <Plus size={18} />
                     Nova Unidade
                 </button>
@@ -35,32 +35,32 @@ const NetworkManager: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {units.map(unit => (
-                    <div key={unit.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                    <div key={unit.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-xl hover:-translate-y-1 transition-all group">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${unit.type === 'CAPS' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                                    <Building2 size={20} />
+                                <div className={`p-3 rounded-xl ${unit.type === 'CAPS' ? 'bg-[#6C4FFE]/10 text-[#6C4FFE]' : 'bg-[#0054A6]/10 text-[#0054A6]'}`}>
+                                    <Building2 size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-800">{unit.name}</h3>
-                                    <span className="text-xs font-medium text-slate-500">{unit.type} • {unit.region}</span>
+                                    <h3 className="font-bold text-slate-800 group-hover:text-[#0054A6] transition-colors">{unit.name}</h3>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{unit.type} • {unit.region}</span>
                                 </div>
                             </div>
-                            <span className={`w-3 h-3 rounded-full ${unit.status === 'active' ? 'bg-green-500' : 'bg-red-500'}`} title={unit.status === 'active' ? 'Ativo' : 'Inativo'}></span>
+                            <span className={`w-3 h-3 rounded-full ${unit.status === 'active' ? 'bg-[#0B8A4D] shadow-[0_0_8px_#0B8A4D]' : 'bg-red-400'}`} title={unit.status === 'active' ? 'Ativo' : 'Inativo'}></span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+                        <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-50">
                             <div className="flex items-center gap-2 text-slate-600">
-                                <Users size={16} className="text-slate-400" />
-                                <span className="text-sm font-medium">{unit.activeGroups} Grupos</span>
+                                <Users size={18} className="text-slate-400" />
+                                <span className="text-sm font-bold">{unit.activeGroups} Grupos</span>
                             </div>
                             <div className="flex items-center gap-2 text-slate-600">
-                                <Activity size={16} className="text-slate-400" />
-                                <span className="text-sm font-medium">{unit.status === 'active' ? 'Operacional' : 'Sem Atividade'}</span>
+                                <Activity size={18} className="text-slate-400" />
+                                <span className="text-sm font-bold">{unit.status === 'active' ? 'Operacional' : 'Sem Atividade'}</span>
                             </div>
                         </div>
 
-                        <button className="w-full mt-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        <button className="w-full mt-6 py-3 text-sm font-bold text-[#0054A6] bg-[#F6F8FE] rounded-xl hover:bg-[#0054A6] hover:text-white transition-all">
                             Ver Detalhes
                         </button>
                     </div>

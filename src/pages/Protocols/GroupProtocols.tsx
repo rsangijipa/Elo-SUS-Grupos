@@ -46,46 +46,55 @@ const GroupProtocols: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Protocolos de Grupo</h2>
+                    <h2 className="text-2xl font-bold text-[#0054A6]">Protocolos de Grupo</h2>
                     <p className="text-slate-500 mt-1">Biblioteca de modelos baseados em evidências para o SUS.</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {PROTOCOLS.map(protocol => (
-                    <div key={protocol.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow flex flex-col">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${protocol.color}`}>
+                    <div key={protocol.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col group relative overflow-hidden">
+                        {/* Decorative Gradient Line */}
+                        <div className={`absolute top-0 left-0 w-full h-1.5 ${protocol.id === 'pnct' ? 'bg-orange-400' :
+                            protocol.id === 'prenatal' ? 'bg-[#F5A3D3]' :
+                                'bg-[#0054A6]'
+                            }`}></div>
+
+                        <div className="flex justify-between items-start mb-6">
+                            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${protocol.type === 'closed'
+                                ? 'bg-orange-50 text-orange-600'
+                                : 'bg-blue-50 text-[#0054A6]'
+                                }`}>
                                 {protocol.type === 'closed' ? 'Grupo Fechado' : 'Fluxo Contínuo'}
                             </div>
-                            <button className="text-slate-400 hover:text-blue-600">
-                                <BookOpen size={20} />
+                            <button className="text-slate-300 hover:text-[#0054A6] transition-colors">
+                                <BookOpen size={22} />
                             </button>
                         </div>
 
-                        <h3 className="text-xl font-bold text-slate-800 mb-2">{protocol.title}</h3>
-                        <p className="text-slate-600 text-sm mb-6 flex-grow">{protocol.description}</p>
+                        <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-[#0054A6] transition-colors">{protocol.title}</h3>
+                        <p className="text-slate-600 text-sm mb-8 flex-grow leading-relaxed">{protocol.description}</p>
 
-                        <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
-                            <div className="flex items-center gap-1">
-                                <Clock size={16} />
-                                <span>{protocol.sessions > 0 ? `${protocol.sessions} Sessões` : 'Contínuo'}</span>
+                        <div className="flex items-center gap-6 text-sm text-slate-500 mb-8">
+                            <div className="flex items-center gap-2">
+                                <Clock size={18} className="text-slate-400" />
+                                <span className="font-medium">{protocol.sessions > 0 ? `${protocol.sessions} Sessões` : 'Contínuo'}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <Users size={16} />
-                                <span>10-15 Participantes</span>
+                            <div className="flex items-center gap-2">
+                                <Users size={18} className="text-slate-400" />
+                                <span className="font-medium">10-15 Participantes</span>
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-2 mb-6">
+                        <div className="flex flex-wrap gap-2 mb-8">
                             {protocol.tags.map(tag => (
-                                <span key={tag} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md font-medium">
+                                <span key={tag} className="px-2.5 py-1 bg-[#F6F8FE] text-slate-600 text-xs rounded-lg font-bold border border-slate-100">
                                     #{tag}
                                 </span>
                             ))}
                         </div>
 
-                        <button className="w-full py-3 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                        <button className="w-full py-3.5 bg-[#0054A6] text-white font-bold rounded-xl hover:bg-[#004080] transition-all shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
                             <FileText size={18} />
                             Usar Modelo
                             <ArrowRight size={18} />

@@ -53,6 +53,7 @@ export interface Patient {
     birthDate: string;
     status: 'active' | 'waiting' | 'inactive';
     groupId?: string; // Linked to a Group
+    cpf?: string;
     phone: string;
 }
 

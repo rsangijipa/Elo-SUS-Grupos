@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Save, ArrowLeft, FileText, Coffee, BookOpen } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Save, ArrowLeft, FileText, Coffee, BookOpen, Loader2 } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
 
 const SessionMode: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { db } = useAuth();
+    const { groups, patients } = useData();
 
-    // Mock session data loading based on ID (in real app, fetch from DB)
-    const sessionGroup = db.groups.find(g => g.id === id) || db.groups[0]; // Fallback for demo
-    const sessionPatients = db.patients.filter(p => p.groupId === sessionGroup?.id);
+    // Mock session data loading based on ID
+    const sessionGroup = groups.find(g => g.id === id) || groups[0];
+    const sessionPatients = patients.filter(p => p.groupId === sessionGroup?.id);
 
     const [attendance, setAttendance] = useState<Record<string, 'present' | 'absent' | 'justified'>>({});
     const [evolution, setEvolution] = useState('');
@@ -19,6 +19,24 @@ const SessionMode: React.FC = () => {
         materials: false,
         snack: false
     });
+    const [isAutosaving, setIsAutosaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+    // Autosave Effect
+    useEffect(() => {
+        if (!evolution) return;
+
+        const timer = setTimeout(() => {
+            setIsAutosaving(true);
+            // Simulate API save
+            setTimeout(() => {
+                setIsAutosaving(false);
+                setLastSaved(new Date());
+            }, 800);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [evolution]);
 
     const handleAttendance = (patientId: string, status: 'present' | 'absent' | 'justified') => {
         setAttendance(prev => ({ ...prev, [patientId]: status }));
@@ -159,10 +177,21 @@ const SessionMode: React.FC = () => {
                 {/* Right Column: Evolution */}
                 <div className="space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-6">
-                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <FileText size={20} className="text-orange-600" />
-                            Evolução do Grupo
-                        </h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <FileText size={20} className="text-orange-600" />
+                                Evolução do Grupo
+                            </h3>
+                            {isAutosaving ? (
+                                <span className="text-xs text-slate-400 flex items-center gap-1">
+                                    <Loader2 size={12} className="animate-spin" /> Salvando...
+                                </span>
+                            ) : lastSaved ? (
+                                <span className="text-xs text-green-600">
+                                    Salvo às {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            ) : null}
+                        </div>
                         <p className="text-xs text-slate-500 mb-3">
                             Esta evolução será replicada para todos os pacientes presentes. Você poderá editar individualmente depois.
                         </p>
@@ -176,7 +205,7 @@ const SessionMode: React.FC = () => {
                         <div className="mt-6 pt-6 border-t border-slate-100">
                             <button
                                 onClick={handleSaveSession}
-                                className="w-full btn-primary flex items-center justify-center gap-2 py-3 text-lg"
+                                className="w-full btn-primary flex items-center justify-center gap-2 py-3 text-lg bg-[#0054A6] text-white rounded-xl hover:bg-[#004080] transition-colors shadow-lg shadow-blue-900/20"
                             >
                                 <Save size={20} />
                                 Finalizar Sessão
