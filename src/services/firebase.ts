@@ -23,14 +23,18 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : undefined;
+const auth = app ? getAuth(app) : undefined;
+const db = app ? getFirestore(app) : undefined;
 
-// Enable persistence to prevent logout on refresh
-setPersistence(auth, browserLocalPersistence)
-    .catch((error) => {
-        console.error("Firebase Persistence Error:", error);
-    });
+if (app && auth) {
+    // Enable persistence to prevent logout on refresh
+    setPersistence(auth, browserLocalPersistence)
+        .catch((error) => {
+            console.error("Firebase Persistence Error:", error);
+        });
+} else {
+    console.error("Firebase NOT initialized. Missing API Key.");
+}
 
 export { auth, db };

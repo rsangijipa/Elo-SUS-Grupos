@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { DataProvider } from './contexts/DataContext';
+import EnvTest from './components/EnvTest';
+
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard';
 import Schedule from './pages/Schedule/Schedule';
@@ -40,15 +43,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
-import { DataProvider } from './contexts/DataContext';
-
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <NotificationProvider>
-          <DataProvider>
-            <Router>
+    <Router>
+      <AuthProvider>
+        <ThemeProvider>
+          <NotificationProvider>
+            <DataProvider>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={
@@ -79,11 +80,11 @@ function App() {
                 {/* Catch all */}
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
-            </Router>
-          </DataProvider>
-        </NotificationProvider>
-      </ThemeProvider>
-    </AuthProvider>
+            </DataProvider>
+          </NotificationProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

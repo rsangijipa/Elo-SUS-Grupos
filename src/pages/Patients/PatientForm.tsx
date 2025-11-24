@@ -211,18 +211,18 @@ const PatientForm: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+                <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-6 border-t border-slate-100">
                     <button
                         type="button"
                         onClick={() => navigate('/pacientes')}
-                        className="px-6 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors"
+                        className="w-full md:w-auto px-6 py-3 md:py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors active:bg-slate-100"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-[#0054A6] hover:bg-[#004080] rounded-lg shadow-sm transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 md:py-2.5 text-sm font-bold text-white bg-[#0054A6] hover:bg-[#004080] rounded-lg shadow-sm transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Save size={18} />
                         {loading ? 'Salvando...' : 'Salvar'}
