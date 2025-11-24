@@ -114,6 +114,25 @@ const GroupManagement: React.FC = () => {
         setIsSending(false);
     };
 
+    const handleGenerateWhatsAppLink = () => {
+        if (!message.trim()) {
+            addNotification({
+                type: 'alert',
+                title: 'Mensagem vazia',
+                message: 'Digite uma mensagem para gerar o link.'
+            });
+            return;
+        }
+        const encodedMessage = encodeURIComponent(message);
+        const waLink = `https://wa.me/?text=${encodedMessage}`;
+        window.open(waLink, '_blank');
+        addNotification({
+            type: 'success',
+            title: 'Link Gerado',
+            message: 'WhatsApp aberto com a mensagem pronta.'
+        });
+    };
+
     const getUrlType = (url: string) => {
         if (!url) return null;
         // Simple regex for YouTube/Vimeo
@@ -336,23 +355,33 @@ const GroupManagement: React.FC = () => {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleBatchSend}
-                                disabled={isSending}
-                                className="w-full py-3 bg-[#0054A6] hover:bg-[#004080] text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {isSending ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Enviando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send size={18} />
-                                        Enviar para Todos
-                                    </>
-                                )}
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleGenerateWhatsAppLink}
+                                    className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-2"
+                                    title="Gerar link para enviar via WhatsApp Web/App"
+                                >
+                                    <MessageSquare size={18} />
+                                    Link WhatsApp
+                                </button>
+                                <button
+                                    onClick={handleBatchSend}
+                                    disabled={isSending}
+                                    className="flex-[2] py-3 bg-[#0054A6] hover:bg-[#004080] text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {isSending ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Enviando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send size={18} />
+                                            Enviar na Plataforma
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
 

@@ -70,12 +70,38 @@ export default function PatientDashboard() {
             <div className="bg-gradient-to-r from-[#6C4FFE] to-[#8B5CF6] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                 <div className="relative z-10">
-                    <h1 className="text-3xl font-bold mb-2">Olá, {user?.name?.split(' ')[0]}!</h1>
+                    <h1 className="text-3xl font-bold mb-2">
+                        {new Date().getHours() < 12 ? 'Bom dia' : new Date().getHours() < 18 ? 'Boa tarde' : 'Boa noite'}, {user?.name?.split(' ')[0]}!
+                    </h1>
                     <p className="text-blue-100 text-lg max-w-xl">
-                        Sua jornada de cuidado continua. Você tem <span className="font-bold bg-white/20 px-2 py-0.5 rounded-lg">{myGroups.length} grupos</span> ativos.
+                        Hoje é um ótimo dia para cuidar de você. <span className="font-bold bg-white/20 px-2 py-0.5 rounded-lg">{myGroups.length} grupos</span> ativos.
                     </p>
                 </div>
             </div>
+
+            {/* Next Appointment Card */}
+            {myGroups.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#6C4FFE]"></div>
+                    <div className="p-4 bg-purple-50 rounded-full text-[#6C4FFE]">
+                        <Calendar size={32} />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-lg font-bold text-slate-800">Próximo Encontro</h3>
+                        <p className="text-slate-500">Sua jornada continua em breve.</p>
+                    </div>
+                    <div className="flex flex-col md:items-end gap-1">
+                        <div className="text-2xl font-bold text-[#6C4FFE]">Quarta-feira, 14:00</div>
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <MapPin size={16} />
+                            Sala 04 - UBS Centro
+                        </div>
+                    </div>
+                    <button className="px-6 py-2 bg-[#6C4FFE] text-white font-bold rounded-xl hover:bg-[#5b41d9] transition-colors shadow-lg shadow-purple-200">
+                        Ver Detalhes
+                    </button>
+                </div>
+            )}
 
             {/* Pending Invites Section */}
             {invites.length > 0 && (
@@ -144,12 +170,18 @@ export default function PatientDashboard() {
                 </h2>
 
                 {myGroups.length === 0 ? (
-                    <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                            <Calendar size={32} />
+                    <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm flex flex-col items-center">
+                        <div className="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100"></div>
+                            <Calendar size={48} className="relative z-10 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-700">Nenhum grupo ativo</h3>
-                        <p className="text-slate-500">Você ainda não está participando de nenhum grupo terapêutico.</p>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">Nenhum grupo ativo no momento</h3>
+                        <p className="text-slate-500 max-w-md mx-auto mb-6">
+                            Você ainda não está participando de nenhum grupo terapêutico. Aguarde o convite do seu profissional de saúde ou entre em contato com a unidade.
+                        </p>
+                        <button className="px-6 py-2 text-[#6C4FFE] font-bold hover:bg-purple-50 rounded-xl transition-colors">
+                            Entrar em contato com a unidade
+                        </button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

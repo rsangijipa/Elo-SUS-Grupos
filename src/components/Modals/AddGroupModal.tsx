@@ -53,6 +53,49 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
+                    {/* Quick Templates */}
+                    <div className="mb-4">
+                        <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Modelos Rápidos</label>
+                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({
+                                    ...formData,
+                                    name: 'Grupo de Tabagismo',
+                                    description: 'Grupo focado na cessação do tabagismo com abordagem cognitivo-comportamental.',
+                                    protocol: 'TABAGISMO'
+                                })}
+                                className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                            >
+                                + Tabagismo
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({
+                                    ...formData,
+                                    name: 'Grupo de Gestantes',
+                                    description: 'Acompanhamento pré-natal e orientações para gestantes.',
+                                    protocol: 'STANDARD'
+                                })}
+                                className="px-3 py-1.5 bg-pink-50 text-pink-700 text-xs font-bold rounded-lg border border-pink-100 hover:bg-pink-100 transition-colors whitespace-nowrap"
+                            >
+                                + Gestantes
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({
+                                    ...formData,
+                                    name: 'Grupo de Ansiedade',
+                                    description: 'Estratégias de enfrentamento para ansiedade e estresse.',
+                                    protocol: 'STANDARD'
+                                })}
+                                className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-100 hover:bg-purple-100 transition-colors whitespace-nowrap"
+                            >
+                                + Ansiedade
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Name */}
                     <div className="space-y-1">
                         <label className="text-sm font-bold text-slate-700">Nome do Grupo</label>

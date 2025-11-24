@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Plus, X, CheckCircle2, Filter, Search, ChevronRight, User } from 'lucide-react';
 import { MOCK_GROUPS, DEMO_PATIENTS, MOCK_APPOINTMENTS } from '../../utils/seedData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,8 +32,38 @@ const ProfessionalDashboard: React.FC = () => {
         priority: 'normal' as 'normal' | 'urgente'
     });
 
+    const [isLoadingData, setIsLoadingData] = useState(true);
+
+    // Skeleton Component
+    const DashboardSkeleton = () => (
+        <div className="space-y-8 animate-pulse">
+            <div className="flex justify-between gap-4">
+                <div className="h-10 w-64 bg-slate-200 rounded-xl"></div>
+                <div className="h-10 w-40 bg-slate-200 rounded-xl"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="h-32 bg-slate-200 rounded-2xl"></div>
+                ))}
+            </div>
+            <div className="h-64 bg-slate-200 rounded-2xl"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 h-96 bg-slate-200 rounded-2xl"></div>
+                <div className="space-y-6">
+                    <div className="h-48 bg-slate-200 rounded-2xl"></div>
+                    <div className="h-48 bg-slate-200 rounded-2xl"></div>
+                </div>
+            </div>
+        </div>
+    );
+
     useEffect(() => {
-        loadReferrals();
+        const init = async () => {
+            setIsLoadingData(true);
+            await loadReferrals();
+            setIsLoadingData(false);
+        };
+        init();
     }, []);
 
     const loadReferrals = async () => {
@@ -62,9 +93,10 @@ const ProfessionalDashboard: React.FC = () => {
                 referringProfessionalRole: '', reason: '', mainComplaint: '',
                 riskLevel: 'baixo', priority: 'normal'
             });
-            alert('Paciente encaminhado com sucesso!');
+            toast.success('Paciente encaminhado com sucesso!');
         } catch (error) {
             console.error(error);
+            toast.error('Erro ao encaminhar paciente.');
         } finally {
             setLoading(false);
         }
@@ -90,7 +122,7 @@ const ProfessionalDashboard: React.FC = () => {
             setShowAnamnesisModal(false);
             setSelectedReferral(null);
             loadReferrals();
-            alert('Triagem salva e convite enviado com sucesso!');
+            toast.success('Triagem salva e convite enviado com sucesso!');
         }
     };
 
@@ -98,6 +130,7 @@ const ProfessionalDashboard: React.FC = () => {
         if (window.confirm('Confirmar entrada manual deste paciente no grupo?')) {
             await referralService.manualAcceptance(referralId, user?.name || 'Profissional');
             loadReferrals();
+            toast.success('Paciente aceito manualmente.');
         }
     };
 
@@ -120,6 +153,8 @@ const ProfessionalDashboard: React.FC = () => {
     });
 
     const uniqueOrigins = Array.from(new Set(referrals.map(r => r.originUnitName)));
+
+    if (isLoadingData) return <DashboardSkeleton />;
 
     return (
         <div className="space-y-8 animate-fade-in">
