@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Group } from '../types/group';
 import { Patient } from '../types/patient';
-import { Appointment } from '../utils/seedData'; // Importing from seedData as there is no dedicated type file yet
+import { Appointment } from '../types/appointment';
 import { useAuth } from './AuthContext';
 import { groupService } from '../services/groupService';
 import { patientService } from '../services/patientService';
+import { appointmentService } from '../services/appointmentService';
 import { useNotifications } from './NotificationContext';
 
 interface DataContextType {
@@ -44,14 +45,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadData = async () => {
         setLoading(true);
         try {
-            const [fetchedGroups, fetchedPatients] = await Promise.all([
+            const [fetchedGroups, fetchedPatients, fetchedAppointments] = await Promise.all([
                 groupService.getAll(),
-                patientService.getAll()
+                patientService.getAll(),
+                appointmentService.getAll()
             ]);
             setGroups(fetchedGroups);
             setPatients(fetchedPatients);
-            // Appointments are currently not fetched from Firestore
-            setAppointments([]);
+            setAppointments(fetchedAppointments);
         } catch (error) {
             console.error('Error loading data:', error);
             addNotification({
@@ -125,13 +126,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
-        // Stub implementation
-        console.log('Add appointment not implemented yet', appointmentData);
-        addNotification({
-            type: 'alert',
-            title: 'Funcionalidade em breve',
-            message: 'O agendamento ainda não está conectado ao banco de dados.'
-        });
+        try {
+            await appointmentService.create(appointmentData);
+            await loadData();
+            addNotification({
+                type: 'success',
+                title: 'Agendamento criado',
+                message: 'O agendamento foi salvo com sucesso.'
+            });
+        } catch (error) {
+            console.error('Error adding appointment:', error);
+            throw error;
+        }
     };
 
     const refreshData = async () => {

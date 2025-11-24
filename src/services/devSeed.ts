@@ -1,9 +1,10 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import { MOCK_GROUPS, DEMO_PATIENTS } from '../utils/seedData';
+import { MOCK_GROUPS, DEMO_PATIENTS, MOCK_APPOINTMENTS } from '../utils/seedData';
 import { groupService } from './groupService';
 import { patientService } from './patientService';
+import { appointmentService } from './appointmentService';
 
 export async function setupDevEnvironment() {
     // Hardcoded credentials as requested by the user for this specific fix
@@ -76,8 +77,6 @@ async function seedDatabase(userId: string) {
         if (groupsSnapshot.empty) {
             console.log('Seeding Groups...');
             for (const group of MOCK_GROUPS) {
-                // Remove ID to let Firestore generate one, or keep it if we want consistent IDs
-                // Here we let Firestore generate IDs but keep the content
                 const { id, ...groupData } = group;
                 await groupService.create({
                     ...groupData,
@@ -95,7 +94,6 @@ async function seedDatabase(userId: string) {
             console.log('Seeding Patients...');
             for (const patient of DEMO_PATIENTS) {
                 const { id, ...patientData } = patient;
-                // Ensure patient data matches the interface expected by Firestore/Service
                 await patientService.create({
                     name: patientData.name,
                     birthDate: patientData.birthDate,
@@ -103,13 +101,30 @@ async function seedDatabase(userId: string) {
                     status: patientData.status as any,
                     cns: patientData.cns,
                     cpf: patientData.cpf,
-                    sexo: 'Outro', // Default as seed data might not have it
+                    sexo: 'Outro',
                     unidadeSaudeId: 'ubs-centro'
                 });
             }
             console.log('Patients seeded.');
         } else {
             console.log('Patients already exist. Skipping seed.');
+        }
+
+        // Check if appointments exist
+        const appointmentsSnapshot = await getDocs(collection(db, 'appointments'));
+        if (appointmentsSnapshot.empty) {
+            console.log('Seeding Appointments...');
+            for (const appointment of MOCK_APPOINTMENTS) {
+                const { id, ...appointmentData } = appointment;
+                await appointmentService.create({
+                    ...appointmentData,
+                    // Ensure date is string if it's Date object
+                    date: appointmentData.date instanceof Date ? appointmentData.date.toISOString() : appointmentData.date
+                });
+            }
+            console.log('Appointments seeded.');
+        } else {
+            console.log('Appointments already exist. Skipping seed.');
         }
 
     } catch (error) {

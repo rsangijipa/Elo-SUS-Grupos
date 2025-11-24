@@ -37,6 +37,15 @@ service cloud.firestore {
       allow write: if isProfessional();
     }
 
+    // Appointments
+    match /appointments/{appointmentId} {
+      // Read: Authenticated users (Patients see their own/group's, Professionals see all)
+      // For simplicity, allowing authenticated read for now, but could be stricter
+      allow read: if isAuthenticated();
+      // Write: ONLY professionals
+      allow write: if isProfessional();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;
