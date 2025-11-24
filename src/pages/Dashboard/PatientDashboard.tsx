@@ -1,23 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Calendar, MapPin, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, Clock, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { referralService, Referral } from '../../services/referralService';
+import { MOCK_GROUPS } from '../../utils/seedData';
 
 export default function PatientDashboard() {
     const { user } = useAuth();
     const { groups } = useData();
     const navigate = useNavigate();
+    const [invites, setInvites] = useState<Referral[]>([]);
+    const [showAcceptModal, setShowAcceptModal] = useState(false);
+    const [selectedInvite, setSelectedInvite] = useState<Referral | null>(null);
+
+    useEffect(() => {
+        loadInvites();
+    }, [user]);
+
+    const loadInvites = async () => {
+        if (!user) return;
+        const allReferrals = await referralService.getAll();
+        console.log('DEBUG: User:', user);
+        console.log('DEBUG: All Referrals:', allReferrals);
+
+        // In a real app, filter by user.id. For demo, we might show all 'convidado' if user matches or just for visibility.
+        // Assuming user.id matches patientId in referrals for now.
+        // For demo purposes, let's show all 'convidado' referrals if the user is a patient, 
+        // or strictly filter if we want to be precise. Let's filter by patientId to be correct.
+        // If user.id is not in mock data, we might not see anything. 
+        // Let's assume the user logged in is one of the patients in mock data or we just show all for demo.
+        const myInvites = allReferrals.filter(r => r.status === 'convidado' && (r.patientId === user.id || r.patientId === 'new'));
+        // DEBUG: Relaxed filter
+        // const myInvites = allReferrals.filter(r => r.status === 'convidado');
+        console.log('DEBUG: My Invites:', myInvites);
+        setInvites(myInvites);
+    };
+
+    const handleAcceptClick = (invite: Referral) => {
+        setSelectedInvite(invite);
+        setShowAcceptModal(true);
+    };
+
+    const confirmAcceptance = async () => {
+        if (!selectedInvite) return;
+        await referralService.acceptInvite(selectedInvite.id, user?.name || 'Paciente', user?.id || 'unknown');
+        setShowAcceptModal(false);
+        setSelectedInvite(null);
+        loadInvites();
+        // Optionally refresh groups from context if it was connected to the same source
+        alert('Parabéns! Você agora faz parte do grupo.');
+        navigate(0); // Reload to refresh groups (since useData might not auto-update from localStorage service change)
+    };
 
     // Filter groups where the patient is a participant
     const myGroups = groups.filter(g => g.participants?.includes(user?.id || ''));
 
-    // Calculate attendance (mock logic for now, can be expanded with real data)
+    // Calculate attendance (mock logic for now)
     const getAttendanceStatus = (groupId: string) => {
-        // In a real app, this would calculate based on past appointments and attendance records
-        // For demo purposes, we'll randomize or use a fixed value if available
-        const attendanceRate = 85; // Mock 85% attendance
-
+        const attendanceRate = 85;
         if (attendanceRate >= 75) return { color: 'bg-green-500', text: 'text-green-600', label: 'Presença Excelente', rate: attendanceRate };
         if (attendanceRate >= 70) return { color: 'bg-amber-500', text: 'text-amber-600', label: 'Atenção à Frequência', rate: attendanceRate };
         return { color: 'bg-red-500', text: 'text-red-600', label: 'Risco de Desligamento', rate: attendanceRate };
@@ -35,6 +76,65 @@ export default function PatientDashboard() {
                     </p>
                 </div>
             </div>
+
+            {/* Pending Invites Section */}
+            {invites.length > 0 && (
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <Mail className="text-orange-500" />
+                        Convites Pendentes
+                        <span className="bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full">{invites.length}</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {invites.map(invite => {
+                            // Find group details if available
+                            const group = MOCK_GROUPS.find(g => g.id === invite.groupId);
+                            return (
+                                <div key={invite.id} className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-orange-500 relative overflow-hidden">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">
+                                                Novo Convite
+                                            </span>
+                                            <h3 className="text-xl font-bold text-slate-800 mt-2">
+                                                {group?.name || 'Grupo Terapêutico'}
+                                            </h3>
+                                            <p className="text-sm text-slate-500">Encaminhado por {invite.referringProfessionalName || 'Profissional'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 mb-6 bg-slate-50 p-4 rounded-xl">
+                                        <div className="flex items-center gap-3 text-sm text-slate-700">
+                                            <Calendar size={18} className="text-slate-400" />
+                                            <span className="font-medium">{group?.schedule || 'Horário a definir'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm text-slate-700">
+                                            <MapPin size={18} className="text-slate-400" />
+                                            <span className="font-medium">{group?.room || 'Local a definir'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm text-slate-700">
+                                            <AlertCircle size={18} className="text-slate-400" />
+                                            <span className="font-medium">Comparecer semanalmente por 4 encontros</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => handleAcceptClick(invite)}
+                                            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-orange-200"
+                                        >
+                                            Quero participar
+                                        </button>
+                                        <button className="px-4 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">
+                                            Tenho dúvidas
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* My Groups Section */}
             <div>
@@ -118,6 +218,49 @@ export default function PatientDashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Acceptance Modal */}
+            {showAcceptModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-slate-800">Finalizar Inscrição</h3>
+                            <button onClick={() => setShowAcceptModal(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="bg-blue-50 p-4 rounded-xl text-blue-800 text-sm">
+                                <p className="font-bold mb-1">Antes de entrar no grupo...</p>
+                                <p>Vamos aplicar um pequeno questionário sobre seu uso de tabaco. Ele ajuda a equipe a entender melhor seu caso.</p>
+                            </div>
+
+                            {/* Mock Question */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-bold text-slate-700">1. Quanto tempo após acordar você fuma seu primeiro cigarro?</p>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                        <input type="radio" name="q1" className="text-blue-600" />
+                                        <span className="text-sm text-slate-600">Dentro de 5 minutos</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                        <input type="radio" name="q1" className="text-blue-600" />
+                                        <span className="text-sm text-slate-600">Entre 6 e 30 minutos</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={confirmAcceptance}
+                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/20 mt-4"
+                            >
+                                Enviar Respostas e Entrar no Grupo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

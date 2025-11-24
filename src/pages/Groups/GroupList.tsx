@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Search, Users, ArrowRight, MapPin, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Search, Users, ArrowRight, MapPin, Clock, X, BarChart3, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import AddGroupModal from '../../components/Modals/AddGroupModal';
@@ -8,6 +8,8 @@ const GroupList: React.FC = () => {
     const { groups, loading } = useData();
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activePopover, setActivePopover] = useState<string | null>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
     const filteredGroups = groups.filter(g =>
@@ -15,8 +17,39 @@ const GroupList: React.FC = () => {
         g.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Close popover when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+                setActivePopover(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const togglePopover = (e: React.MouseEvent, groupId: string) => {
+        e.stopPropagation();
+        setActivePopover(activePopover === groupId ? null : groupId);
+    };
+
+    // Mock stats generator (since backend doesn't provide this yet)
+    const getGroupStats = (groupId: string) => {
+        // Deterministic mock based on ID char code
+        const seed = groupId.charCodeAt(0);
+        const attendance = 60 + (seed % 35); // 60-95%
+        return {
+            participants: 10 + (seed % 15),
+            attendance,
+            sessions: 4 + (seed % 8)
+        };
+    };
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -63,48 +96,94 @@ const GroupList: React.FC = () => {
                         <p className="text-sm text-slate-400 mt-1">Tente buscar com outros termos ou crie um novo grupo.</p>
                     </div>
                 ) : (
-                    filteredGroups.map((group) => (
-                        <div key={group.id} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-blue-100 transition-all duration-200 flex flex-col">
-                            <div className="p-6 flex-1">
-                                <div className="flex items-start justify-between mb-4">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0054A6] uppercase tracking-wide">
-                                        Grupo Terapêutico
-                                    </span>
-                                    <span className={`w-2.5 h-2.5 rounded-full ${group.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300'}`} title={group.status === 'active' ? 'Ativo' : 'Inativo'}></span>
+                    filteredGroups.map((group) => {
+                        const stats = getGroupStats(group.id);
+                        return (
+                            <div key={group.id} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-visible hover:shadow-md hover:border-blue-100 transition-all duration-200 flex flex-col relative">
+                                <div className="p-6 flex-1">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#0054A6] uppercase tracking-wide">
+                                            Grupo Terapêutico
+                                        </span>
+                                        <span className={`w-2.5 h-2.5 rounded-full ${group.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300'}`} title={group.status === 'active' ? 'Ativo' : 'Inativo'}></span>
+                                    </div>
+
+                                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-[#0054A6] transition-colors">
+                                        {group.name}
+                                    </h3>
+                                    <p className="text-sm text-slate-500 line-clamp-2 mb-4 leading-relaxed">
+                                        {group.description || 'Sem descrição definida.'}
+                                    </p>
+
+                                    <div className="flex items-center gap-4 text-sm text-slate-500 pt-4 border-t border-slate-50">
+                                        <div className="flex items-center gap-1.5">
+                                            <MapPin size={16} className="text-slate-400" />
+                                            <span className="font-medium text-slate-700">{group.room}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock size={16} className="text-slate-400" />
+                                            <span className="capitalize">{group.schedule}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-[#0054A6] transition-colors">
-                                    {group.name}
-                                </h3>
-                                <p className="text-sm text-slate-500 line-clamp-2 mb-4 leading-relaxed">
-                                    {group.description || 'Sem descrição definida.'}
-                                </p>
+                                <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-between items-center group-hover:bg-blue-50/30 transition-colors relative">
+                                    <div className="relative">
+                                        <button
+                                            onClick={(e) => togglePopover(e, group.id)}
+                                            className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1 hover:text-[#0054A6] transition-colors ${activePopover === group.id ? 'text-[#0054A6]' : 'text-slate-400'}`}
+                                        >
+                                            Ver Detalhes
+                                            {activePopover === group.id ? <X size={14} /> : <MoreHorizontal size={14} />}
+                                        </button>
 
-                                <div className="flex items-center gap-4 text-sm text-slate-500 pt-4 border-t border-slate-50">
-                                    <div className="flex items-center gap-1.5">
-                                        <MapPin size={16} className="text-slate-400" />
-                                        <span className="font-medium text-slate-700">{group.room}</span>
+                                        {/* Popover */}
+                                        {activePopover === group.id && (
+                                            <div
+                                                ref={popoverRef}
+                                                className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-50 animate-fade-in"
+                                            >
+                                                <h4 className="font-bold text-slate-800 mb-3 text-sm border-b border-slate-50 pb-2">Resumo do Grupo</h4>
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-slate-500">Participantes</span>
+                                                        <span className="text-sm font-bold text-slate-700">{stats.participants}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs text-slate-500">Sessões Realizadas</span>
+                                                        <span className="text-sm font-bold text-slate-700">{stats.sessions}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="text-xs text-slate-500">Taxa de Presença</span>
+                                                            <span className={`text-xs font-bold ${stats.attendance >= 80 ? 'text-emerald-600' :
+                                                                    stats.attendance >= 60 ? 'text-amber-600' : 'text-red-600'
+                                                                }`}>{stats.attendance}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full ${stats.attendance >= 80 ? 'bg-emerald-500' :
+                                                                        stats.attendance >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                                                                    }`}
+                                                                style={{ width: `${stats.attendance}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Clock size={16} className="text-slate-400" />
-                                        <span className="capitalize">{group.schedule}</span>
-                                    </div>
+
+                                    <button
+                                        onClick={() => navigate(`/groups/${group.id}/manage`)}
+                                        className="flex items-center gap-1 text-sm font-bold text-[#0054A6] hover:text-[#004080] transition-colors"
+                                    >
+                                        Gerenciar <ArrowRight size={16} />
+                                    </button>
                                 </div>
                             </div>
-
-                            <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-between items-center group-hover:bg-blue-50/30 transition-colors">
-                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                                    Ver Detalhes
-                                </span>
-                                <button
-                                    onClick={() => navigate(`/grupos/${group.id}`)}
-                                    className="flex items-center gap-1 text-sm font-bold text-[#0054A6] hover:text-[#004080] transition-colors"
-                                >
-                                    Gerenciar <ArrowRight size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 

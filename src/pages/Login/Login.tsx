@@ -25,6 +25,7 @@ export default function Login() {
         email: '',
         password: '',
         confirmPassword: '',
+        cpf: '',
         crp: '',
         cns: ''
     });
@@ -93,6 +94,7 @@ export default function Login() {
                     email: formData.email,
                     password: formData.password,
                     role: theme,
+                    cpf: formData.cpf,
                     crp: theme === 'professional' ? formData.crp : undefined,
                     cns: theme === 'patient' ? formData.cns : undefined
                 });
@@ -363,6 +365,23 @@ export default function Login() {
                                         placeholder="Nome Completo"
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {!isLogin && (
+                            <div className="space-y-1 animate-fade-in">
+                                <div className="relative group">
+                                    <FileText className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-current transition-colors" size={20} style={{ color: theme === 'patient' ? '#9333ea' : '#2563eb' }} />
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:border-transparent outline-none transition-all font-medium text-slate-900 placeholder:text-slate-400"
+                                        style={{ '--tw-ring-color': theme === 'patient' ? '#d8b4fe' : '#93c5fd' } as React.CSSProperties}
+                                        placeholder="CPF"
+                                        value={formData.cpf}
+                                        onChange={e => setFormData({ ...formData, cpf: e.target.value })}
                                     />
                                 </div>
                             </div>

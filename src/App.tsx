@@ -20,6 +20,8 @@ import PatientDetail from './pages/Patients/PatientDetail';
 import GroupList from './pages/Groups/GroupList';
 import PatientList from './pages/Patients/PatientList';
 
+import GroupManagement from './pages/Groups/GroupManagement';
+
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -70,6 +72,7 @@ function App() {
                   <Route path="wellbeing" element={<WellbeingCenter />} />
                   <Route path="patients/:id" element={<PatientDetail />} />
                   <Route path="groups" element={<GroupList />} />
+                  <Route path="groups/:id/manage" element={<GroupManagement />} />
                   <Route path="patients" element={<PatientList />} />
                 </Route>
 

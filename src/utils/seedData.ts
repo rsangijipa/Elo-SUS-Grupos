@@ -16,6 +16,7 @@ export interface User {
     email: string;
     role: 'professional' | 'patient';
     avatar?: string;
+    cpf?: string;
 
     // Professional specific
     crp?: string; // Conselho Regional de Psicologia

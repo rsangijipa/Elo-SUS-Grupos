@@ -12,7 +12,9 @@ import {
     RefreshCw,
     Heart,
     Activity,
-    LifeBuoy
+    LifeBuoy,
+    UserPlus,
+    User
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,7 +25,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout, toggleRole } = useAuth();
+    const { user, logout, switchDevRole } = useAuth();
 
     const professionalItems = [
         { path: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard },
@@ -117,15 +119,42 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* User Footer */}
                 <div className="p-4 border-t border-slate-100 bg-[#F6F8FE]/50">
-                    {/* Dev Tool: Role Toggle */}
-                    <button
-                        onClick={toggleRole}
-                        className="w-full mb-4 flex items-center justify-center gap-2 text-xs font-bold text-[#6C4FFE] bg-white hover:bg-[#6C4FFE]/5 py-2.5 rounded-xl border border-[#6C4FFE]/20 transition-colors shadow-sm"
-                        title="Alternar entre visão de Profissional e Paciente (Dev Mode)"
-                    >
-                        <RefreshCw size={12} />
-                        Trocar Visão ({user?.role === 'professional' ? 'Pro' : 'Paciente'})
-                    </button>
+                    {/* Dev Tool: Role Switcher */}
+                    <div className="mb-4 space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Modo de Teste</p>
+                        <div className="grid grid-cols-3 gap-1">
+                            <button
+                                onClick={() => switchDevRole('referrer')}
+                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'doc_ref_01'
+                                    ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
+                                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                title="Médico/Enfermeiro (Encaminhar)"
+                            >
+                                <UserPlus size={14} />
+                                <span className="text-[9px] font-bold">Encaminhar</span>
+                            </button>
+                            <button
+                                onClick={() => switchDevRole('executor')}
+                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'psi_exec_01' || (user?.role === 'professional' && user?.id !== 'doc_ref_01')
+                                    ? 'bg-purple-50 border-purple-200 text-purple-700 shadow-sm'
+                                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                title="Terapeuta (Atender)"
+                            >
+                                <Stethoscope size={14} />
+                                <span className="text-[9px] font-bold">Atender</span>
+                            </button>
+                            <button
+                                onClick={() => switchDevRole('patient')}
+                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'patient'
+                                    ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm'
+                                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                title="Paciente"
+                            >
+                                <User size={14} />
+                                <span className="text-[9px] font-bold">Paciente</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <Link to="/profile" className="block" onClick={() => window.innerWidth < 768 && onClose()}>
                         <div className="bg-white rounded-2xl p-3 flex items-center gap-3 mb-3 cursor-pointer hover:shadow-md transition-all border border-slate-100 group">

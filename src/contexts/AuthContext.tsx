@@ -30,6 +30,7 @@ interface AuthContextType {
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
     toggleRole: () => void;
+    switchDevRole: (type: 'referrer' | 'executor' | 'patient') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -129,10 +130,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const newUser: User = {
             ...baseState,
-            id: `u${Date.now()}`,
+            id: `u${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: data.name,
             email: data.email,
             role: data.role || 'professional',
+            cpf: data.cpf,
             avatar: data.name.substring(0, 2).toUpperCase()
         };
 
@@ -186,6 +188,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         saveDb(newDb);
     };
 
+    const switchDevRole = (type: 'referrer' | 'executor' | 'patient') => {
+        let newUser: User;
+
+        if (type === 'referrer') {
+            newUser = {
+                ...INITIAL_PROFESSIONAL_STATE,
+                id: 'doc_ref_01',
+                name: 'Dr. Encaminhador',
+                email: 'medico@ubs.sus.gov.br',
+                role: 'professional',
+                avatar: 'DR',
+                crp: 'CRM 12345' // Mock CRM
+            };
+        } else if (type === 'executor') {
+            newUser = {
+                ...MOCK_PROFESSIONAL, // Use the mock professional as the executor (Therapist)
+                id: 'psi_exec_01',
+                name: 'Psi. Atendente',
+                email: 'psi@caps.sus.gov.br',
+                role: 'professional',
+                avatar: 'PS',
+                crp: 'CRP 06/12345'
+            };
+        } else {
+            newUser = {
+                ...MOCK_PATIENT,
+                id: 'pat_01',
+                name: 'Paciente Teste',
+                email: 'paciente@email.com',
+                role: 'patient',
+                avatar: 'PA'
+            };
+        }
+
+        const newDb = { ...db, user: newUser };
+        // If switching to executor, ensure groups are loaded (mock groups)
+        if (type === 'executor' && newDb.groups.length === 0) {
+            newDb.groups = MOCK_GROUPS;
+        }
+
+        saveDb(newDb);
+    };
+
     return (
         <AuthContext.Provider value={{
             user: db.user,
@@ -196,7 +241,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             register,
             logout,
             updateProfile,
-            toggleRole
+            toggleRole,
+            switchDevRole
         }}>
             {children}
         </AuthContext.Provider>
