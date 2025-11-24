@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DataProvider } from './contexts/DataContext';
+import { Toaster } from 'react-hot-toast';
 import EnvTest from './components/EnvTest';
 
 import Login from './pages/Login/Login';
@@ -46,10 +47,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <ThemeProvider>
-          <NotificationProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <ThemeProvider>
             <DataProvider>
+              <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={
@@ -81,9 +83,9 @@ function App() {
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </DataProvider>
-          </NotificationProvider>
-        </ThemeProvider>
-      </AuthProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </NotificationProvider>
     </Router>
   );
 }

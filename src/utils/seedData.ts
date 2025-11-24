@@ -227,7 +227,8 @@ export const DEMO_PATIENTS: Patient[] = Array.from({ length: 20 }, (_, i) => ({
     birthDate: new Date(1970 + Math.floor(Math.random() * 30), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)).toISOString(),
     status: i < 15 ? 'active' : 'waiting',
     groupId: i < 15 ? ['g1', 'g2', 'g3'][i % 3] : undefined,
-    phone: `(11) 9${Math.floor(Math.random() * 10000)}-${Math.floor(Math.random() * 10000)}`
+    phone: `(11) 9${Math.floor(Math.random() * 10000)}-${Math.floor(Math.random() * 10000)}`,
+    cpf: `123.456.789-${(i % 90 + 10).toString().padStart(2, '0')}`
 }));
 
 // Alias for backward compatibility if needed, or just use DEMO_PATIENTS

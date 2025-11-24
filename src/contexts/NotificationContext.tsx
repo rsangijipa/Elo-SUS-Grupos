@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 export interface Notification {
     id: string;
@@ -63,6 +64,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             read: false,
             timestamp: new Date()
         };
+
+        // Trigger Toast
+        switch (data.type) {
+            case 'success':
+                toast.success(data.title ? `${data.title}: ${data.message}` : data.message);
+                break;
+            case 'alert':
+                toast.error(data.title ? `${data.title}: ${data.message}` : data.message);
+                break;
+            default:
+                toast(data.title ? `${data.title}: ${data.message}` : data.message);
+        }
+
         setNotifications(prev => [newNotification, ...prev]);
     };
 
