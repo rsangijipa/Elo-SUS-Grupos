@@ -1,242 +1,194 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
-    INITIAL_PROFESSIONAL_STATE,
-    INITIAL_PATIENT_STATE,
-    MOCK_PROFESSIONAL,
-    MOCK_PATIENT,
-    MOCK_GROUPS,
-    MOCK_PATIENTS,
-    MOCK_APPOINTMENTS,
-    type User,
-    type Patient,
-    type Appointment
-} from '../utils/seedData';
-import { Group } from '../types/group';
-
-interface Database {
-    user: User | null;
-    groups: Group[];
-    patients: Patient[];
-    appointments: Appointment[];
-}
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    User as FirebaseUser
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../services/firebase';
+import { User } from '../utils/seedData';
+import { INITIAL_PROFESSIONAL_STATE, INITIAL_PATIENT_STATE } from '../utils/seedData';
+import { useNotifications } from './NotificationContext';
 
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    db: Database;
-    login: (email: string, password?: string, role?: 'professional' | 'patient') => Promise<void>;
+    login: (email: string, password?: string) => Promise<void>;
     register: (data: any) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     updateProfile: (data: Partial<User>) => Promise<void>;
+    // Deprecated/Mock methods kept for compatibility but might need removal or refactor
     toggleRole: () => void;
     switchDevRole: (type: 'referrer' | 'executor' | 'patient') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'elosus_db';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [db, setDb] = useState<Database>({
-        user: null,
-        groups: [],
-        patients: [],
-        appointments: []
-    });
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { addNotification } = useNotifications();
 
     useEffect(() => {
-        // Load from localStorage on mount
-        const storedData = localStorage.getItem(STORAGE_KEY);
-        if (storedData) {
-            try {
-                setDb(JSON.parse(storedData));
-            } catch (error) {
-                console.error('Failed to parse stored DB', error);
-                localStorage.removeItem(STORAGE_KEY);
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                try {
+                    const userDocRef = doc(db, 'users', firebaseUser.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (userDoc.exists()) {
+                        setUser({ id: firebaseUser.uid, ...userDoc.data() } as User);
+                    } else {
+                        // Fallback if user exists in Auth but not in Firestore (shouldn't happen normally)
+                        console.warn('User authenticated but no Firestore document found.');
+                        setUser(null);
+                    }
+                } catch (error) {
+                    console.error('Error fetching user profile:', error);
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
             }
-        }
-        setIsLoading(false);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    // Helper to save DB to state and localStorage
-    const saveDb = (newDb: Database) => {
-        setDb(newDb);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
-    };
-
-    const login = async (email: string, password?: string, role?: 'professional' | 'patient') => {
+    const login = async (email: string, password?: string) => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API
-
-        let newDb: Database;
-
-        // 🚨 DEMO MODE (Admin / Dev)
-        if (email.toLowerCase() === 'admin@elosus.gov.br' || email.toLowerCase() === 'doll.ricardoll@gmail.com') {
-            console.log("🔐 LOGGING IN AS DEMO ADMIN");
-            newDb = {
-                user: MOCK_PROFESSIONAL,
-                groups: MOCK_GROUPS,
-                patients: MOCK_PATIENTS,
-                appointments: MOCK_APPOINTMENTS
-            };
-        }
-        // 🚨 DEMO PATIENT
-        else if (email.toLowerCase() === 'paciente@elosus.gov.br') {
-            console.log("👤 LOGGING IN AS DEMO PATIENT");
-            newDb = {
-                user: MOCK_PATIENT,
-                groups: [],
-                patients: [],
-                appointments: MOCK_APPOINTMENTS
-            };
-        }
-        // 🌍 REAL USER (PRODUCTION)
-        else {
-            console.log("🌍 LOGGING IN AS REAL USER (CLEAN STATE)");
-
-            // Check if we already have data for this user in our "Local DB"
-            if (db.user && db.user.email === email) {
-                newDb = { ...db }; // Keep existing state
-            } else {
-                // NEW USER -> CLEAN SLATE (No Dr. Joao's patients!)
-                const newUser: User = {
-                    ...(role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE),
-                    id: `u${Date.now()}`,
-                    email: email,
-                    name: email.split('@')[0],
-                    role: role || 'professional',
-                    avatar: undefined // No avatar initially
-                };
-                newDb = {
-                    user: newUser,
-                    groups: [],
-                    patients: [],
-                    appointments: []
-                };
+        try {
+            // If password is not provided (e.g. from some old mock calls), use a default or error
+            // For the demo buttons, we will ensure they pass the password.
+            if (!password) {
+                throw new Error('Senha é obrigatória.');
             }
+            await signInWithEmailAndPassword(auth, email, password);
+            addNotification({
+                type: 'success',
+                title: 'Login realizado',
+                message: 'Bem-vindo de volta!'
+            });
+        } catch (error: any) {
+            console.error('Login error:', error);
+            let message = 'Falha ao realizar login.';
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                message = 'E-mail ou senha incorretos.';
+            }
+            addNotification({
+                type: 'alert',
+                title: 'Erro no Login',
+                message
+            });
+            throw error;
+        } finally {
+            setIsLoading(false);
         }
-
-        saveDb(newDb);
-        setIsLoading(false);
     };
 
     const register = async (data: any) => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const firebaseUser = userCredential.user;
 
-        const baseState = data.role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
+            const baseState = data.role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
 
-        const newUser: User = {
-            ...baseState,
-            id: `u${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: data.name,
-            email: data.email,
-            role: data.role || 'professional',
-            cpf: data.cpf,
-            avatar: data.name.substring(0, 2).toUpperCase()
-        };
+            const newUser: User = {
+                ...baseState,
+                id: firebaseUser.uid,
+                name: data.name,
+                email: data.email,
+                role: data.role || 'professional',
+                cpf: data.cpf,
+                avatar: data.name.substring(0, 2).toUpperCase(),
+                // Ensure these fields are present
+                unidadeSaudeId: 'all'
+            };
 
-        // Initialize with EMPTY arrays
-        const newDb: Database = {
-            user: newUser,
-            groups: [],
-            patients: [],
-            appointments: []
-        };
+            // Create user document in Firestore
+            await setDoc(doc(db, 'users', firebaseUser.uid), {
+                ...newUser,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
 
-        saveDb(newDb);
-        setIsLoading(false);
+            setUser(newUser);
+            addNotification({
+                type: 'success',
+                title: 'Conta criada',
+                message: 'Seu cadastro foi realizado com sucesso.'
+            });
+        } catch (error: any) {
+            console.error('Registration error:', error);
+            let message = 'Falha ao criar conta.';
+            if (error.code === 'auth/email-already-in-use') {
+                message = 'Este e-mail já está em uso.';
+            }
+            addNotification({
+                type: 'alert',
+                title: 'Erro no Cadastro',
+                message
+            });
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const logout = () => {
-        // We might want to keep the DB in localStorage even after logout for persistence across sessions,
-        // but clear the 'user' object to signify logged out. 
-        // However, for this simple auth flow, let's just clear the user from state.
-        // If we want to support multiple users on same browser, we'd need a better structure.
-        // For now, let's clear the current session user but keep data if we wanted (omitted for simplicity).
-
-        // Actually, to be safe and simple:
-        setDb(prev => ({ ...prev, user: null }));
-        // We update localStorage to reflect logged out state
-        const newDb = { ...db, user: null };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setUser(null);
+            addNotification({
+                type: 'success',
+                title: 'Logout',
+                message: 'Você saiu do sistema.'
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     };
 
     const updateProfile = async (data: Partial<User>) => {
-        if (!db.user) return;
-        const updatedUser = { ...db.user, ...data };
-        const newDb = { ...db, user: updatedUser };
-        saveDb(newDb);
+        if (!user) return;
+        try {
+            const userDocRef = doc(db, 'users', user.id);
+            await setDoc(userDocRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+            setUser(prev => prev ? { ...prev, ...data } : null);
+            addNotification({
+                type: 'success',
+                title: 'Perfil atualizado',
+                message: 'Seus dados foram salvos.'
+            });
+        } catch (error) {
+            console.error('Update profile error:', error);
+            addNotification({
+                type: 'alert',
+                title: 'Erro',
+                message: 'Não foi possível atualizar o perfil.'
+            });
+        }
     };
 
+    // Deprecated methods - kept empty or logging warning to prevent build errors if used elsewhere
     const toggleRole = () => {
-        if (!db.user) return;
-
-        // Simple toggle for dev purposes
-        const newRole = db.user.role === 'professional' ? 'patient' : 'professional';
-        const baseState = newRole === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
-
-        const updatedUser = {
-            ...db.user,
-            ...baseState,
-            role: newRole as 'professional' | 'patient'
-        };
-
-        const newDb = { ...db, user: updatedUser };
-        saveDb(newDb);
+        console.warn('toggleRole is deprecated in production mode.');
     };
 
     const switchDevRole = (type: 'referrer' | 'executor' | 'patient') => {
-        let newUser: User;
-
-        if (type === 'referrer') {
-            newUser = {
-                ...INITIAL_PROFESSIONAL_STATE,
-                id: 'doc_ref_01',
-                name: 'Dr. Encaminhador',
-                email: 'medico@ubs.sus.gov.br',
-                role: 'professional',
-                avatar: 'DR',
-                crp: 'CRM 12345' // Mock CRM
-            };
-        } else if (type === 'executor') {
-            newUser = {
-                ...MOCK_PROFESSIONAL, // Use the mock professional as the executor (Therapist)
-                id: 'psi_exec_01',
-                name: 'Psi. Atendente',
-                email: 'psi@caps.sus.gov.br',
-                role: 'professional',
-                avatar: 'PS',
-                crp: 'CRP 06/12345'
-            };
-        } else {
-            newUser = {
-                ...MOCK_PATIENT,
-                id: 'pat_01',
-                name: 'Paciente Teste',
-                email: 'paciente@email.com',
-                role: 'patient',
-                avatar: 'PA'
-            };
-        }
-
-        const newDb = { ...db, user: newUser };
-        // If switching to executor, ensure groups are loaded (mock groups)
-        if (type === 'executor' && newDb.groups.length === 0) {
-            newDb.groups = MOCK_GROUPS;
-        }
-
-        saveDb(newDb);
+        console.warn('switchDevRole is deprecated. Use real accounts.');
     };
 
     return (
         <AuthContext.Provider value={{
-            user: db.user,
-            isAuthenticated: !!db.user,
+            user,
+            isAuthenticated: !!user,
             isLoading,
-            db,
             login,
             register,
             logout,

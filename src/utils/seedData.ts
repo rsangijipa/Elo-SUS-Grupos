@@ -35,6 +35,7 @@ export interface User {
     emergencyContact?: string; // Name + Phone
     phone?: string;
     address?: string;
+    unidadeSaudeId?: string;
 }
 
 import { Group } from '../types/group';
@@ -232,10 +233,5 @@ export const DEMO_PATIENTS: Patient[] = Array.from({ length: 20 }, (_, i) => ({
 // Alias for backward compatibility if needed, or just use DEMO_PATIENTS
 export const MOCK_PATIENTS = DEMO_PATIENTS;
 
-export const generateDemoData = () => {
-    localStorage.setItem('elosus_patients', JSON.stringify(DEMO_PATIENTS));
-    localStorage.setItem('elosus_groups', JSON.stringify(MOCK_GROUPS));
-    localStorage.setItem('elosus_appointments', JSON.stringify(MOCK_APPOINTMENTS));
-    localStorage.setItem('elosus_referrals', JSON.stringify([])); // Initialize empty referrals
-    window.location.reload();
-};
+// generateDemoData removed as we now use Firestore seeding via devSeed.ts
+

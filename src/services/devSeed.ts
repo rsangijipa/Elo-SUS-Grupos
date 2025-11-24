@@ -6,42 +6,35 @@ import { groupService } from './groupService';
 import { patientService } from './patientService';
 import { appointmentService } from './appointmentService';
 
+const DEMO_USERS = [
+    {
+        email: 'admin@elosus.gov.br',
+        password: 'admin123', // Weak password for demo only
+        role: 'professional',
+        name: 'Administrador Demo',
+        unidadeSaudeId: 'all'
+    },
+    {
+        email: 'paciente@elosus.gov.br',
+        password: 'paciente123',
+        role: 'patient',
+        name: 'Paciente Demo',
+        unidadeSaudeId: 'ubs-centro'
+    }
+];
+
 export async function setupDevEnvironment() {
-    // Hardcoded credentials as requested by the user for this specific fix
-    const devEmail = 'admin@admin.com';
-    const devPassword = 'admin123';
-
     try {
-        console.log('Checking dev environment setup for admin...');
+        console.log('Checking dev environment setup...');
 
-        let currentUser = auth.currentUser;
-
-        if (!currentUser) {
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, devEmail, devPassword);
-                currentUser = userCredential.user;
-                console.log('Admin user logged in successfully.');
-            } catch (error: any) {
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-                    console.log('Admin user not found or invalid. Creating...');
-                    try {
-                        const userCredential = await createUserWithEmailAndPassword(auth, devEmail, devPassword);
-                        currentUser = userCredential.user;
-                        console.log('Admin user created.');
-                    } catch (createError: any) {
-                        console.error('Error creating admin user:', createError);
-                        return;
-                    }
-                } else {
-                    console.error('Error signing in:', error);
-                    return;
-                }
-            }
+        for (const user of DEMO_USERS) {
+            await ensureUser(user);
         }
 
-        if (currentUser) {
-            await ensureUserDoc(currentUser.uid, devEmail);
-            await seedDatabase(currentUser.uid);
+        // Seed data using the first admin user found or created
+        const adminUser = auth.currentUser;
+        if (adminUser) {
+            await seedDatabase(adminUser.uid);
         }
 
     } catch (error) {
@@ -49,24 +42,34 @@ export async function setupDevEnvironment() {
     }
 }
 
-async function ensureUserDoc(uid: string, email: string) {
-    const userDocRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userDocRef);
+async function ensureUser(userData: any) {
+    try {
+        // Try to sign in first to check if exists
+        await signInWithEmailAndPassword(auth, userData.email, userData.password);
+        console.log(`User ${userData.email} logged in.`);
+    } catch (error: any) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+            console.log(`User ${userData.email} not found. Creating...`);
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+                console.log(`User ${userData.email} created.`);
 
-    if (!userDoc.exists()) {
-        console.log('Creating Firestore document for dev user...');
-        await setDoc(userDocRef, {
-            uid: uid,
-            nome: 'Administrador',
-            email: email,
-            role: 'professional', // Changed to professional to match rules
-            unidadeSaudeId: 'all',
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        });
-        console.log('Firestore document created.');
-    } else {
-        console.log('Firestore document for dev user already exists.');
+                // Create Firestore doc
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    uid: userCredential.user.uid,
+                    name: userData.name,
+                    email: userData.email,
+                    role: userData.role,
+                    unidadeSaudeId: userData.unidadeSaudeId,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+            } catch (createError: any) {
+                console.error(`Error creating user ${userData.email}:`, createError);
+            }
+        } else {
+            console.error(`Error checking user ${userData.email}:`, error);
+        }
     }
 }
 

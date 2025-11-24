@@ -74,7 +74,7 @@ export default function Login() {
 
         try {
             if (isLogin) {
-                await login(formData.email, formData.password, theme);
+                await login(formData.email, formData.password);
                 addNotification({
                     type: 'success',
                     title: 'Bem-vindo de volta!',

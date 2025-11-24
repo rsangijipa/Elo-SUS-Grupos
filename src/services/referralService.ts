@@ -1,4 +1,20 @@
+import {
+    collection,
+    addDoc,
+    updateDoc,
+    doc,
+    getDocs,
+    getDoc,
+    query,
+    where,
+    serverTimestamp,
+    arrayUnion,
+    runTransaction
+} from 'firebase/firestore';
+import { db } from './firebase';
 import { Patient } from '../types/patient';
+
+const COLLECTION_NAME = 'referrals';
 
 export interface ReferralTimelineEvent {
     status: 'created' | 'triaged' | 'invited' | 'accepted' | 'declined' | 'joined';
@@ -37,63 +53,24 @@ export interface Referral {
     notes?: string;
 }
 
-// Mock Referrals
-const MOCK_REFERRALS: Referral[] = [
-    {
-        id: 'r1',
-        patientId: 'p004',
-        patientName: 'Diego Ramos Ferreira',
-        originUnitName: 'NASF Zona Leste',
-        referringProfessionalName: 'Dr. Silva',
-        referringProfessionalRole: 'Psiquiatra',
-        reason: 'Conflito Escolar / Agressividade',
-        mainComplaint: 'Dificuldade de socialização na escola e episódios de raiva.',
-        riskLevel: 'moderado',
-        priority: 'normal',
-        status: 'encaminhado',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        timeline: [
-            { status: 'created', date: new Date().toISOString(), by: 'Dr. Silva' }
-        ]
-    },
-    {
-        id: 'r2',
-        patientId: 'p018',
-        patientName: 'Rafael Nunes Campos',
-        originUnitName: 'UBS Cidade Alta',
-        referringProfessionalName: 'Enf. Maria',
-        referringProfessionalRole: 'Enfermeira',
-        reason: 'Ansiedade Social',
-        riskLevel: 'moderado',
-        priority: 'normal',
-        status: 'em_triagem',
-        createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-        updatedAt: new Date().toISOString(),
-        timeline: [
-            { status: 'created', date: new Date(Date.now() - 86400000).toISOString(), by: 'Enf. Maria' }
-        ]
-    }
-];
-
 export const referralService = {
     getAll: async (): Promise<Referral[]> => {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const stored = localStorage.getItem('elosus_referrals');
-        if (stored) {
-            return JSON.parse(stored);
+        try {
+            const q = query(collection(db, COLLECTION_NAME));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Referral));
+        } catch (error) {
+            console.error('Error fetching referrals:', error);
+            return [];
         }
-        localStorage.setItem('elosus_referrals', JSON.stringify(MOCK_REFERRALS));
-        return MOCK_REFERRALS;
     },
 
     create: async (referralData: Omit<Referral, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'timeline'>): Promise<Referral> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const newReferral: Referral = {
+        const newReferralData = {
             ...referralData,
-            id: Math.random().toString(36).substr(2, 9),
             status: 'encaminhado',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -106,167 +83,143 @@ export const referralService = {
             ]
         };
 
-        const current = await referralService.getAll();
-        const updated = [newReferral, ...current];
-        localStorage.setItem('elosus_referrals', JSON.stringify(updated));
-        return newReferral;
+        const docRef = await addDoc(collection(db, COLLECTION_NAME), newReferralData);
+        return { id: docRef.id, ...newReferralData } as Referral;
     },
 
     updateStatus: async (id: string, status: Referral['status'], notes?: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const current = await referralService.getAll();
-        const updated = current.map(r => {
-            if (r.id === id) {
-                return {
-                    ...r,
-                    status,
-                    notes: notes || r.notes,
-                    updatedAt: new Date().toISOString()
-                };
-            }
-            return r;
+        const docRef = doc(db, COLLECTION_NAME, id);
+        await updateDoc(docRef, {
+            status,
+            notes: notes || undefined, // Only update if provided
+            updatedAt: new Date().toISOString()
         });
-        localStorage.setItem('elosus_referrals', JSON.stringify(updated));
     },
 
     // New Methods for Workflow
 
     invitePatient: async (referralId: string, groupDetails: { groupId: string, professionalName: string }): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const current = await referralService.getAll();
-        const updated = current.map(r => {
-            if (r.id === referralId) {
-                return {
-                    ...r,
-                    status: 'convidado' as const,
-                    groupId: groupDetails.groupId,
-                    updatedAt: new Date().toISOString(),
-                    timeline: [
-                        ...r.timeline,
-                        {
-                            status: 'invited' as const,
-                            date: new Date().toISOString(),
-                            by: groupDetails.professionalName,
-                            notes: `Convidado para o grupo ${groupDetails.groupId}`
-                        }
-                    ]
-                };
-            }
-            return r;
+        const docRef = doc(db, COLLECTION_NAME, referralId);
+
+        // We need to get the current timeline to append
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Referral not found');
+
+        const currentData = docSnap.data() as Referral;
+
+        await updateDoc(docRef, {
+            status: 'convidado',
+            groupId: groupDetails.groupId,
+            updatedAt: new Date().toISOString(),
+            timeline: [
+                ...currentData.timeline,
+                {
+                    status: 'invited',
+                    date: new Date().toISOString(),
+                    by: groupDetails.professionalName,
+                    notes: `Convidado para o grupo ${groupDetails.groupId}`
+                }
+            ]
         });
-        localStorage.setItem('elosus_referrals', JSON.stringify(updated));
     },
 
     acceptInvite: async (referralId: string, patientName: string, userId: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+            await runTransaction(db, async (transaction) => {
+                const referralRef = doc(db, COLLECTION_NAME, referralId);
+                const referralDoc = await transaction.get(referralRef);
 
-        // 1. Update Referral Status
-        const currentReferrals = await referralService.getAll();
-        let targetGroupId = '';
+                if (!referralDoc.exists()) {
+                    throw new Error("Referral does not exist!");
+                }
 
-        const updatedReferrals = currentReferrals.map(r => {
-            if (r.id === referralId) {
-                targetGroupId = r.groupId || '';
-                return {
-                    ...r,
-                    status: 'concluido' as const,
+                const referralData = referralDoc.data() as Referral;
+                const targetGroupId = referralData.groupId;
+
+                if (!targetGroupId) {
+                    throw new Error("No group linked to this referral invite.");
+                }
+
+                // 1. Update Referral
+                transaction.update(referralRef, {
+                    status: 'concluido',
                     patientId: userId, // Link to the actual patient user
                     updatedAt: new Date().toISOString(),
                     timeline: [
-                        ...r.timeline,
+                        ...referralData.timeline,
                         {
-                            status: 'accepted' as const,
+                            status: 'accepted',
                             date: new Date().toISOString(),
                             by: patientName
                         },
                         {
-                            status: 'joined' as const,
+                            status: 'joined',
                             date: new Date().toISOString(),
                             by: 'Sistema',
                             notes: 'Paciente ingressou no grupo'
                         }
                     ]
-                };
-            }
-            return r;
-        });
-        localStorage.setItem('elosus_referrals', JSON.stringify(updatedReferrals));
-
-        // 2. Add Patient to Group Participants (Mock Logic for localStorage)
-        if (targetGroupId) {
-            const storedGroups = localStorage.getItem('elosus_groups_v2');
-            if (storedGroups) {
-                const groups = JSON.parse(storedGroups);
-                const updatedGroups = groups.map((g: any) => {
-                    if (g.id === targetGroupId) {
-                        const currentParticipants = g.participants || [];
-                        if (!currentParticipants.includes(userId)) {
-                            return {
-                                ...g,
-                                participants: [...currentParticipants, userId]
-                            };
-                        }
-                    }
-                    return g;
                 });
-                localStorage.setItem('elosus_groups_v2', JSON.stringify(updatedGroups));
-            }
+
+                // 2. Add Patient to Group Participants
+                const groupRef = doc(db, 'grupos', targetGroupId);
+                // Use arrayUnion to add unique value
+                transaction.update(groupRef, {
+                    participants: arrayUnion(userId)
+                });
+            });
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+            throw e;
         }
     },
 
     declineInvite: async (referralId: string, reason: string, patientName: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const current = await referralService.getAll();
-        const updated = current.map(r => {
-            if (r.id === referralId) {
-                return {
-                    ...r,
-                    status: 'rejeitado' as const,
-                    updatedAt: new Date().toISOString(),
-                    timeline: [
-                        ...r.timeline,
-                        {
-                            status: 'declined' as const,
-                            date: new Date().toISOString(),
-                            by: patientName,
-                            notes: reason
-                        }
-                    ]
-                };
-            }
-            return r;
+        const docRef = doc(db, COLLECTION_NAME, referralId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Referral not found');
+        const currentData = docSnap.data() as Referral;
+
+        await updateDoc(docRef, {
+            status: 'rejeitado',
+            updatedAt: new Date().toISOString(),
+            timeline: [
+                ...currentData.timeline,
+                {
+                    status: 'declined',
+                    date: new Date().toISOString(),
+                    by: patientName,
+                    notes: reason
+                }
+            ]
         });
-        localStorage.setItem('elosus_referrals', JSON.stringify(updated));
     },
 
     manualAcceptance: async (referralId: string, professionalName: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const current = await referralService.getAll();
-        const updated = current.map(r => {
-            if (r.id === referralId) {
-                return {
-                    ...r,
-                    status: 'concluido' as const,
-                    updatedAt: new Date().toISOString(),
-                    timeline: [
-                        ...r.timeline,
-                        {
-                            status: 'accepted' as const,
-                            date: new Date().toISOString(),
-                            by: professionalName,
-                            notes: 'Aceite manual realizado pelo profissional'
-                        },
-                        {
-                            status: 'joined' as const,
-                            date: new Date().toISOString(),
-                            by: 'Sistema'
-                        }
-                    ]
-                };
-            }
-            return r;
+        const docRef = doc(db, COLLECTION_NAME, referralId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) throw new Error('Referral not found');
+        const currentData = docSnap.data() as Referral;
+
+        await updateDoc(docRef, {
+            status: 'concluido',
+            updatedAt: new Date().toISOString(),
+            timeline: [
+                ...currentData.timeline,
+                {
+                    status: 'accepted',
+                    date: new Date().toISOString(),
+                    by: professionalName,
+                    notes: 'Aceite manual realizado pelo profissional'
+                },
+                {
+                    status: 'joined',
+                    date: new Date().toISOString(),
+                    by: 'Sistema'
+                }
+            ]
         });
-        localStorage.setItem('elosus_referrals', JSON.stringify(updated));
     }
 };
+
 
