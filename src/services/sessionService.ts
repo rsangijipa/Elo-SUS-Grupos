@@ -9,7 +9,7 @@ import {
     serverTimestamp,
     orderBy
 } from 'firebase/firestore';
-import { db } from '../firebase_config';
+import { db } from './firebase';
 import type { Session, Attendance } from '../types/session';
 
 const SESSIONS_COLLECTION = 'sessoesGrupo';

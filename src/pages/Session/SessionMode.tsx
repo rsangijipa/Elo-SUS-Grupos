@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Save, ArrowLeft, FileText, Coffee, BookOpen, Loader2 } from 'lucide-react';
+import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Save, ArrowLeft, FileText, BookOpen, Loader2 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import ProtocolRenderer from '../../components/ProtocolRenderer';
 
@@ -71,6 +71,28 @@ const SessionMode: React.FC = () => {
         return <div className="p-8 text-center">Grupo não encontrado.</div>;
     }
 
+    const getAttendanceButtonClass = (patientId: string, type: 'present' | 'absent' | 'justified') => {
+        const status = attendance[patientId];
+        const baseClass = "p-2 rounded-lg transition-all";
+
+        if (type === 'present') {
+            return status === 'present'
+                ? `${baseClass} bg-green-100 text-green-700 ring-2 ring-green-500`
+                : `${baseClass} bg-slate-100 text-slate-400 hover:bg-green-50 hover:text-green-600`;
+        }
+        if (type === 'absent') {
+            return status === 'absent'
+                ? `${baseClass} bg-red-100 text-red-700 ring-2 ring-red-500`
+                : `${baseClass} bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600`;
+        }
+        if (type === 'justified') {
+            return status === 'justified'
+                ? `${baseClass} bg-orange-100 text-orange-700 ring-2 ring-orange-500`
+                : `${baseClass} bg-slate-100 text-slate-400 hover:bg-orange-50 hover:text-orange-600`;
+        }
+        return baseClass;
+    };
+
     return (
         <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-20 relative">
             {/* Protocol Modal */}
@@ -90,7 +112,7 @@ const SessionMode: React.FC = () => {
                         </div>
                         <div className="p-6">
                             <ProtocolRenderer
-                                protocol={sessionGroup.protocol}
+                                protocol={sessionGroup.protocol as any}
                                 patientId={selectedPatientForProtocol}
                                 onSave={handleSaveProtocolData}
                             />
@@ -147,7 +169,7 @@ const SessionMode: React.FC = () => {
                                         {/* Protocol Button */}
                                         {sessionGroup.protocol && sessionGroup.protocol !== 'STANDARD' && (
                                             <button
-                                                onClick={() => setSelectedPatientForProtocol(patient.id)}
+                                                onClick={() => setSelectedPatientForProtocol(patient.id || '')}
                                                 className="p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-all mr-2"
                                                 title="Abrir Ficha Clínica"
                                             >
@@ -156,22 +178,22 @@ const SessionMode: React.FC = () => {
                                         )}
 
                                         <button
-                                            onClick={() => handleAttendance(patient.id, 'present')}
-                                            className={`p-2 rounded-lg transition-all ${attendance[patient.id] === 'present' ? 'bg-green-100 text-green-700 ring-2 ring-green-500' : 'bg-slate-100 text-slate-400 hover:bg-green-50 hover:text-green-600'}`}
+                                            onClick={() => handleAttendance(patient.id || '', 'present')}
+                                            className={getAttendanceButtonClass(patient.id || '', 'present')}
                                             title="Presente"
                                         >
                                             <CheckCircle size={20} />
                                         </button>
                                         <button
-                                            onClick={() => handleAttendance(patient.id, 'absent')}
-                                            className={`p-2 rounded-lg transition-all ${attendance[patient.id] === 'absent' ? 'bg-red-100 text-red-700 ring-2 ring-red-500' : 'bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
+                                            onClick={() => handleAttendance(patient.id || '', 'absent')}
+                                            className={getAttendanceButtonClass(patient.id || '', 'absent')}
                                             title="Falta"
                                         >
                                             <XCircle size={20} />
                                         </button>
                                         <button
-                                            onClick={() => handleAttendance(patient.id, 'justified')}
-                                            className={`p-2 rounded-lg transition-all ${attendance[patient.id] === 'justified' ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-500' : 'bg-slate-100 text-slate-400 hover:bg-orange-50 hover:text-orange-600'}`}
+                                            onClick={() => handleAttendance(patient.id || '', 'justified')}
+                                            className={getAttendanceButtonClass(patient.id || '', 'justified')}
                                             title="Justificativa"
                                         >
                                             <AlertTriangle size={20} />

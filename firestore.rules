@@ -11,65 +11,35 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
     
-    function isTherapist() {
-      return isAuthenticated() && getUserData().role == 'terapeuta';
-    }
-    
-    function isCoordinator() {
-      return isAuthenticated() && getUserData().role == 'coordenador';
-    }
-    
-    function isAdmin() {
-      return isAuthenticated() && getUserData().role == 'administrador';
+    function isProfessional() {
+      return isAuthenticated() && (request.auth.token.role == 'professional' || getUserData().role == 'professional');
     }
 
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin() || request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Unidades de Saude
-    match /unidadesSaude/{unidadeId} {
-      allow read: if isAuthenticated();
-      allow write: if isCoordinator() || isAdmin();
+    // Patients - Strict Access
+    match /pacientes/{patientId} {
+      // Read: Only the patient themselves OR a professional
+      allow read: if isAuthenticated() && (request.auth.uid == patientId || isProfessional());
+      // Write: ONLY professionals
+      allow write: if isProfessional();
     }
 
-    // Pacientes
-    match /pacientes/{pacienteId} {
+    // Groups
+    match /grupos/{groupId} {
+      // Read: Authenticated users (Patients need to see groups they are in, Professionals see all)
       allow read: if isAuthenticated();
-      // Therapists can create/update patients linked to their unit (simplified for now)
-      allow write: if isAuthenticated(); 
+      // Write: ONLY professionals
+      allow write: if isProfessional();
     }
 
-    // Grupos
-    match /grupos/{grupoId} {
-      allow read: if isAuthenticated();
-      allow write: if isTherapist() || isCoordinator() || isAdmin();
-    }
-
-    // Inscricoes
-    match /inscricoesGrupo/{inscricaoId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-
-    // Sessoes
-    match /sessoesGrupo/{sessaoId} {
-      allow read: if isAuthenticated();
-      allow write: if isTherapist() || isCoordinator() || isAdmin();
-    }
-
-    // Presencas
-    match /presencasSessao/{presencaId} {
-      allow read: if isAuthenticated();
-      allow write: if isTherapist() || isCoordinator() || isAdmin();
-    }
-    
-    // Notificacoes
-    match /notificacoes/{notificacaoId} {
-      allow read: if isAuthenticated() && resource.data.destinatario == request.auth.token.phone_number; // Example
-      allow write: if false; // Only backend/functions should write notifications ideally
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

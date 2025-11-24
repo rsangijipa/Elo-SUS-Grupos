@@ -9,7 +9,7 @@ import {
     where,
     serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase_config';
+import { db } from './firebase';
 
 export interface Subscription {
     id?: string;

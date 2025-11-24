@@ -10,7 +10,7 @@ import {
     serverTimestamp,
     getDoc
 } from 'firebase/firestore';
-import { db } from '../firebase_config';
+import { db } from './firebase';
 import type { Patient } from '../types/patient';
 
 const COLLECTION_NAME = 'pacientes';

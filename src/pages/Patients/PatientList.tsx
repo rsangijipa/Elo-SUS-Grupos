@@ -12,9 +12,25 @@ const PatientList: React.FC = () => {
 
     const filteredPatients = patients.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.cns?.includes(searchTerm) ||
-        p.cpf?.includes(searchTerm)
+        (p.cns && p.cns.includes(searchTerm)) ||
+        (p.cpf && p.cpf.includes(searchTerm))
     );
+
+    const getAge = (birthDateString?: string) => {
+        if (!birthDateString) return '-';
+        const birthDate = new Date(birthDateString);
+        if (isNaN(birthDate.getTime())) return '-';
+        const ageDifMs = Date.now() - birthDate.getTime();
+        const ageDate = new Date(ageDifMs);
+        return Math.abs(ageDate.getUTCFullYear() - 1970);
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('pt-BR');
+    };
 
     return (
         <div className="space-y-8">
@@ -92,9 +108,9 @@ const PatientList: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-slate-700 font-medium">{new Date(patient.birthDate).toLocaleDateString('pt-BR')}</div>
+                                            <div className="text-sm text-slate-700 font-medium">{formatDate(patient.birthDate)}</div>
                                             <div className="text-xs text-slate-400">
-                                                {new Date().getFullYear() - new Date(patient.birthDate).getFullYear()} anos
+                                                {getAge(patient.birthDate)} anos
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -121,7 +137,7 @@ const PatientList: React.FC = () => {
                                                 <button
                                                     onClick={() => {
                                                         if (window.confirm('Tem certeza que deseja excluir este paciente?')) {
-                                                            deletePatient(patient.id);
+                                                            if (patient.id) deletePatient(patient.id);
                                                         }
                                                     }}
                                                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

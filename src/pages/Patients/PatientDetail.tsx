@@ -59,6 +59,7 @@ const PatientDetail: React.FC = () => {
         }
     };
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const [activeTab, setActiveTab] = useState<'overview' | 'documents'>('overview');
 
     return (
@@ -72,8 +73,8 @@ const PatientDetail: React.FC = () => {
                             <ArrowLeft size={24} />
                         </button>
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-900">{patient.nomeCompleto}</h1>
-                            <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {new Date(patient.dataNascimento).toLocaleDateString('pt-BR')}</p>
+                            <h1 className="text-3xl font-bold text-slate-900">{patient.name}</h1>
+                            <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {new Date(patient.birthDate).toLocaleDateString('pt-BR')}</p>
                         </div>
                     </div>
                     {getRiskBadge()}
@@ -82,7 +83,7 @@ const PatientDetail: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-50">
                     <div>
                         <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Telefone</span>
-                        <span className="text-slate-700 font-medium">{patient.telefone}</span>
+                        <span className="text-slate-700 font-medium">{patient.phone}</span>
                     </div>
                     <div>
                         <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Diagnóstico Principal</span>

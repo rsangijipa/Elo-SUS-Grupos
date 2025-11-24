@@ -10,16 +10,17 @@ const PatientForm: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<Partial<Patient>>({
-        nomeCompleto: '',
-        dataNascimento: '',
+        name: '',
+        birthDate: '',
         sexo: 'M',
         cpf: '',
         cns: '',
-        telefone: '',
+        phone: '',
         whatsappResponsavel: '',
         nomeResponsavel: '',
         observacoes: '',
         unidadeSaudeId: 'ubs-centro',
+        status: 'active'
     });
 
     useEffect(() => {
@@ -101,9 +102,9 @@ const PatientForm: React.FC = () => {
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Nome Completo *</label>
                         <input
                             type="text"
-                            name="nomeCompleto"
+                            name="name"
                             required
-                            value={formData.nomeCompleto}
+                            value={formData.name}
                             onChange={handleChange}
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
                             placeholder="Nome completo do paciente"
@@ -114,9 +115,9 @@ const PatientForm: React.FC = () => {
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Data de Nascimento *</label>
                         <input
                             type="date"
-                            name="dataNascimento"
+                            name="birthDate"
                             required
-                            value={formData.dataNascimento}
+                            value={formData.birthDate}
                             onChange={handleChange}
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         />
@@ -164,9 +165,9 @@ const PatientForm: React.FC = () => {
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Telefone *</label>
                         <input
                             type="text"
-                            name="telefone"
+                            name="phone"
                             required
-                            value={formData.telefone}
+                            value={formData.phone}
                             onChange={handleChange}
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
                             placeholder="(00) 00000-0000"

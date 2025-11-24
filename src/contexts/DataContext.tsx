@@ -1,120 +1,141 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-    Patient,
-    Appointment,
-    MOCK_GROUPS,
-    DEMO_PATIENTS,
-    MOCK_APPOINTMENTS
-} from '../utils/seedData';
 import { Group } from '../types/group';
+import { Patient } from '../types/patient';
+import { Appointment } from '../utils/seedData'; // Importing from seedData as there is no dedicated type file yet
 import { useAuth } from './AuthContext';
+import { groupService } from '../services/groupService';
+import { patientService } from '../services/patientService';
+import { useNotifications } from './NotificationContext';
 
 interface DataContextType {
     groups: Group[];
     patients: Patient[];
     appointments: Appointment[];
     loading: boolean;
-    addGroup: (group: Omit<Group, 'id'>) => void;
-    addPatient: (patient: Omit<Patient, 'id'>) => void;
-    addAppointment: (appointment: Omit<Appointment, 'id'>) => void;
-    updatePatient: (id: string, data: Partial<Patient>) => void;
-    deletePatient: (id: string) => void;
-    refreshData: () => void;
+    addGroup: (group: Omit<Group, 'id'>) => Promise<void>;
+    addPatient: (patient: Omit<Patient, 'id'>) => Promise<void>;
+    updatePatient: (id: string, data: Partial<Patient>) => Promise<void>;
+    deletePatient: (id: string) => Promise<void>;
+    addAppointment: (appointment: Omit<Appointment, 'id'>) => Promise<void>;
+    refreshData: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-    GROUPS: 'elosus_groups_v2',
-    PATIENTS: 'elosus_patients_v2',
-    APPOINTMENTS: 'elosus_appointments_v2'
-};
-
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
+    const { addNotification } = useNotifications();
     const [groups, setGroups] = useState<Group[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Load data from localStorage or seed if empty/demo
     useEffect(() => {
-        loadData();
+        if (user) {
+            loadData();
+        } else {
+            setGroups([]);
+            setPatients([]);
+            setAppointments([]);
+            setLoading(false);
+        }
     }, [user]);
 
-    const loadData = () => {
+    const loadData = async () => {
         setLoading(true);
-
-        // Try to load from localStorage
-        const storedGroups = localStorage.getItem(STORAGE_KEYS.GROUPS);
-        const storedPatients = localStorage.getItem(STORAGE_KEYS.PATIENTS);
-        const storedAppointments = localStorage.getItem(STORAGE_KEYS.APPOINTMENTS);
-
-        if (storedGroups) setGroups(JSON.parse(storedGroups));
-        else {
-            setGroups(MOCK_GROUPS);
-            localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(MOCK_GROUPS));
+        try {
+            const [fetchedGroups, fetchedPatients] = await Promise.all([
+                groupService.getAll(),
+                patientService.getAll()
+            ]);
+            setGroups(fetchedGroups);
+            setPatients(fetchedPatients);
+            // Appointments are currently not fetched from Firestore
+            setAppointments([]);
+        } catch (error) {
+            console.error('Error loading data:', error);
+            addNotification({
+                type: 'alert',
+                title: 'Erro ao carregar dados',
+                message: 'Não foi possível sincronizar com o servidor.'
+            });
+        } finally {
+            setLoading(false);
         }
+    };
 
-        if (storedPatients) setPatients(JSON.parse(storedPatients));
-        else {
-            setPatients(DEMO_PATIENTS);
-            localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(DEMO_PATIENTS));
+    const addGroup = async (groupData: Omit<Group, 'id'>) => {
+        try {
+            await groupService.create(groupData);
+            await loadData(); // Refresh to get the new ID and server timestamp
+            addNotification({
+                type: 'success',
+                title: 'Grupo criado',
+                message: 'O grupo foi criado com sucesso.'
+            });
+        } catch (error) {
+            console.error('Error adding group:', error);
+            throw error;
         }
+    };
 
-        if (storedAppointments) setAppointments(JSON.parse(storedAppointments));
-        else {
-            setAppointments(MOCK_APPOINTMENTS);
-            localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(MOCK_APPOINTMENTS));
+    const addPatient = async (patientData: Omit<Patient, 'id'>) => {
+        try {
+            await patientService.create(patientData);
+            await loadData();
+            addNotification({
+                type: 'success',
+                title: 'Paciente cadastrado',
+                message: 'O paciente foi cadastrado com sucesso.'
+            });
+        } catch (error) {
+            console.error('Error adding patient:', error);
+            throw error;
         }
-
-        setLoading(false);
     };
 
-    const addGroup = (groupData: Omit<Group, 'id'>) => {
-        const newGroup: Group = {
-            ...groupData,
-            id: `g${Date.now()}`
-        };
-        const updatedGroups = [...groups, newGroup];
-        setGroups(updatedGroups);
-        localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(updatedGroups));
+    const updatePatient = async (id: string, data: Partial<Patient>) => {
+        try {
+            await patientService.update(id, data);
+            await loadData();
+            addNotification({
+                type: 'success',
+                title: 'Paciente atualizado',
+                message: 'Os dados do paciente foram atualizados.'
+            });
+        } catch (error) {
+            console.error('Error updating patient:', error);
+            throw error;
+        }
     };
 
-    const addPatient = (patientData: Omit<Patient, 'id'>) => {
-        const newPatient: Patient = {
-            ...patientData,
-            id: `p${Date.now()}`
-        };
-        const updatedPatients = [newPatient, ...patients]; // Add to top
-        setPatients(updatedPatients);
-        localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(updatedPatients));
+    const deletePatient = async (id: string) => {
+        try {
+            await patientService.delete(id);
+            await loadData();
+            addNotification({
+                type: 'success',
+                title: 'Paciente removido',
+                message: 'O paciente foi removido com sucesso.'
+            });
+        } catch (error) {
+            console.error('Error deleting patient:', error);
+            throw error;
+        }
     };
 
-    const updatePatient = (id: string, data: Partial<Patient>) => {
-        const updatedPatients = patients.map(p => p.id === id ? { ...p, ...data } : p);
-        setPatients(updatedPatients);
-        localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(updatedPatients));
+    const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
+        // Stub implementation
+        console.log('Add appointment not implemented yet', appointmentData);
+        addNotification({
+            type: 'alert',
+            title: 'Funcionalidade em breve',
+            message: 'O agendamento ainda não está conectado ao banco de dados.'
+        });
     };
 
-    const deletePatient = (id: string) => {
-        const updatedPatients = patients.filter(p => p.id !== id);
-        setPatients(updatedPatients);
-        localStorage.setItem(STORAGE_KEYS.PATIENTS, JSON.stringify(updatedPatients));
-    };
-
-    const addAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
-        const newAppointment: Appointment = {
-            ...appointmentData,
-            id: `a${Date.now()}`
-        };
-        const updatedAppointments = [...appointments, newAppointment];
-        setAppointments(updatedAppointments);
-        localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(updatedAppointments));
-    };
-
-    const refreshData = () => {
-        loadData();
+    const refreshData = async () => {
+        await loadData();
     };
 
     return (
@@ -125,9 +146,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             loading,
             addGroup,
             addPatient,
-            addAppointment,
             updatePatient,
             deletePatient,
+            addAppointment,
             refreshData
         }}>
             {children}
