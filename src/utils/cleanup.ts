@@ -5,6 +5,10 @@ export const cleanupDatabase = async () => {
     console.log('Starting database cleanup...');
     try {
         // 1. Delete all Referrals
+        if (!db) {
+            console.error('Database not initialized');
+            return false;
+        }
         const referralsRef = collection(db, 'referrals');
         const referralsSnapshot = await getDocs(referralsRef);
         const referralDeletions = referralsSnapshot.docs.map(d => deleteDoc(doc(db, 'referrals', d.id)));
