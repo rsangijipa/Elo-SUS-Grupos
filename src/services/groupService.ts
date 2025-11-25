@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Group } from '../types/group';
+import { notificationService } from './notificationService';
 
 const COLLECTION_NAME = 'grupos';
 
@@ -98,6 +99,20 @@ export const groupService = {
                     });
                 }
             });
+
+            // Send notification after successful transaction
+            // We need group name, so let's fetch it quickly or pass it. 
+            // Fetching is safer to ensure we have data.
+            const groupSnap = await getDoc(doc(db, COLLECTION_NAME, groupId));
+            const groupName = groupSnap.exists() ? groupSnap.data().name : 'Grupo';
+
+            await notificationService.sendNotification(patientId, {
+                title: 'Novo Grupo',
+                message: `Olá! O psicólogo adicionou você ao grupo ${groupName}. Clique para acessar.`,
+                type: 'group_invite',
+                link: `/groups/${groupId}`
+            });
+
         } catch (e) {
             console.error("Transaction failed: ", e);
             throw e;

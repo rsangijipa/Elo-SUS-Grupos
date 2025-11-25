@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Users,
@@ -17,28 +17,22 @@ import {
     XCircle,
     AlertCircle,
     MoreVertical,
-    X
+    X,
+    UserPlus,
+    Save
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { groupService } from '../../services/groupService';
+import { attendanceService } from '../../services/attendanceService';
+import type { Patient } from '../../types/patient';
+import AddParticipantModal from '../../components/Modals/AddParticipantModal';
 
-interface Participant {
-    id: string;
-    name: string;
-    attendanceRate: number;
-    status: 'present' | 'absent' | 'excused' | null;
-    avatar?: string;
+interface Participant extends Omit<Patient, 'status'> {
+    attendanceRate?: number; // Calculated dynamically
+    status?: 'present' | 'absent' | 'excused' | null; // For current session
+    patientStatus?: 'active' | 'waiting' | 'inactive'; // Renamed original status
 }
-
-// Mock data for participants
-const MOCK_PARTICIPANTS: Participant[] = [
-    { id: '1', name: 'Maria Silva', attendanceRate: 85, status: null, avatar: 'MS' },
-    { id: '2', name: 'João Santos', attendanceRate: 85, status: null, avatar: 'JS' },
-    { id: '3', name: 'Ana Souza', attendanceRate: 89, status: null, avatar: 'AS' },
-    { id: '4', name: 'Ana Maria', attendanceRate: 85, status: null, avatar: 'AM' },
-    { id: '5', name: 'Rurio Eiutos', attendanceRate: 83, status: null, avatar: 'RE' },
-    { id: '6', name: 'Ermo Celhario', attendanceRate: 85, status: null, avatar: 'EC' },
-];
 
 const GroupManagement: React.FC = () => {
     const { id } = useParams();
@@ -47,30 +41,99 @@ const GroupManagement: React.FC = () => {
     const { addNotification } = useNotifications();
     const group = groups.find(g => g.id === id);
 
-    const [participants, setParticipants] = useState<Participant[]>(MOCK_PARTICIPANTS);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    // Messaging
     const [message, setMessage] = useState('');
     const [urlInput, setUrlInput] = useState('');
-    const [isSending, setIsSending] = useState(false);
     const [selectedChannels, setSelectedChannels] = useState({
         whatsapp: true,
         email: true,
         sms: false
     });
+    // Selection for batch actions
+    const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
 
     // Accordion states
     const [showAttachments, setShowAttachments] = useState(true);
     const [showMessageHistory, setShowMessageHistory] = useState(true);
 
-    if (!group) {
-        return (
-            <div className="p-8 text-center">
-                <h2 className="text-xl font-bold text-slate-800">Grupo não encontrado</h2>
-                <button onClick={() => navigate('/groups')} className="mt-4 text-blue-600 hover:underline">
-                    Voltar para Grupos
-                </button>
-            </div>
-        );
-    }
+    useEffect(() => {
+        if (id) {
+            loadParticipants();
+        }
+    }, [id]);
+
+    const loadParticipants = async () => {
+        if (!id) return;
+        setLoading(true);
+        try {
+            const data = await groupService.getParticipants(id);
+            // Initialize status as null for the current session
+            // TODO: Calculate attendanceRate based on historical sessions
+            const participantsWithStatus = data.map(p => ({
+                ...p,
+                status: null,
+                attendanceRate: 0 // Placeholder
+            }));
+            setParticipants(participantsWithStatus);
+            // Select all by default for messaging
+            setSelectedParticipantIds(participantsWithStatus.map(p => p.id!));
+        } catch (error) {
+            console.error("Error loading participants:", error);
+            addNotification({
+                type: 'alert',
+                title: 'Erro',
+                message: 'Falha ao carregar participantes.'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddParticipant = async (patientId: string) => {
+        if (!id) return;
+        try {
+            await groupService.addParticipant(id, patientId);
+            addNotification({
+                type: 'success',
+                title: 'Sucesso',
+                message: 'Participante adicionado ao grupo.'
+            });
+            await loadParticipants(); // Reload list
+        } catch (error) {
+            console.error("Error adding participant:", error);
+            addNotification({
+                type: 'alert',
+                title: 'Erro',
+                message: 'Falha ao adicionar participante.'
+            });
+        }
+    };
+
+    const handleRemoveParticipant = async (participantId: string) => {
+        if (!id) return;
+        if (window.confirm('Tem certeza que deseja remover este participante do grupo?')) {
+            try {
+                await groupService.removeParticipant(id, participantId);
+                setParticipants(prev => prev.filter(p => p.id !== participantId));
+                addNotification({
+                    type: 'success',
+                    title: 'Participante removido',
+                    message: 'O participante foi removido do grupo com sucesso.'
+                });
+            } catch (error) {
+                console.error("Error removing participant:", error);
+                addNotification({
+                    type: 'alert',
+                    title: 'Erro',
+                    message: 'Falha ao remover participante.'
+                });
+            }
+        }
+    };
 
     const handleAttendance = (participantId: string, status: 'present' | 'absent' | 'excused') => {
         setParticipants(prev => prev.map(p =>
@@ -78,18 +141,56 @@ const GroupManagement: React.FC = () => {
         ));
     };
 
-    const handleRemoveParticipant = (participantId: string) => {
-        if (window.confirm('Tem certeza que deseja remover este participante do grupo?')) {
-            setParticipants(prev => prev.filter(p => p.id !== participantId));
+    const handleSaveSession = async () => {
+        if (!id) return;
+
+        // Check if at least one attendance is marked
+        const hasAttendance = participants.some(p => p.status !== null);
+        if (!hasAttendance) {
+            addNotification({
+                type: 'alert',
+                title: 'Atenção',
+                message: 'Marque a presença de pelo menos um participante.'
+            });
+            return;
+        }
+
+        try {
+            const attendanceList: Record<string, any> = {};
+            participants.forEach(p => {
+                if (p.id && p.status) {
+                    attendanceList[p.id] = {
+                        status: p.status,
+                        notes: '' // Could add notes field later
+                    };
+                }
+            });
+
+            await attendanceService.saveSession(id, {
+                date: new Date().toISOString(),
+                attendanceList
+            });
+
             addNotification({
                 type: 'success',
-                title: 'Participante removido',
-                message: 'O participante foi removido do grupo com sucesso.'
+                title: 'Sessão Salva',
+                message: 'A presença foi registrada com sucesso.'
+            });
+
+            // Reset statuses or navigate away? 
+            // Usually we might want to keep them visible or clear them.
+            // For now, let's keep them as visual confirmation.
+        } catch (error) {
+            console.error("Error saving session:", error);
+            addNotification({
+                type: 'alert',
+                title: 'Erro',
+                message: 'Falha ao salvar sessão.'
             });
         }
     };
 
-    const handleBatchSend = async () => {
+    const handleBatchSend = () => {
         if (!message.trim() && !urlInput.trim()) {
             addNotification({
                 type: 'alert',
@@ -99,22 +200,50 @@ const GroupManagement: React.FC = () => {
             return;
         }
 
-        setIsSending(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        if (selectedParticipantIds.length === 0) {
+            addNotification({
+                type: 'alert',
+                title: 'Nenhum selecionado',
+                message: 'Selecione pelo menos um participante.'
+            });
+            return;
+        }
 
-        addNotification({
-            type: 'success',
-            title: 'Enviado com sucesso',
-            message: `Mensagem enviada para ${participants.length} participantes.`
+        const fullMessage = `${message} ${urlInput}`.trim();
+        const encodedMessage = encodeURIComponent(fullMessage);
+
+        let sentCount = 0;
+        participants.forEach(p => {
+            if (p.id && selectedParticipantIds.includes(p.id) && p.phone) {
+                // Open WhatsApp for each selected participant
+                // Note: Browsers might block multiple popups. 
+                // A better UX might be to show a list of links to click, but the requirement was "open a new tab".
+                // We'll try to open them.
+                const phone = p.phone.replace(/\D/g, '');
+                window.open(`https://wa.me/55${phone}?text=${encodedMessage}`, '_blank');
+                sentCount++;
+            }
         });
 
-        setMessage('');
-        setUrlInput('');
-        setIsSending(false);
+        if (sentCount > 0) {
+            addNotification({
+                type: 'success',
+                title: 'Enviado',
+                message: `Abriu WhatsApp para ${sentCount} participantes.`
+            });
+            setMessage('');
+            setUrlInput('');
+        } else {
+            addNotification({
+                type: 'alert',
+                title: 'Atenção',
+                message: 'Nenhum participante selecionado possui telefone válido.'
+            });
+        }
     };
 
     const handleGenerateWhatsAppLink = () => {
+        // Group link (broadcast)
         if (!message.trim()) {
             addNotification({
                 type: 'alert',
@@ -126,21 +255,32 @@ const GroupManagement: React.FC = () => {
         const encodedMessage = encodeURIComponent(message);
         const waLink = `https://wa.me/?text=${encodedMessage}`;
         window.open(waLink, '_blank');
-        addNotification({
-            type: 'success',
-            title: 'Link Gerado',
-            message: 'WhatsApp aberto com a mensagem pronta.'
-        });
+    };
+
+    const toggleSelection = (id: string) => {
+        setSelectedParticipantIds(prev =>
+            prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
+        );
     };
 
     const getUrlType = (url: string) => {
         if (!url) return null;
-        // Simple regex for YouTube/Vimeo
         const videoRegex = /(youtube\.com|youtu\.be|vimeo\.com)/i;
         return videoRegex.test(url) ? 'video' : 'news';
     };
 
     const urlType = getUrlType(urlInput);
+
+    if (!group) {
+        return (
+            <div className="p-8 text-center">
+                <h2 className="text-xl font-bold text-slate-800">Grupo não encontrado</h2>
+                <button onClick={() => navigate('/groups')} className="mt-4 text-blue-600 hover:underline">
+                    Voltar para Grupos
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -174,12 +314,39 @@ const GroupManagement: React.FC = () => {
                                 <Users size={20} className="text-blue-600" />
                                 Participantes do Grupo ({participants.length})
                             </h3>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSaveSession}
+                                    className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                                >
+                                    <Save size={16} />
+                                    Salvar Chamada
+                                </button>
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                                >
+                                    <UserPlus size={16} />
+                                    Adicionar
+                                </button>
+                            </div>
                         </div>
 
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
                                     <tr>
+                                        <th className="px-4 py-4 w-10">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedParticipantIds.length === participants.length && participants.length > 0}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) setSelectedParticipantIds(participants.map(p => p.id!));
+                                                    else setSelectedParticipantIds([]);
+                                                }}
+                                                className="rounded text-blue-600 focus:ring-blue-500"
+                                            />
+                                        </th>
                                         <th className="px-6 py-4">Nome</th>
                                         <th className="px-6 py-4">Taxa de Presença</th>
                                         <th className="px-6 py-4 text-center">Presença Hoje</th>
@@ -187,82 +354,97 @@ const GroupManagement: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {participants.map((participant) => (
-                                        <tr key={participant.id} className="hover:bg-slate-50 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                                                        {participant.avatar}
-                                                    </div>
-                                                    <span className="font-medium text-slate-900">{participant.name}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden w-24">
-                                                        <div
-                                                            className={`h-full rounded-full ${participant.attendanceRate >= 80 ? 'bg-emerald-500' :
-                                                                participant.attendanceRate >= 60 ? 'bg-amber-500' : 'bg-red-500'
-                                                                }`}
-                                                            style={{ width: `${participant.attendanceRate}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-bold text-slate-600">{participant.attendanceRate}%</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleAttendance(participant.id, 'present')}
-                                                        className={`p-2 rounded-lg transition-all ${participant.status === 'present'
-                                                            ? 'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-200'
-                                                            : 'text-slate-300 hover:bg-emerald-50 hover:text-emerald-500'
-                                                            }`}
-                                                        title="Presente"
-                                                    >
-                                                        <CheckCircle2 size={20} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleAttendance(participant.id, 'excused')}
-                                                        className={`p-2 rounded-lg transition-all ${participant.status === 'excused'
-                                                            ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-200'
-                                                            : 'text-slate-300 hover:bg-amber-50 hover:text-amber-500'
-                                                            }`}
-                                                        title="Falta Justificada"
-                                                    >
-                                                        <AlertCircle size={20} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleAttendance(participant.id, 'absent')}
-                                                        className={`p-2 rounded-lg transition-all ${participant.status === 'absent'
-                                                            ? 'bg-red-100 text-red-600 ring-2 ring-red-200'
-                                                            : 'text-slate-300 hover:bg-red-50 hover:text-red-500'
-                                                            }`}
-                                                        title="Falta"
-                                                    >
-                                                        <XCircle size={20} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Enviar Mensagem Individual"
-                                                    >
-                                                        <MessageSquare size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleRemoveParticipant(participant.id)}
-                                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Remover do Grupo"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                            </td>
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan={5} className="p-8 text-center text-slate-500">Carregando participantes...</td>
                                         </tr>
-                                    ))}
+                                    ) : participants.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="p-8 text-center text-slate-500">Nenhum participante neste grupo.</td>
+                                        </tr>
+                                    ) : (
+                                        participants.map((participant) => (
+                                            <tr key={participant.id} className="hover:bg-slate-50 transition-colors group">
+                                                <td className="px-4 py-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedParticipantIds.includes(participant.id!)}
+                                                        onChange={() => toggleSelection(participant.id!)}
+                                                        className="rounded text-blue-600 focus:ring-blue-500"
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                                                            {participant.name.substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <span className="font-medium text-slate-900 block">{participant.name}</span>
+                                                            <span className="text-xs text-slate-400">{participant.phone}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden w-24">
+                                                            <div
+                                                                className={`h-full rounded-full ${participant.attendanceRate! >= 80 ? 'bg-emerald-500' :
+                                                                    participant.attendanceRate! >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                                                                    }`}
+                                                                style={{ width: `${participant.attendanceRate || 0}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-600">{participant.attendanceRate || 0}%</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => handleAttendance(participant.id!, 'present')}
+                                                            className={`p-2 rounded-lg transition-all ${participant.status === 'present'
+                                                                ? 'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-200'
+                                                                : 'text-slate-300 hover:bg-emerald-50 hover:text-emerald-500'
+                                                                }`}
+                                                            title="Presente"
+                                                        >
+                                                            <CheckCircle2 size={20} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAttendance(participant.id!, 'excused')}
+                                                            className={`p-2 rounded-lg transition-all ${participant.status === 'excused'
+                                                                ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-200'
+                                                                : 'text-slate-300 hover:bg-amber-50 hover:text-amber-500'
+                                                                }`}
+                                                            title="Falta Justificada"
+                                                        >
+                                                            <AlertCircle size={20} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAttendance(participant.id!, 'absent')}
+                                                            className={`p-2 rounded-lg transition-all ${participant.status === 'absent'
+                                                                ? 'bg-red-100 text-red-600 ring-2 ring-red-200'
+                                                                : 'text-slate-300 hover:bg-red-50 hover:text-red-500'
+                                                                }`}
+                                                            title="Falta"
+                                                        >
+                                                            <XCircle size={20} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleRemoveParticipant(participant.id!)}
+                                                            className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Remover do Grupo"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -362,24 +544,14 @@ const GroupManagement: React.FC = () => {
                                     title="Gerar link para enviar via WhatsApp Web/App"
                                 >
                                     <MessageSquare size={18} />
-                                    Link WhatsApp
+                                    Link Geral
                                 </button>
                                 <button
                                     onClick={handleBatchSend}
-                                    disabled={isSending}
-                                    className="flex-[2] py-3 bg-[#0054A6] hover:bg-[#004080] text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="flex-[2] py-3 bg-[#0054A6] hover:bg-[#004080] text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
                                 >
-                                    {isSending ? (
-                                        <>
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            Enviando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Send size={18} />
-                                            Enviar na Plataforma
-                                        </>
-                                    )}
+                                    <Send size={18} />
+                                    Enviar ({selectedParticipantIds.length})
                                 </button>
                             </div>
                         </div>
@@ -434,6 +606,13 @@ const GroupManagement: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <AddParticipantModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAdd={handleAddParticipant}
+                currentParticipantIds={participants.map(p => p.id!)}
+            />
         </div>
     );
 };

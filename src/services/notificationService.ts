@@ -1,59 +1,71 @@
+import {
+    collection,
+    addDoc,
+    updateDoc,
+    doc,
+    serverTimestamp,
+    onSnapshot,
+    query,
+    where,
+    orderBy
+} from 'firebase/firestore';
+import { db } from './firebase';
+
 export interface Notification {
-    id: string;
-    type: 'alert' | 'info' | 'success'; // Map to colors (Red/Blue/Green)
-    title: string; // e.g., "Novo Paciente", "Lembrete de Grupo"
+    id?: string;
+    title: string;
     message: string;
+    type: 'group_invite' | 'system' | 'alert' | 'success';
     read: boolean;
-    timestamp: Date;
+    createdAt: any;
+    link?: string;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-    {
-        id: '1',
-        type: 'info',
-        title: 'Lembrete de Grupo',
-        message: 'Grupo de Gestantes amanhã às 09:00',
-        read: false,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
-    },
-    {
-        id: '2',
-        type: 'success',
-        title: 'Confirmação',
-        message: 'Paciente João confirmou presença',
-        read: false,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3) // 3 hours ago
-    },
-    {
-        id: '3',
-        type: 'alert',
-        title: 'Relatório Pendente',
-        message: 'Evolução de Maria Oliveira pendente',
-        read: true,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5) // 5 hours ago
-    }
-];
-
 export const notificationService = {
-    getNotifications: async (): Promise<Notification[]> => {
-        // Simulate API call
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve([...MOCK_NOTIFICATIONS]);
-            }, 300);
-        });
-    },
-
-    markAsRead: async (id: string): Promise<void> => {
-        const index = MOCK_NOTIFICATIONS.findIndex(n => n.id === id);
-        if (index !== -1) {
-            MOCK_NOTIFICATIONS[index].read = true;
+    sendNotification: async (userId: string, notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) => {
+        try {
+            const notificationsRef = collection(db, 'users', userId, 'notifications');
+            await addDoc(notificationsRef, {
+                ...notification,
+                read: false,
+                createdAt: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error sending notification:", error);
         }
-        return Promise.resolve();
     },
 
-    markAllAsRead: async (): Promise<void> => {
-        MOCK_NOTIFICATIONS.forEach(n => n.read = true);
-        return Promise.resolve();
+    markAsRead: async (userId: string, notificationId: string) => {
+        try {
+            const notifRef = doc(db, 'users', userId, 'notifications', notificationId);
+            await updateDoc(notifRef, { read: true });
+        } catch (error) {
+            console.error("Error marking notification as read:", error);
+        }
+    },
+
+    markAllAsRead: async (userId: string, notificationIds: string[]) => {
+        try {
+            const promises = notificationIds.map(id =>
+                updateDoc(doc(db, 'users', userId, 'notifications', id), { read: true })
+            );
+            await Promise.all(promises);
+        } catch (error) {
+            console.error("Error marking all as read:", error);
+        }
+    },
+
+    subscribeToNotifications: (userId: string, callback: (notifications: Notification[]) => void) => {
+        const notificationsRef = collection(db, 'users', userId, 'notifications');
+        // Order by createdAt desc
+        const q = query(notificationsRef, orderBy('createdAt', 'desc'));
+
+        return onSnapshot(q, (snapshot) => {
+            const notifications = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Notification));
+            callback(notifications);
+        });
     }
 };

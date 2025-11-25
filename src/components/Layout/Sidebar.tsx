@@ -28,23 +28,60 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navigate = useNavigate();
     const { user, logout, switchDevRole } = useAuth();
 
-    const professionalItems = [
-        { path: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard },
-        { path: '/groups', label: 'Meus Grupos', icon: Users },
-        { path: '/patients', label: 'Pacientes', icon: Stethoscope },
-        { path: '/schedule', label: 'Agenda', icon: Calendar },
-        { path: '/reports', label: 'Relatórios', icon: FileText },
+    const allMenuItems = [
+        {
+            path: '/dashboard',
+            label: user?.role === 'patient' ? 'Início' : 'Visão Geral',
+            icon: LayoutDashboard,
+            visibleTo: ['admin', 'professional', 'patient']
+        },
+        {
+            path: '/groups',
+            label: 'Meus Grupos',
+            icon: Users,
+            visibleTo: ['admin', 'professional']
+        },
+        {
+            path: '/patients',
+            label: 'Pacientes',
+            icon: Stethoscope,
+            visibleTo: ['admin', 'professional']
+        },
+        {
+            path: '/schedule',
+            label: user?.role === 'patient' ? 'Minha Agenda' : 'Agenda',
+            icon: Calendar,
+            visibleTo: ['admin', 'professional', 'patient']
+        },
+        {
+            path: '/reports',
+            label: user?.role === 'patient' ? 'Meu Progresso' : 'Relatórios',
+            icon: user?.role === 'patient' ? Activity : FileText,
+            visibleTo: ['admin', 'professional', 'patient']
+        },
+        {
+            path: '/wellbeing',
+            label: 'Bem-Estar',
+            icon: Heart,
+            visibleTo: ['patient']
+        },
+        {
+            path: '/materials',
+            label: 'Meus Documentos',
+            icon: FileText,
+            visibleTo: ['patient']
+        },
+        {
+            path: '/developer',
+            label: 'Desenvolvedor',
+            icon: Code,
+            visibleTo: ['admin']
+        }
     ];
 
-    const patientItems = [
-        { path: '/dashboard', label: 'Início', icon: LayoutDashboard },
-        { path: '/wellbeing', label: 'Bem-Estar', icon: Heart },
-        { path: '/reports', label: 'Meu Progresso', icon: Activity },
-        { path: '/materials', label: 'Meus Documentos', icon: FileText },
-        { path: '/schedule', label: 'Minha Agenda', icon: Calendar },
-    ];
-
-    const menuItems = user?.role === 'patient' ? patientItems : professionalItems;
+    const menuItems = allMenuItems.filter(item =>
+        user?.role && item.visibleTo.includes(user.role)
+    );
 
     const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -87,13 +124,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             to={item.path}
                             onClick={() => window.innerWidth < 768 && onClose()}
                             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive(item.path)
-                                ? 'bg-gradient-to-r from-[#0054A6]/10 to-[#6C4FFE]/5 text-[#0054A6] shadow-sm font-bold'
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-[#0054A6]'
+                                ? item.path === '/developer'
+                                    ? 'bg-red-50 text-red-600 shadow-sm font-bold'
+                                    : 'bg-gradient-to-r from-[#0054A6]/10 to-[#6C4FFE]/5 text-[#0054A6] shadow-sm font-bold'
+                                : item.path === '/developer'
+                                    ? 'text-slate-500 hover:bg-red-50 hover:text-red-600'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-[#0054A6]'
                                 }`}
                         >
                             <item.icon
                                 size={20}
-                                className={isActive(item.path) ? 'text-[#0054A6]' : 'text-slate-400 group-hover:text-[#0054A6] transition-colors'}
+                                className={isActive(item.path)
+                                    ? (item.path === '/developer' ? 'text-red-600' : 'text-[#0054A6]')
+                                    : (item.path === '/developer' ? 'text-slate-400 group-hover:text-red-600' : 'text-slate-400 group-hover:text-[#0054A6]') + ' transition-colors'}
                             />
                             {item.label}
                         </Link>
@@ -116,25 +159,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             Central de Ajuda
                         </Link>
                     </div>
-                    {/* Developer Link - Only for Admin */}
-                    {user?.email === 'admin@admin.com' && (
-                        <div className="pt-4 mt-4 border-t border-slate-100">
-                            <Link
-                                to="/developer"
-                                onClick={() => window.innerWidth < 768 && onClose()}
-                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive('/developer')
-                                    ? 'bg-red-50 text-red-600 shadow-sm font-bold'
-                                    : 'text-slate-500 hover:bg-red-50 hover:text-red-600'
-                                    }`}
-                            >
-                                <Code
-                                    size={20}
-                                    className={isActive('/developer') ? 'text-red-600' : 'text-slate-400 group-hover:text-red-600 transition-colors'}
-                                />
-                                Desenvolvedor
-                            </Link>
-                        </div>
-                    )}
                 </nav>
 
                 {/* User Footer */}

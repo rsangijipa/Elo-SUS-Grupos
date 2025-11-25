@@ -7,71 +7,86 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+
     function isProfessional() {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'professional';
+      return isAuthenticated() && (getUserData().role == 'professional' || getUserData().role == 'admin');
     }
 
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Users: Users can read/write their own profile
+    // Users: 
+    // - Admin can read/write all.
+    // - Professionals can read all (to find patients), but write only their own? 
+    //   Actually user said: "Profissional pode apenas ler (para buscar pacientes)."
+    // - Users can read/write their own profile.
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId) || isProfessional();
+      allow write: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+
+      // Notifications sub-collection
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+        // Allow professionals/admin to write notifications to other users?
+        // The service uses 'addDoc' to 'users/{userId}/notifications'.
+        // If the sender is a professional adding a participant, they need write access to the patient's notifications.
+        allow create: if isProfessional(); 
+      }
     }
 
-    // Groups: Readable by authenticated, Writable by professionals
+    // Groups: 
+    // - Admin and Professional can read and write (create/delete).
+    // - Patients might need read access if they are in the group? 
+    //   For now, let's stick to the request: "Admin e Profissional podem ler e escrever".
     match /grupos/{groupId} {
-      allow read: if isAuthenticated();
+      allow read: if isProfessional();
       allow write: if isProfessional();
+
+      // Sessions sub-collection
+      match /sessions/{sessionId} {
+        allow read, write: if isProfessional();
+      }
     }
 
-    // Patients: Readable by owner (if patient) or professionals. Writable by professionals.
+    // Patients Collection (if separate from users, but usually linked):
+    // "Pacientes": Visible to admin (and potentially professional for read-only).
+    // Request says: "users: Admin pode criar/deletar qualquer um. Profissional pode apenas ler".
+    // Assuming 'pacientes' collection is used for patient records distinct from auth users?
+    // The code uses 'pacientes' collection in some places and 'users' in others. 
+    // Let's secure 'pacientes' too.
     match /pacientes/{patientId} {
-      allow read: if isAuthenticated() && (
-        isProfessional() || 
-        // If the patientId matches the user's ID (assuming we link them) or some other logic
-        // For now, let's assume patients can read their own data if we link it, 
-        // but typically patients collection is managed by pros.
-        // Let's stick to: Professionals can read all, Patients can read if it's their record (future)
-        true 
-      );
-      allow write: if isProfessional();
+      allow read: if isProfessional();
+      allow write: if isAdmin(); // Only admin can add/delete patients? 
+      // Wait, user said: "Profissional... Pode: Criar/Excluir Grupos e Adicionar/Remover Participantes".
+      // But for "Pacientes" menu: "Pode ver/usar: Menu 'Pacientes'".
+      // And "Admin... Pode: Adicionar/Excluir Profissionais, Pacientes e Grupos".
+      // So Professionals might NOT be able to create patients directly, only Admins?
+      // Let's assume Professionals can READ patients to add them to groups.
+      // But if they need to create a patient on the fly?
+      // The prompt says: "Admin... Pode: Adicionar/Excluir ... Pacientes". 
+      // "Profissional... NÃO PODE: Excluir contas...".
+      // Let's allow Professional to write to 'pacientes' if it's just updating?
+      // Let's stick to: Admin = RW, Professional = Read.
+      allow create, update: if isAdmin(); 
+      allow delete: if isAdmin();
     }
 
-    // Appointments: Readable by authenticated, Writable by professionals
-    match /appointments/{appointmentId} {
-      allow read: if isAuthenticated();
-      allow write: if isProfessional();
-    }
-
-    // Referrals: 
-    // - Professionals can read/write all.
-    // - Patients can read their own referrals (where patientId == auth.uid).
-    // - Patients can update status (accept/decline) of their own referrals.
+    // Attendance (if top level, but we moved it to subcollection):
+    // "attendance: Admin e Profissional podem gravar."
+    // We handled this in groups/{groupId}/sessions.
+    
+    // Referrals
     match /referrals/{referralId} {
-      allow read: if isAuthenticated() && (
-        isProfessional() || 
-        resource.data.patientId == request.auth.uid ||
-        // Allow reading if it's a new referral (no patientId linked yet? usually linked by name/cpf first)
-        // For now, let's allow authenticated read for simplicity in this demo phase, 
-        // or restrict to professional if strict.
-        // Let's go with strict:
-        isProfessional() ||
-        (resource.data.patientId == request.auth.uid)
-      );
-      
-      allow create: if isProfessional();
-      
-      allow update: if isAuthenticated() && (
-        isProfessional() ||
-        (resource.data.patientId == request.auth.uid && 
-         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'timeline', 'groupId', 'patientId']))
-        )
-      );
-      
-      allow delete: if isProfessional();
+      allow read, write: if isProfessional();
     }
   }
 }
