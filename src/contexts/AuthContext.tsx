@@ -40,7 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const userDoc = await getDoc(userDocRef);
 
                     if (userDoc.exists()) {
-                        setUser({ id: firebaseUser.uid, ...userDoc.data() } as User);
+                        const userData = userDoc.data();
+                        setUser({
+                            id: firebaseUser.uid,
+                            ...userData,
+                            email: userData.email || firebaseUser.email || ''
+                        } as User);
                     } else {
                         // Fallback if user exists in Auth but not in Firestore (shouldn't happen normally)
                         console.warn('User authenticated but no Firestore document found.');
@@ -84,9 +89,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 title: 'Erro no Login',
                 message
             });
+            setIsLoading(false); // Only set loading to false on error
             throw error;
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -134,9 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 title: 'Erro no Cadastro',
                 message
             });
+            setIsLoading(false); // Only set loading to false on error, otherwise wait for auth state change
             throw error;
-        } finally {
-            setIsLoading(false);
         }
     };
 

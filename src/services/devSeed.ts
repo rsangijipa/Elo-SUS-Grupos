@@ -44,31 +44,26 @@ export async function setupDevEnvironment() {
 
 async function ensureUser(userData: any) {
     try {
-        // Try to sign in first to check if exists
-        await signInWithEmailAndPassword(auth, userData.email, userData.password);
-        console.log(`User ${userData.email} logged in.`);
-    } catch (error: any) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-            console.log(`User ${userData.email} not found. Creating...`);
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
-                console.log(`User ${userData.email} created.`);
+        // Try to create the user directly
+        const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+        console.log(`User ${userData.email} created.`);
 
-                // Create Firestore doc
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    uid: userCredential.user.uid,
-                    name: userData.name,
-                    email: userData.email,
-                    role: userData.role,
-                    unidadeSaudeId: userData.unidadeSaudeId,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-            } catch (createError: any) {
-                console.error(`Error creating user ${userData.email}:`, createError);
-            }
+        // Create Firestore doc
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+            uid: userCredential.user.uid,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            unidadeSaudeId: userData.unidadeSaudeId,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+    } catch (error: any) {
+        if (error.code === 'auth/email-already-in-use') {
+            console.log(`User ${userData.email} already exists.`);
+            // Do NOT log in if user exists
         } else {
-            console.error(`Error checking user ${userData.email}:`, error);
+            console.error(`Error ensuring user ${userData.email}:`, error);
         }
     }
 }

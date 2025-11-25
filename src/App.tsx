@@ -25,6 +25,7 @@ import GroupList from './pages/Groups/GroupList';
 import PatientList from './pages/Patients/PatientList';
 
 import GroupManagement from './pages/Groups/GroupManagement';
+import DeveloperTools from './pages/Developer/DeveloperTools';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -77,6 +78,7 @@ function App() {
                   <Route path="groups" element={<GroupList />} />
                   <Route path="groups/:id/manage" element={<GroupManagement />} />
                   <Route path="patients" element={<PatientList />} />
+                  <Route path="developer" element={<DeveloperTools />} />
                 </Route>
 
                 {/* Catch all */}

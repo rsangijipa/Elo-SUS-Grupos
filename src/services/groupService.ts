@@ -8,7 +8,8 @@ import {
     query,
     where,
     serverTimestamp,
-    getDoc
+    getDoc,
+    runTransaction
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Group } from '../types/group';
@@ -69,5 +70,97 @@ export const groupService = {
             id: doc.id,
             ...doc.data()
         } as Group));
+    },
+
+    addParticipant: async (groupId: string, patientId: string) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const groupRef = doc(db, COLLECTION_NAME, groupId);
+                const patientRef = doc(db, 'pacientes', patientId);
+
+                const groupDoc = await transaction.get(groupRef);
+                const patientDoc = await transaction.get(patientRef);
+
+                if (!groupDoc.exists()) throw new Error("Group does not exist!");
+                if (!patientDoc.exists()) throw new Error("Patient does not exist!");
+
+                const groupData = groupDoc.data();
+                const participants = groupData.participants || [];
+
+                if (!participants.includes(patientId)) {
+                    transaction.update(groupRef, {
+                        participants: [...participants, patientId],
+                        updatedAt: serverTimestamp()
+                    });
+                    transaction.update(patientRef, {
+                        groupId: groupId,
+                        updatedAt: serverTimestamp()
+                    });
+                }
+            });
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+            throw e;
+        }
+    },
+
+    removeParticipant: async (groupId: string, participantId: string) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const groupRef = doc(db, COLLECTION_NAME, groupId);
+                const patientRef = doc(db, 'pacientes', participantId);
+
+                const groupDoc = await transaction.get(groupRef);
+                const patientDoc = await transaction.get(patientRef);
+
+                if (!groupDoc.exists()) throw new Error("Group does not exist!");
+
+                const groupData = groupDoc.data();
+                const participants = groupData.participants || [];
+
+                if (participants.includes(participantId)) {
+                    transaction.update(groupRef, {
+                        participants: participants.filter((id: string) => id !== participantId),
+                        updatedAt: serverTimestamp()
+                    });
+
+                    // Only clear groupId if it matches the current group
+                    if (patientDoc.exists() && patientDoc.data().groupId === groupId) {
+                        transaction.update(patientRef, {
+                            groupId: null, // or deleteField()
+                            updatedAt: serverTimestamp()
+                        });
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+            throw e;
+        }
+    },
+
+    getParticipants: async (groupId: string) => {
+        const groupRef = doc(db, COLLECTION_NAME, groupId);
+        const groupSnap = await getDoc(groupRef);
+
+        if (groupSnap.exists()) {
+            const data = groupSnap.data();
+            const participantIds = data.participants || [];
+
+            if (participantIds.length === 0) return [];
+
+            // Firestore 'in' query supports up to 10 items. For more, we need multiple queries or document gets.
+            // For simplicity and scalability, we'll fetch individual docs since we have IDs.
+            // Or use 'in' batches if we expect < 30 participants usually.
+            // Let's use Promise.all with getDoc for now as it's straightforward.
+
+            const patientPromises = participantIds.map((id: string) => getDoc(doc(db, 'pacientes', id)));
+            const patientSnaps = await Promise.all(patientPromises);
+
+            return patientSnaps
+                .filter(snap => snap.exists())
+                .map(snap => ({ id: snap.id, ...snap.data() }));
+        }
+        return [];
     }
 };

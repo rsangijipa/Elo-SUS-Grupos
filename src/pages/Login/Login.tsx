@@ -174,21 +174,10 @@ export default function Login() {
         </div>
     );
 
-    // DEV: Cleanup
-    const handleCleanup = async () => {
-        if (window.confirm('Delete all test data?')) {
-            const { cleanupDatabase } = await import('../../utils/cleanup');
-            await cleanupDatabase();
-            alert('Cleanup complete');
-        }
-    };
+
 
     return (
         <div className={`min-h-screen flex items-center justify-center p-4 lg:p-8 font-sans transition-colors duration-700 bg-gradient-to-br ${colors.gradient}`}>
-            <button onClick={handleCleanup} className="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded z-50 text-xs font-bold shadow-lg hover:bg-red-700 transition-colors">
-                DEV: Cleanup DB
-            </button>
-
             <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center relative min-h-[600px] gap-8 lg:gap-16">
 
                 {/* Visuals - Left Side */}

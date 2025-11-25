@@ -14,7 +14,8 @@ import {
     Activity,
     LifeBuoy,
     UserPlus,
-    User
+    User,
+    Code
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -115,6 +116,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             Central de Ajuda
                         </Link>
                     </div>
+                    {/* Developer Link - Only for Admin */}
+                    {user?.email === 'admin@admin.com' && (
+                        <div className="pt-4 mt-4 border-t border-slate-100">
+                            <Link
+                                to="/developer"
+                                onClick={() => window.innerWidth < 768 && onClose()}
+                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive('/developer')
+                                    ? 'bg-red-50 text-red-600 shadow-sm font-bold'
+                                    : 'text-slate-500 hover:bg-red-50 hover:text-red-600'
+                                    }`}
+                            >
+                                <Code
+                                    size={20}
+                                    className={isActive('/developer') ? 'text-red-600' : 'text-slate-400 group-hover:text-red-600 transition-colors'}
+                                />
+                                Desenvolvedor
+                            </Link>
+                        </div>
+                    )}
                 </nav>
 
                 {/* User Footer */}
