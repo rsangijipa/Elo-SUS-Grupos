@@ -149,8 +149,8 @@ export default function TobaccoAnamnesisForm({ patientId, initialData, onSave }:
                                         type="button"
                                         onClick={() => toggleTrigger(trigger)}
                                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${formData.smokingHistory.associatedTriggers.includes(trigger)
-                                                ? 'bg-[#0054A6] text-white shadow-md'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            ? 'bg-[#0054A6] text-white shadow-md'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                             }`}
                                     >
                                         {trigger}
@@ -194,11 +194,11 @@ export default function TobaccoAnamnesisForm({ patientId, initialData, onSave }:
                         <div className="space-y-4">
                             {formData.fagerstrom.questions.map((q) => (
                                 <div key={q.id} className="p-4 border border-slate-100 rounded-xl hover:border-blue-200 transition-colors">
-                                    <p className="font-medium text-slate-800 mb-3">{q.question}</p>
+                                    <p className="font-medium text-slate-800 mb-3 break-words">{q.question}</p>
                                     <div className="space-y-2">
                                         {q.options.map((opt) => (
-                                            <label key={opt.label} className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${q.selectedOption === opt.value ? 'border-[#0054A6] bg-[#0054A6]' : 'border-slate-300 group-hover:border-[#0054A6]'
+                                            <label key={opt.label} className="flex items-start gap-3 cursor-pointer group p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                                                <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors mt-0.5 ${q.selectedOption === opt.value ? 'border-[#0054A6] bg-[#0054A6]' : 'border-slate-300 group-hover:border-[#0054A6]'
                                                     }`}>
                                                     {q.selectedOption === opt.value && <CheckCircle size={12} className="text-white" />}
                                                 </div>
@@ -209,7 +209,7 @@ export default function TobaccoAnamnesisForm({ patientId, initialData, onSave }:
                                                     checked={q.selectedOption === opt.value}
                                                     onChange={() => handleFagerstromAnswer(q.id, opt.value)}
                                                 />
-                                                <span className={`text-sm ${q.selectedOption === opt.value ? 'text-[#0054A6] font-medium' : 'text-slate-600'}`}>
+                                                <span className={`text-sm break-words ${q.selectedOption === opt.value ? 'text-[#0054A6] font-medium' : 'text-slate-600'}`}>
                                                     {opt.label}
                                                 </span>
                                             </label>

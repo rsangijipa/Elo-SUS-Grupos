@@ -146,7 +146,7 @@ export default function Login() {
                 DEV: Cleanup DB
             </button>
 
-            <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center relative min-h-[700px]">
+            <div className="w-full max-w-[1400px] flex flex-col lg:flex-row items-center justify-center relative min-h-[700px]">
 
                 {/* Visuals - Left Side */}
                 <div className={`

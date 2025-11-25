@@ -482,7 +482,7 @@ const ProfessionalDashboard: React.FC = () => {
             {/* Referral Modal */}
             {showReferralModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-[100] p-0 md:p-4 animate-fade-in">
-                    <div className="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col h-[90vh] md:h-auto md:max-h-[90vh]">
+                    <div className="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col h-[90vh] md:h-auto md:max-h-[90vh]">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                             <h3 className="font-bold text-slate-800 flex items-center gap-2">
                                 <ClipboardList size={20} className="text-blue-600" />
