@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, Clock, AlertCircle, X } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle, X, FileText, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
 import { MOCK_GROUPS } from '../../utils/seedData';
@@ -14,6 +14,11 @@ export default function PatientDashboard() {
     const [showAcceptModal, setShowAcceptModal] = useState(false);
     const [selectedInvite, setSelectedInvite] = useState<Referral | null>(null);
 
+    // Anamnesis State
+    const [anamnesisStep, setAnamnesisStep] = useState(0); // 0 = Intro, 1 = Questions
+    const [anamnesisAnswers, setAnamnesisAnswers] = useState<Record<string, string>>({});
+    const [anamnesisError, setAnamnesisError] = useState<string | null>(null);
+
     useEffect(() => {
         loadInvites();
     }, [user]);
@@ -21,36 +26,50 @@ export default function PatientDashboard() {
     const loadInvites = async () => {
         if (!user) return;
         const allReferrals = await referralService.getAll();
-        console.log('DEBUG: User:', user);
-        console.log('DEBUG: All Referrals:', allReferrals);
 
-        // In a real app, filter by user.id. For demo, we might show all 'convidado' if user matches or just for visibility.
-        // Assuming user.id matches patientId in referrals for now.
-        // For demo purposes, let's show all 'convidado' referrals if the user is a patient, 
-        // or strictly filter if we want to be precise. Let's filter by patientId to be correct.
-        // If user.id is not in mock data, we might not see anything. 
-        // Let's assume the user logged in is one of the patients in mock data or we just show all for demo.
+        // Filter by user.id
         const myInvites = allReferrals.filter(r => r.status === 'convidado' && (r.patientId === user.id || r.patientId === 'new'));
-        // DEBUG: Relaxed filter
-        // const myInvites = allReferrals.filter(r => r.status === 'convidado');
-        console.log('DEBUG: My Invites:', myInvites);
         setInvites(myInvites);
     };
 
     const handleAcceptClick = (invite: Referral) => {
         setSelectedInvite(invite);
+        setAnamnesisStep(0);
+        setAnamnesisAnswers({});
+        setAnamnesisError(null);
         setShowAcceptModal(true);
+    };
+
+    const handleAnswerChange = (questionId: string, value: string) => {
+        setAnamnesisAnswers(prev => ({ ...prev, [questionId]: value }));
+        if (anamnesisError) setAnamnesisError(null);
+    };
+
+    const validateAnamnesis = () => {
+        const requiredQuestions = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
+        const missing = requiredQuestions.filter(q => !anamnesisAnswers[q]);
+
+        if (missing.length > 0) {
+            setAnamnesisError('Por favor, responda todas as perguntas para continuar.');
+            return false;
+        }
+        return true;
     };
 
     const confirmAcceptance = async () => {
         if (!selectedInvite) return;
+
+        if (!validateAnamnesis()) return;
+
         await referralService.acceptInvite(selectedInvite.id, user?.name || 'Paciente', user?.id || 'unknown');
+
+        // Show success feedback
+        alert('Anamnese salva com sucesso! Você agora faz parte do grupo.');
+
         setShowAcceptModal(false);
         setSelectedInvite(null);
         loadInvites();
-        // Optionally refresh groups from context if it was connected to the same source
-        alert('Parabéns! Você agora faz parte do grupo.');
-        navigate(0); // Reload to refresh groups (since useData might not auto-update from localStorage service change)
+        navigate(0);
     };
 
     // Filter groups where the patient is a participant
@@ -64,8 +83,64 @@ export default function PatientDashboard() {
         return { color: 'bg-red-500', text: 'text-red-600', label: 'Risco de Desligamento', rate: attendanceRate };
     };
 
+    // Fagerström Questions
+    const questions = [
+        {
+            id: 'q1',
+            text: '1. Quanto tempo após acordar você fuma o primeiro cigarro?',
+            options: [
+                { label: 'Dentro de 5 minutos', value: '3' },
+                { label: 'Entre 6 e 30 minutos', value: '2' },
+                { label: 'Entre 31 e 60 minutos', value: '1' },
+                { label: 'Após 60 minutos', value: '0' }
+            ]
+        },
+        {
+            id: 'q2',
+            text: '2. Você acha difícil não fumar em locais proibidos?',
+            options: [
+                { label: 'Sim', value: '1' },
+                { label: 'Não', value: '0' }
+            ]
+        },
+        {
+            id: 'q3',
+            text: '3. Qual o cigarro do dia que traz mais satisfação?',
+            options: [
+                { label: 'O primeiro da manhã', value: '1' },
+                { label: 'Outros', value: '0' }
+            ]
+        },
+        {
+            id: 'q4',
+            text: '4. Quantos cigarros você fuma por dia?',
+            options: [
+                { label: 'Menos de 10', value: '0' },
+                { label: 'De 11 a 20', value: '1' },
+                { label: 'De 21 a 30', value: '2' },
+                { label: 'Mais de 31', value: '3' }
+            ]
+        },
+        {
+            id: 'q5',
+            text: '5. Você fuma mais frequentemente pela manhã?',
+            options: [
+                { label: 'Sim', value: '1' },
+                { label: 'Não', value: '0' }
+            ]
+        },
+        {
+            id: 'q6',
+            text: '6. Você fuma mesmo quando está doente?',
+            options: [
+                { label: 'Sim', value: '1' },
+                { label: 'Não', value: '0' }
+            ]
+        }
+    ];
+
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
             {/* Welcome Header */}
             <div className="bg-gradient-to-r from-[#6C4FFE] to-[#8B5CF6] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
@@ -251,43 +326,128 @@ export default function PatientDashboard() {
                 )}
             </div>
 
-            {/* Acceptance Modal */}
+            {/* Acceptance Modal - Refined */}
             {showAcceptModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <h3 className="font-bold text-slate-800">Finalizar Inscrição</h3>
-                            <button onClick={() => setShowAcceptModal(false)} className="text-slate-400 hover:text-slate-600">
-                                <X size={20} />
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col overflow-hidden">
+
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur-md sticky top-0 z-10">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                    <FileText className="text-blue-600" size={24} />
+                                    Anamnese – Grupo de Tabagismo
+                                </h3>
+                                <p className="text-sm text-slate-500">Responda para finalizar sua inscrição</p>
+                            </div>
+                            <button onClick={() => setShowAcceptModal(false)} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                <X size={24} />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className="bg-blue-50 p-4 rounded-xl text-blue-800 text-sm">
-                                <p className="font-bold mb-1">Antes de entrar no grupo...</p>
-                                <p>Vamos aplicar um pequeno questionário sobre seu uso de tabaco. Ele ajuda a equipe a entender melhor seu caso.</p>
-                            </div>
 
-                            {/* Mock Question */}
-                            <div className="space-y-2">
-                                <p className="text-sm font-bold text-slate-700">1. Quanto tempo após acordar você fuma seu primeiro cigarro?</p>
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                        <input type="radio" name="q1" className="text-blue-600" />
-                                        <span className="text-sm text-slate-600">Dentro de 5 minutos</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                        <input type="radio" name="q1" className="text-blue-600" />
-                                        <span className="text-sm text-slate-600">Entre 6 e 30 minutos</span>
-                                    </label>
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 bg-slate-50/30">
+
+                            {/* Intro Step */}
+                            {anamnesisStep === 0 && (
+                                <div className="space-y-6 text-center py-8">
+                                    <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-blue-600 mb-4">
+                                        <FileText size={48} />
+                                    </div>
+                                    <h4 className="text-2xl font-bold text-slate-800">Bem-vindo ao Grupo!</h4>
+                                    <p className="text-slate-600 max-w-md mx-auto leading-relaxed">
+                                        Para que a equipe possa te ajudar da melhor forma, precisamos entender um pouco mais sobre seus hábitos.
+                                        <br /><br />
+                                        Vamos responder a um breve questionário (Teste de Fagerström) para avaliar seu grau de dependência de nicotina.
+                                    </p>
+                                    <div className="pt-4">
+                                        <button
+                                            onClick={() => setAnamnesisStep(1)}
+                                            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all transform hover:scale-105 flex items-center gap-2 mx-auto"
+                                        >
+                                            Começar Anamnese <ChevronRight size={20} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <button
-                                onClick={confirmAcceptance}
-                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/20 mt-4"
-                            >
-                                Enviar Respostas e Entrar no Grupo
-                            </button>
+                            {/* Questionnaire Step */}
+                            {anamnesisStep === 1 && (
+                                <div className="space-y-8">
+                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 text-sm mb-6">
+                                        <p className="font-bold flex items-center gap-2">
+                                            <AlertCircle size={16} />
+                                            Importante
+                                        </p>
+                                        <p>Todas as perguntas são obrigatórias para garantir uma avaliação precisa.</p>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        {questions.map((q) => (
+                                            <div key={q.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                                <p className="font-bold text-slate-800 mb-4 text-lg">{q.text} <span className="text-red-500">*</span></p>
+                                                <div className="space-y-3">
+                                                    {q.options.map((opt) => (
+                                                        <label
+                                                            key={opt.label}
+                                                            className={`
+                                                                flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all
+                                                                ${anamnesisAnswers[q.id] === opt.value
+                                                                    ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                                                                    : 'border-slate-200 hover:bg-slate-50 hover:border-slate-300'}
+                                                            `}
+                                                        >
+                                                            <div className={`
+                                                                w-6 h-6 rounded-full border-2 flex items-center justify-center
+                                                                ${anamnesisAnswers[q.id] === opt.value ? 'border-blue-600' : 'border-slate-300'}
+                                                            `}>
+                                                                {anamnesisAnswers[q.id] === opt.value && (
+                                                                    <div className="w-3 h-3 bg-blue-600 rounded-full" />
+                                                                )}
+                                                            </div>
+                                                            <input
+                                                                type="radio"
+                                                                name={q.id}
+                                                                value={opt.value}
+                                                                checked={anamnesisAnswers[q.id] === opt.value}
+                                                                onChange={() => handleAnswerChange(q.id, opt.value)}
+                                                                className="hidden"
+                                                            />
+                                                            <span className="text-slate-700 font-medium">{opt.label}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="p-6 border-t border-slate-100 bg-white flex flex-col gap-3">
+                            {anamnesisError && (
+                                <div className="text-red-500 text-sm font-bold text-center animate-pulse">
+                                    {anamnesisError}
+                                </div>
+                            )}
+
+                            {anamnesisStep === 1 && (
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => setShowAcceptModal(false)}
+                                        className="flex-1 py-3.5 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-200"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={confirmAcceptance}
+                                        className="flex-[2] py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
+                                    >
+                                        Salvar e Continuar <CheckCircle2 size={20} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -295,4 +455,3 @@ export default function PatientDashboard() {
         </div>
     );
 }
-
