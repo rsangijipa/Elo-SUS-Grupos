@@ -10,7 +10,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <>
-            {user.role === 'professional' ? (
+            {user.role === 'professional' || user.role === 'admin' ? (
                 <ProfessionalDashboard key="professional" />
             ) : (
                 <PatientDashboard key="patient" />

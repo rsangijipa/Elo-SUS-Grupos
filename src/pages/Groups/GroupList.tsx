@@ -1,16 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Search, Users, ArrowRight, MapPin, Clock, X, BarChart3, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Users, ArrowRight, MapPin, Clock, X, BarChart3, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import AddGroupModal from '../../components/Modals/AddGroupModal';
 
 const GroupList: React.FC = () => {
-    const { groups, loading } = useData();
+    const { groups, loading, refreshData } = useData();
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activePopover, setActivePopover] = useState<string | null>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    const handleDeleteGroup = async (groupId: string) => {
+        if (window.confirm('Tem certeza que deseja excluir este grupo? Esta ação não pode ser desfeita.')) {
+            try {
+                const { groupService } = await import('../../services/groupService');
+                await groupService.delete(groupId);
+                await refreshData();
+                setActivePopover(null);
+            } catch (error) {
+                console.error('Error deleting group:', error);
+                alert('Erro ao excluir grupo.');
+            }
+        }
+    };
 
     const filteredGroups = groups.filter(g =>
         g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -157,19 +171,28 @@ const GroupList: React.FC = () => {
                                                         <div className="flex justify-between items-center mb-1">
                                                             <span className="text-xs text-slate-500">Taxa de Presença</span>
                                                             <span className={`text-xs font-bold ${stats.attendance >= 80 ? 'text-emerald-600' :
-                                                                    stats.attendance >= 60 ? 'text-amber-600' : 'text-red-600'
+                                                                stats.attendance >= 60 ? 'text-amber-600' : 'text-red-600'
                                                                 }`}>{stats.attendance}%</span>
                                                         </div>
                                                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                             <div
                                                                 className={`h-full rounded-full ${stats.attendance >= 80 ? 'bg-emerald-500' :
-                                                                        stats.attendance >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                                                                    stats.attendance >= 60 ? 'bg-amber-500' : 'bg-red-500'
                                                                     }`}
                                                                 style={{ width: `${stats.attendance}%` }}
                                                             />
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteGroup(group.id);
+                                                    }}
+                                                    className="w-full mt-3 pt-2 border-t border-slate-50 text-left text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-2 transition-colors"
+                                                >
+                                                    <Trash2 size={14} /> Excluir Grupo
+                                                </button>
                                             </div>
                                         )}
                                     </div>

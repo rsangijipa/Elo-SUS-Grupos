@@ -169,36 +169,47 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <div className="mb-4 space-y-2">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Modo de Teste</p>
                         <div className="grid grid-cols-3 gap-1">
-                            <button
-                                onClick={() => switchDevRole('referrer')}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'doc_ref_01'
-                                    ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
-                                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                                title="Médico/Enfermeiro (Encaminhar)"
-                            >
-                                <UserPlus size={14} />
-                                <span className="text-[9px] font-bold">Encaminhar</span>
-                            </button>
-                            <button
-                                onClick={() => switchDevRole('executor')}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'psi_exec_01' || (user?.role === 'professional' && user?.id !== 'doc_ref_01')
-                                    ? 'bg-purple-50 border-purple-200 text-purple-700 shadow-sm'
-                                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                                title="Terapeuta (Atender)"
-                            >
-                                <Stethoscope size={14} />
-                                <span className="text-[9px] font-bold">Atender</span>
-                            </button>
-                            <button
-                                onClick={() => switchDevRole('patient')}
-                                className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'patient'
-                                    ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm'
-                                    : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                                title="Paciente"
-                            >
-                                <User size={14} />
-                                <span className="text-[9px] font-bold">Paciente</span>
-                            </button>
+                            {/* Encaminhar: Visible to Admin and Professional */}
+                            {['admin', 'professional'].includes(user?.originalRole || user?.role || '') && (
+                                <button
+                                    onClick={() => switchDevRole('referrer')}
+                                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'doc_ref_01'
+                                        ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    title="Médico/Enfermeiro (Encaminhar)"
+                                >
+                                    <UserPlus size={14} />
+                                    <span className="text-[9px] font-bold">Encaminhar</span>
+                                </button>
+                            )}
+
+                            {/* Atender: Visible to Admin, Professional, and Patient */}
+                            {['admin', 'professional', 'patient'].includes(user?.originalRole || user?.role || '') && (
+                                <button
+                                    onClick={() => switchDevRole('executor')}
+                                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'psi_exec_01' || (user?.role === 'professional' && user?.id !== 'doc_ref_01')
+                                        ? 'bg-purple-50 border-purple-200 text-purple-700 shadow-sm'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    title="Terapeuta (Atender)"
+                                >
+                                    <Stethoscope size={14} />
+                                    <span className="text-[9px] font-bold">Atender</span>
+                                </button>
+                            )}
+
+                            {/* Paciente: Visible to Admin only */}
+                            {['admin'].includes(user?.originalRole || user?.role || '') && (
+                                <button
+                                    onClick={() => switchDevRole('patient')}
+                                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'patient'
+                                        ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    title="Paciente"
+                                >
+                                    <User size={14} />
+                                    <span className="text-[9px] font-bold">Paciente</span>
+                                </button>
+                            )}
                         </div>
                     </div>
 

@@ -15,6 +15,7 @@ export interface User {
     name: string;
     email: string;
     role: 'professional' | 'patient' | 'admin';
+    originalRole?: 'professional' | 'patient' | 'admin';
     avatar?: string;
     cpf?: string;
 

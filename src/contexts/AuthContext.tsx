@@ -184,7 +184,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const switchDevRole = (type: 'referrer' | 'executor' | 'patient') => {
-        console.warn('switchDevRole is deprecated. Use real accounts.');
+        if (!user) return;
+
+        const originalRole = user.originalRole || user.role;
+        let newRole: 'professional' | 'patient' | 'admin' = 'professional';
+        let additionalData = {};
+
+        if (type === 'patient') {
+            newRole = 'patient';
+            additionalData = INITIAL_PATIENT_STATE;
+        } else {
+            // referrer or executor are both professionals
+            newRole = 'professional';
+            additionalData = INITIAL_PROFESSIONAL_STATE;
+        }
+
+        // Preserve ID, Name, Email, and Original Role
+        const updatedUser: User = {
+            ...user,
+            ...additionalData,
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: newRole,
+            originalRole: originalRole,
+            // Add specific flags for referrer/executor if needed by UI, 
+            // but for now the role switch is mainly about Patient vs Professional.
+            // If the UI distinguishes Referrer vs Executor by ID (e.g. doc_ref_01), we might need to mock the ID too,
+            // but changing ID breaks Auth. 
+            // Instead, we'll rely on the fact that 'professional' role sees the pro dashboard.
+        };
+
+        setUser(updatedUser);
+
+        addNotification({
+            type: 'info',
+            title: 'Modo de Teste',
+            message: `Perfil alternado para: ${type === 'patient' ? 'Paciente' : type === 'referrer' ? 'Encaminhador' : 'Executor'}`
+        });
     };
 
     return (
