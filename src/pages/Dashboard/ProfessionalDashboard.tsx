@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Plus, X, CheckCircle2, Filter, Search, ChevronRight, User } from 'lucide-react';
 import { MOCK_GROUPS, DEMO_PATIENTS, MOCK_APPOINTMENTS } from '../../utils/seedData';
@@ -9,6 +10,7 @@ import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'visao-geral' | 'triagem'>('visao-geral');
     const [referrals, setReferrals] = useState<Referral[]>([]);
     const [showReferralModal, setShowReferralModal] = useState(false);
@@ -192,7 +194,10 @@ const ProfessionalDashboard: React.FC = () => {
                 <>
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div
+                            onClick={() => navigate('/patients')}
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all"
+                        >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-blue-50 rounded-xl text-[#0054A6]">
                                     <Users size={24} />
@@ -205,7 +210,10 @@ const ProfessionalDashboard: React.FC = () => {
                             <p className="text-3xl font-bold text-slate-900 mt-1">{totalPatients}</p>
                         </div>
 
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div
+                            onClick={() => navigate('/groups')}
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all"
+                        >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
                                     <Calendar size={24} />
@@ -218,7 +226,10 @@ const ProfessionalDashboard: React.FC = () => {
                             <p className="text-3xl font-bold text-slate-900 mt-1">{myGroups.length}</p>
                         </div>
 
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div
+                            onClick={() => navigate('/patients')}
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all"
+                        >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
                                     <Clock size={24} />
@@ -245,7 +256,10 @@ const ProfessionalDashboard: React.FC = () => {
                                     <Calendar size={20} className="text-[#0054A6]" />
                                     Agenda de Hoje
                                 </h3>
-                                <button className="text-sm text-[#0054A6] font-medium hover:underline">
+                                <button
+                                    onClick={() => navigate('/schedule')}
+                                    className="text-sm text-[#0054A6] font-medium hover:underline"
+                                >
                                     Ver calendário completo
                                 </button>
                             </div>
@@ -313,7 +327,12 @@ const ProfessionalDashboard: React.FC = () => {
                                             <span className="text-[10px] text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">Urgente</span>
                                         </div>
                                         <p className="text-sm text-slate-700 font-medium">3 relatórios de evolução pendentes</p>
-                                        <button className="text-xs text-orange-700 font-bold mt-2 hover:underline">Resolver agora</button>
+                                        <button
+                                            onClick={() => navigate('/reports')}
+                                            className="text-xs text-orange-700 font-bold mt-2 hover:underline"
+                                        >
+                                            Resolver agora
+                                        </button>
                                     </div>
 
                                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -321,7 +340,12 @@ const ProfessionalDashboard: React.FC = () => {
                                             <span className="text-xs font-bold text-slate-600">Solicitações</span>
                                         </div>
                                         <p className="text-sm text-slate-700 font-medium">2 novos pacientes na fila de espera</p>
-                                        <button className="text-xs text-[#0054A6] font-bold mt-2 hover:underline">Ver lista</button>
+                                        <button
+                                            onClick={() => navigate('/patients')}
+                                            className="text-xs text-[#0054A6] font-bold mt-2 hover:underline"
+                                        >
+                                            Ver lista
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -456,7 +480,10 @@ const ProfessionalDashboard: React.FC = () => {
                                                         Aceite Manual
                                                     </button>
                                                 )}
-                                                <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                                                <button
+                                                    onClick={() => navigate(`/patients/${referral.patientId === 'new' ? '' : referral.patientId}`)}
+                                                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                                >
                                                     <ChevronRight size={18} />
                                                 </button>
                                             </div>

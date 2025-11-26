@@ -172,7 +172,10 @@ export default function PatientDashboard() {
                             Sala 04 - UBS Centro
                         </div>
                     </div>
-                    <button className="px-6 py-2 bg-[#6C4FFE] text-white font-bold rounded-xl hover:bg-[#5b41d9] transition-colors shadow-lg shadow-purple-200">
+                    <button
+                        onClick={() => navigate('/schedule')}
+                        className="px-6 py-2 bg-[#6C4FFE] text-white font-bold rounded-xl hover:bg-[#5b41d9] transition-colors shadow-lg shadow-purple-200"
+                    >
                         Ver Detalhes
                     </button>
                 </div>
@@ -226,7 +229,10 @@ export default function PatientDashboard() {
                                         >
                                             Quero participar
                                         </button>
-                                        <button className="px-4 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">
+                                        <button
+                                            onClick={() => navigate('/support')}
+                                            className="px-4 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors"
+                                        >
                                             Tenho dúvidas
                                         </button>
                                     </div>
@@ -254,7 +260,10 @@ export default function PatientDashboard() {
                         <p className="text-slate-500 max-w-md mx-auto mb-6">
                             Você ainda não está participando de nenhum grupo terapêutico. Aguarde o convite do seu profissional de saúde ou entre em contato com a unidade.
                         </p>
-                        <button className="px-6 py-2 text-[#6C4FFE] font-bold hover:bg-purple-50 rounded-xl transition-colors">
+                        <button
+                            onClick={() => navigate('/support')}
+                            className="px-6 py-2 text-[#6C4FFE] font-bold hover:bg-purple-50 rounded-xl transition-colors"
+                        >
                             Entrar em contato com a unidade
                         </button>
                     </div>

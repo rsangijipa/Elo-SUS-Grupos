@@ -104,14 +104,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 {/* Brand Header */}
-                <div className="h-24 flex items-center gap-3 px-6 border-b border-slate-100 bg-gradient-to-r from-[#F6F8FE] to-white">
-                    <img src="/elosusgrupos_logo.png" alt="EloSUS" className="h-10 w-auto" />
-                    <div className="flex flex-col">
-                        <span className="font-bold text-[#0054A6] text-lg leading-tight">EloSUS</span>
-                        <span className="text-[10px] font-bold text-[#6C4FFE] tracking-wider uppercase">Grupos</span>
-                    </div>
+                <div className="h-24 flex items-center justify-between px-6 border-b border-slate-100 bg-gradient-to-r from-[#F6F8FE] to-white">
+                    <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <img src="/elosusgrupos_logo.png" alt="EloSUS" className="h-10 w-auto" />
+                        <div className="flex flex-col">
+                            <span className="font-bold text-[#0054A6] text-lg leading-tight">EloSUS</span>
+                            <span className="text-[10px] font-bold text-[#6C4FFE] tracking-wider uppercase">Grupos</span>
+                        </div>
+                    </Link>
                     {/* Mobile Close Button */}
-                    <button onClick={onClose} className="md:hidden ml-auto text-slate-400 hover:text-slate-600">
+                    <button onClick={onClose} className="md:hidden text-slate-400 hover:text-slate-600">
                         <LogOut size={20} className="rotate-180" />
                     </button>
                 </div>
@@ -227,7 +229,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         Sair do Sistema
                     </button>
                 </div>
-            </aside>
+            </aside >
         </>
     );
 }
