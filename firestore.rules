@@ -31,16 +31,20 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isProfessional();
       allow write: if isOwner(userId) || isAdmin();
+      allow update: if isProfessional(); // Allow professionals to update (e.g. assign group)
       allow delete: if isAdmin();
 
       // Notifications sub-collection
       match /notifications/{notificationId} {
         allow read, write: if isOwner(userId);
-        // Allow professionals/admin to write notifications to other users?
-        // The service uses 'addDoc' to 'users/{userId}/notifications'.
-        // If the sender is a professional adding a participant, they need write access to the patient's notifications.
         allow create: if isProfessional(); 
       }
+    }
+
+    // Health Units (Territory)
+    match /healthUnits/{unitId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     // Groups: 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2, AlertTriangle, Map as MapIcon, Cloud } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const DeveloperTools: React.FC = () => {
@@ -18,7 +18,7 @@ const DeveloperTools: React.FC = () => {
         }
     };
 
-    if (user?.email !== 'admin@admin.com') {
+    if (user?.role !== 'admin') {
         return (
             <div className="p-8 text-center text-red-600">
                 <AlertTriangle size={48} className="mx-auto mb-4" />
@@ -57,6 +57,33 @@ const DeveloperTools: React.FC = () => {
                     >
                         <Trash2 size={18} />
                         Limpar Banco de Dados (Cleanup DB)
+                    </button>
+                </div>
+
+                {/* Territory Tools */}
+                <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <MapIcon className="text-blue-500" size={20} />
+                        Território & UBS
+                    </h2>
+                    <p className="text-sm text-slate-600 mb-6">
+                        Gerenciar unidades de saúde e sincronizar lista padrão de Ariquemes.
+                    </p>
+                    <button
+                        onClick={async () => {
+                            try {
+                                const { healthUnitService } = await import('../../services/healthUnitService');
+                                const count = await healthUnitService.syncInitialHealthUnits(true);
+                                alert(`${count} Unidades Sincronizadas com Sucesso!`);
+                            } catch (error) {
+                                console.error('Erro ao sincronizar UBS:', error);
+                                alert('Erro ao sincronizar UBS. Verifique o console.');
+                            }
+                        }}
+                        className="w-full py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-blue-200"
+                    >
+                        <Cloud className="w-5 h-5" />
+                        Sincronizar UBS Ariquemes
                     </button>
                 </div>
             </div>

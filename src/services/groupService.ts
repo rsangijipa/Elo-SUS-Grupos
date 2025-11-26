@@ -77,7 +77,7 @@ export const groupService = {
         try {
             await runTransaction(db, async (transaction) => {
                 const groupRef = doc(db, COLLECTION_NAME, groupId);
-                const patientRef = doc(db, 'pacientes', patientId);
+                const patientRef = doc(db, 'users', patientId);
 
                 const groupDoc = await transaction.get(groupRef);
                 const patientDoc = await transaction.get(patientRef);
@@ -123,7 +123,7 @@ export const groupService = {
         try {
             await runTransaction(db, async (transaction) => {
                 const groupRef = doc(db, COLLECTION_NAME, groupId);
-                const patientRef = doc(db, 'pacientes', participantId);
+                const patientRef = doc(db, 'users', participantId);
 
                 const groupDoc = await transaction.get(groupRef);
                 const patientDoc = await transaction.get(patientRef);
@@ -169,7 +169,7 @@ export const groupService = {
             // Or use 'in' batches if we expect < 30 participants usually.
             // Let's use Promise.all with getDoc for now as it's straightforward.
 
-            const patientPromises = participantIds.map((id: string) => getDoc(doc(db, 'pacientes', id)));
+            const patientPromises = participantIds.map((id: string) => getDoc(doc(db, 'users', id)));
             const patientSnaps = await Promise.all(patientPromises);
 
             return patientSnaps

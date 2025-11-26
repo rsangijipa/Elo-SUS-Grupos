@@ -14,22 +14,22 @@ export default function AddParticipantModal({ isOpen, onClose, onAdd, currentPar
     if (!isOpen) return null;
 
     const handleSelectUser = async (user: any) => {
-        if (window.confirm(`Adicionar ${user.name} ao grupo?`)) {
-            await onAdd(user.id);
-        }
+        // if (window.confirm(`Adicionar ${user.name} ao grupo?`)) {
+        await onAdd(user.id);
+        // }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
                     <h3 className="font-bold text-lg text-slate-800">Adicionar Participante</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-4 overflow-y-auto">
                     <p className="text-sm text-slate-500">
                         Busque por pacientes para adicionar a este grupo.
                     </p>

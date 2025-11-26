@@ -556,7 +556,7 @@ const ProfessionalDashboard: React.FC = () => {
 
                             <div className="space-y-4">
                                 <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Dados Clínicos</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Motivo do Encaminhamento</label>
                                         <select
@@ -575,7 +575,7 @@ const ProfessionalDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Prioridade</label>
-                                        <div className="flex gap-3">
+                                        <div className="flex gap-3 h-[46px] items-center">
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
                                                     type="radio"
@@ -600,38 +600,38 @@ const ProfessionalDashboard: React.FC = () => {
                                             </label>
                                         </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Queixa Principal / Observações</label>
-                                    <textarea
-                                        required
-                                        rows={3}
-                                        value={referralForm.mainComplaint}
-                                        onChange={e => setReferralForm({ ...referralForm, mainComplaint: e.target.value })}
-                                        className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
-                                        placeholder="Descreva brevemente o caso e o motivo do encaminhamento..."
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Classificação de Risco</label>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {['baixo', 'moderado', 'alto'].map((risk) => (
-                                            <button
-                                                key={risk}
-                                                type="button"
-                                                onClick={() => setReferralForm({ ...referralForm, riskLevel: risk as any })}
-                                                className={`py-3 rounded-xl text-sm font-bold capitalize border transition-all ${referralForm.riskLevel === risk
-                                                    ? risk === 'alto' ? 'bg-red-50 border-red-200 text-red-700 ring-2 ring-red-100' : risk === 'moderado' ? 'bg-amber-50 border-amber-200 text-amber-700 ring-2 ring-amber-100' : 'bg-green-50 border-green-200 text-green-700 ring-2 ring-green-100'
-                                                    : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                                                    }`}
-                                            >
-                                                {risk}
-                                            </button>
-                                        ))}
+                                    <div className="md:col-span-2">
+                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Queixa Principal / Observações</label>
+                                        <textarea
+                                            required
+                                            rows={3}
+                                            value={referralForm.mainComplaint}
+                                            onChange={e => setReferralForm({ ...referralForm, mainComplaint: e.target.value })}
+                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
+                                            placeholder="Descreva brevemente o caso e o motivo do encaminhamento..."
+                                        />
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-2">
-                                        * Alto risco: Ideação suicida, risco de agressão, vulnerabilidade social extrema.
-                                    </p>
+                                    <div className="md:col-span-2">
+                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Classificação de Risco</label>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {['baixo', 'moderado', 'alto'].map((risk) => (
+                                                <button
+                                                    key={risk}
+                                                    type="button"
+                                                    onClick={() => setReferralForm({ ...referralForm, riskLevel: risk as any })}
+                                                    className={`py-3 rounded-xl text-sm font-bold capitalize border transition-all ${referralForm.riskLevel === risk
+                                                        ? risk === 'alto' ? 'bg-red-50 border-red-200 text-red-700 ring-2 ring-red-100' : risk === 'moderado' ? 'bg-amber-50 border-amber-200 text-amber-700 ring-2 ring-amber-100' : 'bg-green-50 border-green-200 text-green-700 ring-2 ring-green-100'
+                                                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                                        }`}
+                                                >
+                                                    {risk}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-2">
+                                            * Alto risco: Ideação suicida, risco de agressão, vulnerabilidade social extrema.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 

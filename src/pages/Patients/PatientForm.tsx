@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, MapPin } from 'lucide-react';
 import { patientService } from '../../services/patientService';
+import { healthUnitService } from '../../services/healthUnitService';
 import type { Patient } from '../../types/patient';
-import { useAuth } from '../../contexts/AuthContext';
+import type { HealthUnit } from '../../types/HealthUnit';
 
 const PatientForm: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [healthUnits, setHealthUnits] = useState<HealthUnit[]>([]);
     const [formData, setFormData] = useState<Partial<Patient>>({
         name: '',
         birthDate: '',
@@ -18,16 +20,43 @@ const PatientForm: React.FC = () => {
         phone: '',
         whatsappResponsavel: '',
         nomeResponsavel: '',
+        address: '',
+        neighborhood: '',
         observacoes: '',
-        unidadeSaudeId: 'ubs-centro',
+        unidadeSaudeId: '',
         status: 'active'
     });
 
     useEffect(() => {
+        loadHealthUnits();
         if (id) {
             loadPatient(id);
         }
     }, [id]);
+
+    // Auto-select UBS based on neighborhood
+    useEffect(() => {
+        if (formData.neighborhood && healthUnits.length > 0 && !id) {
+            const neighborhoodLower = formData.neighborhood.toLowerCase();
+            const matchedUBS = healthUnits.find(ubs =>
+                ubs.name.toLowerCase().includes(neighborhoodLower) ||
+                ubs.address.toLowerCase().includes(neighborhoodLower)
+            );
+
+            if (matchedUBS) {
+                setFormData(prev => ({ ...prev, unidadeSaudeId: matchedUBS.id }));
+            }
+        }
+    }, [formData.neighborhood, healthUnits, id]);
+
+    const loadHealthUnits = async () => {
+        try {
+            const units = await healthUnitService.getAll();
+            setHealthUnits(units);
+        } catch (error) {
+            console.error('Error loading health units:', error);
+        }
+    };
 
     const loadPatient = async (patientId: string) => {
         try {
@@ -162,40 +191,111 @@ const PatientForm: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Telefone *</label>
-                        <input
-                            type="text"
-                            name="phone"
-                            required
-                            value={formData.phone}
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+                        <select
+                            name="status"
+                            value={formData.status}
                             onChange={handleChange}
-                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
-                            placeholder="(00) 00000-0000"
-                        />
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
+                        >
+                            <option value="active">Ativo (Em Acompanhamento)</option>
+                            <option value="waiting">Aguardando</option>
+                            <option value="discharged">Alta Clínica</option>
+                            <option value="dropout">Abandono</option>
+                            <option value="inactive">Inativo</option>
+                        </select>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">Nome do Responsável</label>
-                        <input
-                            type="text"
-                            name="nomeResponsavel"
-                            value={formData.nomeResponsavel}
-                            onChange={handleChange}
-                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
-                            placeholder="Opcional"
-                        />
+                    {/* Address Section */}
+                    <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-2">
+                        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
+                            <MapPin size={18} className="text-blue-600" />
+                            Endereço e Localização
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Endereço Completo</label>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                                    placeholder="Rua, Número, Complemento"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Bairro *</label>
+                                <input
+                                    type="text"
+                                    name="neighborhood"
+                                    required
+                                    value={formData.neighborhood}
+                                    onChange={handleChange}
+                                    className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                                    placeholder="Digite o bairro para buscar UBS..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Unidade de Referência (UBS)</label>
+                                <select
+                                    name="unidadeSaudeId"
+                                    value={formData.unidadeSaudeId}
+                                    onChange={handleChange}
+                                    className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
+                                >
+                                    <option value="">Selecione a UBS...</option>
+                                    {healthUnits.map(unit => (
+                                        <option key={unit.id} value={unit.id}>
+                                            {unit.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-slate-400 mt-1">
+                                    * Selecionada automaticamente com base no bairro.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp do Responsável</label>
-                        <input
-                            type="text"
-                            name="whatsappResponsavel"
-                            value={formData.whatsappResponsavel}
-                            onChange={handleChange}
-                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
-                            placeholder="(00) 00000-0000"
-                        />
+                    <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-2">
+                        <h3 className="text-sm font-bold text-slate-900 mb-4">Contato e Responsável</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Telefone *</label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    required
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                                    placeholder="(00) 00000-0000"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Nome do Responsável</label>
+                                <input
+                                    type="text"
+                                    name="nomeResponsavel"
+                                    value={formData.nomeResponsavel}
+                                    onChange={handleChange}
+                                    className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                                    placeholder="Opcional"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp do Responsável</label>
+                                <input
+                                    type="text"
+                                    name="whatsappResponsavel"
+                                    value={formData.whatsappResponsavel}
+                                    onChange={handleChange}
+                                    className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                                    placeholder="(00) 00000-0000"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="col-span-1 md:col-span-2">

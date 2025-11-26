@@ -10,9 +10,16 @@ const DEMO_USERS = [
     {
         email: 'admin@elosus.gov.br',
         password: 'admin123', // Weak password for demo only
-        role: 'professional',
+        role: 'admin',
         name: 'Administrador Demo',
         unidadeSaudeId: 'all'
+    },
+    {
+        email: 'prof@elosus.gov.br',
+        password: 'prof123',
+        role: 'professional',
+        name: 'Profissional Demo',
+        unidadeSaudeId: 'ubs-centro'
     },
     {
         email: 'paciente@elosus.gov.br',
@@ -48,24 +55,37 @@ async function ensureUser(userData: any) {
         const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
         console.log(`User ${userData.email} created.`);
 
-        // Create Firestore doc
-        await setDoc(doc(db, 'users', userCredential.user.uid), {
-            uid: userCredential.user.uid,
-            name: userData.name,
-            email: userData.email,
-            role: userData.role,
-            unidadeSaudeId: userData.unidadeSaudeId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        });
+        // Create/Update Firestore doc
+        await updateUserDoc(userCredential.user.uid, userData);
     } catch (error: any) {
         if (error.code === 'auth/email-already-in-use') {
-            console.log(`User ${userData.email} already exists.`);
-            // Do NOT log in if user exists
+            console.log(`User ${userData.email} already exists. Updating Firestore data...`);
+            // We need the UID. Since we can't get it easily from the error, we'll sign in or assume we can get it?
+            // Actually, we can just sign in to get the UID, or we can't?
+            // Wait, we can't sign in multiple users at once.
+            // But we can query Firestore by email to find the user? No, email is in the doc.
+            // We can try to signInWithEmailAndPassword to get the UID.
+            try {
+                const credential = await signInWithEmailAndPassword(auth, userData.email, userData.password);
+                await updateUserDoc(credential.user.uid, userData);
+            } catch (loginError) {
+                console.error(`Could not login as ${userData.email} to update doc:`, loginError);
+            }
         } else {
             console.error(`Error ensuring user ${userData.email}:`, error);
         }
     }
+}
+
+async function updateUserDoc(uid: string, userData: any) {
+    await setDoc(doc(db, 'users', uid), {
+        uid: uid,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        unidadeSaudeId: userData.unidadeSaudeId,
+        updatedAt: serverTimestamp()
+    }, { merge: true });
 }
 
 async function seedDatabase(userId: string) {

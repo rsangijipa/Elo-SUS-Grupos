@@ -1,6 +1,6 @@
 export type GroupProtocol = 'STANDARD' | 'TABAGISMO' | 'GESTANTE' | 'ANSIEDADE_DEPRESSAO';
 
-export type GroupStatus = 'active' | 'completed' | 'archived' | 'planned' | 'paused';
+export type GroupStatus = 'active' | 'completed' | 'archived' | 'planned' | 'paused' | 'closed';
 
 export interface Group {
     id: string;

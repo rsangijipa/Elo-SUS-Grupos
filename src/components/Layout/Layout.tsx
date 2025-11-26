@@ -7,7 +7,7 @@ const Layout: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
     return (
-        <div className="flex h-screen bg-[#F6F8FE]">
+        <div className="flex h-[100vh] overflow-hidden bg-[#F6F8FE]">
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             <div className="flex-1 flex flex-col overflow-hidden md:ml-64 transition-all duration-300">
                 <Header onOpenSidebar={() => setIsSidebarOpen(true)} />

@@ -271,6 +271,36 @@ const GroupManagement: React.FC = () => {
 
     const urlType = getUrlType(urlInput);
 
+    const handleToggleStatus = async () => {
+        if (!group || !id) return;
+
+        const newStatus = group.status === 'active' ? 'closed' : 'active';
+        const confirmMessage = newStatus === 'closed'
+            ? 'Tem certeza que deseja encerrar as atividades deste grupo? Os dados serão preservados, mas não será possível realizar novas chamadas.'
+            : 'Deseja reativar este grupo?';
+
+        if (window.confirm(confirmMessage)) {
+            try {
+                await groupService.update(id, { status: newStatus });
+                addNotification({
+                    type: 'success',
+                    title: 'Status atualizado',
+                    message: `Grupo ${newStatus === 'active' ? 'reativado' : 'encerrado'} com sucesso.`
+                });
+                // Force reload or update local state via context if possible, 
+                // but for now we rely on the real-time listener or parent refresh if implemented.
+                // Since useData provides groups, it should auto-update if it listens to Firestore.
+            } catch (error) {
+                console.error("Error updating group status:", error);
+                addNotification({
+                    type: 'alert',
+                    title: 'Erro',
+                    message: 'Falha ao atualizar status do grupo.'
+                });
+            }
+        }
+    };
+
     if (!group) {
         return (
             <div className="p-8 text-center">
@@ -282,6 +312,8 @@ const GroupManagement: React.FC = () => {
         );
     }
 
+    const isGroupClosed = group.status === 'closed';
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -289,20 +321,32 @@ const GroupManagement: React.FC = () => {
                 <div>
                     <div className="flex items-center gap-3 mb-1">
                         <h1 className="text-2xl font-bold text-slate-900">{group.name}</h1>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${group.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                            {group.status === 'active' ? 'Ativo' : 'Inativo'}
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${group.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                            {group.status === 'active' ? 'ATIVO' : 'ENCERRADO'}
                         </span>
                     </div>
                     <p className="text-slate-500 flex items-center gap-2 text-sm">
                         <Users size={16} /> {participants.length} participantes • {group.schedule}
                     </p>
                 </div>
-                <button
-                    onClick={() => navigate('/groups')}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors"
-                >
-                    Voltar
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleToggleStatus}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors border ${group.status === 'active'
+                            ? 'border-red-200 text-red-600 hover:bg-red-50'
+                            : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                            }`}
+                    >
+                        {group.status === 'active' ? 'Encerrar Atividades' : 'Reativar Grupo'}
+                    </button>
+                    <button
+                        onClick={() => navigate('/groups')}
+                        className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors"
+                    >
+                        Voltar
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -317,14 +361,22 @@ const GroupManagement: React.FC = () => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleSaveSession}
-                                    className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                                    disabled={isGroupClosed}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${isGroupClosed
+                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                        }`}
                                 >
                                     <Save size={16} />
                                     Salvar Chamada
                                 </button>
                                 <button
                                     onClick={() => setIsAddModalOpen(true)}
-                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                                    disabled={isGroupClosed}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${isGroupClosed
+                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                        }`}
                                 >
                                     <UserPlus size={16} />
                                     Adicionar
@@ -613,7 +665,7 @@ const GroupManagement: React.FC = () => {
                 onAdd={handleAddParticipant}
                 currentParticipantIds={participants.map(p => p.id!)}
             />
-        </div>
+        </div >
     );
 };
 
