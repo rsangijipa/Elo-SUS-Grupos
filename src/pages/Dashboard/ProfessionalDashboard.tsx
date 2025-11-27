@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Filter, Search, ChevronRight, X } from 'lucide-react';
-import { MOCK_GROUPS, DEMO_PATIENTS, MOCK_APPOINTMENTS } from '../../utils/seedData';
+import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { referralService, Referral } from '../../services/referralService';
 import TobaccoInsightsWidget from '../../components/Widgets/TobaccoInsightsWidget';
@@ -10,6 +10,7 @@ import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
+    const { groups, patients, appointments } = useData();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'visao-geral' | 'triagem'>('visao-geral');
     const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -74,8 +75,13 @@ const ProfessionalDashboard: React.FC = () => {
         if (!selectedReferral) return;
 
         if (window.confirm('Deseja salvar a triagem e convidar o paciente para o grupo?')) {
-            // In a real app, we would select the group here. For now, picking the first available or a mock one.
-            const targetGroup = MOCK_GROUPS.find(g => g.protocol === 'TABAGISMO') || MOCK_GROUPS[0];
+            // Select a suitable group
+            const targetGroup = groups.find(g => g.protocol === 'TABAGISMO') || groups[0];
+
+            if (!targetGroup) {
+                toast.error('Nenhum grupo disponível para convite.');
+                return;
+            }
 
             await referralService.invitePatient(selectedReferral.id, {
                 groupId: targetGroup.id,
@@ -98,10 +104,16 @@ const ProfessionalDashboard: React.FC = () => {
     };
 
     // Filter data based on the current user
-    const myGroups = MOCK_GROUPS.filter(g => g.facilitatorId === user?.id);
+    const myGroups = groups.filter(g => g.facilitatorId === user?.id);
     const myGroupIds = myGroups.map(g => g.id);
-    const myPatients = DEMO_PATIENTS.filter((p: any) => p.group && myGroups.some(g => g.name.includes(p.group)));
-    const myAppointments = MOCK_APPOINTMENTS.filter(a => myGroupIds.includes(a.groupId));
+    // Filter patients that belong to my groups
+    // Note: This logic assumes patients have a 'group' field or we check group participants.
+    // The original mock logic was: p.group && myGroups.some(g => g.name.includes(p.group))
+    // Real logic: check if patient ID is in any of myGroups.participants
+    const myPatients = patients.filter(p =>
+        myGroups.some(g => g.participants?.includes(p.id || ''))
+    );
+    const myAppointments = appointments.filter(a => myGroupIds.includes(a.groupId));
 
     const activeGroups = myGroups.filter(g => g.status === 'active').length;
     const totalPatients = myPatients.length;

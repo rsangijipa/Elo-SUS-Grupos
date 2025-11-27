@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle, X, FileText, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
-import { MOCK_GROUPS } from '../../utils/seedData';
 
 export default function PatientDashboard() {
     const { user } = useAuth();
@@ -192,7 +191,7 @@ export default function PatientDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {invites.map(invite => {
                             // Find group details if available
-                            const group = MOCK_GROUPS.find(g => g.id === invite.groupId);
+                            const group = groups.find(g => g.id === invite.groupId);
                             return (
                                 <div key={invite.id} className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-orange-500 relative overflow-hidden">
                                     <div className="flex justify-between items-start mb-4">

@@ -12,7 +12,8 @@ import {
     orderBy,
     startAt,
     endAt,
-    limit
+    limit,
+    setDoc
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Patient } from '../types/patient';
@@ -27,6 +28,15 @@ export const patientService = {
             updatedAt: serverTimestamp(),
         });
         return docRef.id;
+    },
+
+    createWithId: async (id: string, patient: Omit<Patient, 'id'>) => {
+        const docRef = doc(db, COLLECTION_NAME, id);
+        await setDoc(docRef, {
+            ...patient,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
     },
 
     update: async (id: string, patient: Partial<Patient>) => {
@@ -86,6 +96,28 @@ export const patientService = {
             } as Patient));
         } catch (error) {
             console.error("Error searching patients:", error);
+            return [];
+        }
+    },
+
+    searchPatientsByEmail: async (email: string): Promise<Patient[]> => {
+        if (!email) return [];
+
+        const patientsRef = collection(db, COLLECTION_NAME);
+        const q = query(
+            patientsRef,
+            where('email', '==', email),
+            limit(1)
+        );
+
+        try {
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Patient));
+        } catch (error) {
+            console.error("Error searching patient by email:", error);
             return [];
         }
     }

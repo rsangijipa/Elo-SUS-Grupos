@@ -24,6 +24,7 @@ import WellbeingCenter from './pages/Wellbeing/WellbeingCenter';
 import PatientDetail from './pages/Patients/PatientDetail';
 import GroupList from './pages/Groups/GroupList';
 import PatientList from './pages/Patients/PatientList';
+import PatientForm from './pages/Patients/PatientForm';
 
 import GroupManagement from './pages/Groups/GroupManagement';
 import DeveloperTools from './pages/Developer/DeveloperTools';
@@ -102,6 +103,11 @@ function App() {
                   <Route path="patients" element={
                     <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
                       <PatientList />
+                    </RoleGuard>
+                  } />
+                  <Route path="patients/new" element={
+                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                      <PatientForm />
                     </RoleGuard>
                   } />
 

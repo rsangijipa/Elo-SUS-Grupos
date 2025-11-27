@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Building2, Activity, UserCircle, AlertTriangle, Stethoscope, CheckCircle2, Clock } from 'lucide-react';
 import { referralService, Referral } from '../../services/referralService';
+import { patientService } from '../../services/patientService';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import PatientSearch from '../PatientSearch';
@@ -114,7 +115,44 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
                                         onSelect={handlePatientSelect}
                                         placeholder="Digite para buscar..."
                                     />
-                                    {/* Fallback input if needed, but PatientSearch handles input */}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">Email do Paciente</label>
+                                    <div className="relative group">
+                                        <UserCircle className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-[#0054A6] transition-colors" size={18} />
+                                        <input
+                                            type="email"
+                                            placeholder="Buscar por email..."
+                                            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none transition-all font-medium"
+                                            onBlur={async (e) => {
+                                                const email = e.target.value;
+                                                if (email && email.includes('@')) {
+                                                    setLoading(true);
+                                                    try {
+                                                        const patients = await patientService.searchPatientsByEmail(email);
+                                                        if (patients.length > 0) {
+                                                            handlePatientSelect(patients[0]);
+                                                            addNotification({
+                                                                type: 'success',
+                                                                title: 'Paciente encontrado',
+                                                                message: `Dados carregados para: ${patients[0].name}`
+                                                            });
+                                                        } else {
+                                                            addNotification({
+                                                                type: 'info',
+                                                                title: 'Não encontrado',
+                                                                message: 'Nenhum paciente encontrado com este email.'
+                                                            });
+                                                        }
+                                                    } catch (error) {
+                                                        console.error("Error searching by email:", error);
+                                                    } finally {
+                                                        setLoading(false);
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">Cartão SUS (CNS)</label>

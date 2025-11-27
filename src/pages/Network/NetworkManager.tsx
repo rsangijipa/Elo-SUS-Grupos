@@ -1,24 +1,19 @@
 import React, { useState } from 'react';
 import { MapPin, Activity, Users, Plus, Building2 } from 'lucide-react';
 
-interface HealthUnit {
-    id: string;
-    name: string;
-    type: 'UBS' | 'CAPS' | 'NASF' | 'HOSPITAL';
-    region: string;
-    activeGroups: number;
-    status: 'active' | 'inactive';
-}
-
-const MOCK_UNITS: HealthUnit[] = [
-    { id: '1', name: 'UBS Santa Cecília', type: 'UBS', region: 'Centro', activeGroups: 3, status: 'active' },
-    { id: '2', name: 'CAPS II Perdizes', type: 'CAPS', region: 'Oeste', activeGroups: 5, status: 'active' },
-    { id: '3', name: 'UBS República', type: 'UBS', region: 'Centro', activeGroups: 0, status: 'inactive' },
-    { id: '4', name: 'NASF Pinheiros', type: 'NASF', region: 'Oeste', activeGroups: 2, status: 'active' },
-];
+import { unitService, HealthUnit } from '../../services/unitService';
 
 const NetworkManager: React.FC = () => {
-    const [units] = useState<HealthUnit[]>(MOCK_UNITS);
+    const [units, setUnits] = useState<HealthUnit[]>([]);
+
+    React.useEffect(() => {
+        loadUnits();
+    }, []);
+
+    const loadUnits = async () => {
+        const data = await unitService.getAll();
+        setUnits(data);
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">

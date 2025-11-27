@@ -3,6 +3,7 @@ import { Plus, Search, Users, ArrowRight, MapPin, Clock, X, BarChart3, MoreHoriz
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import AddGroupModal from '../../components/Modals/AddGroupModal';
+import { Group } from '../../types/group';
 
 const GroupList: React.FC = () => {
     const { groups, loading, refreshData } = useData();
@@ -50,13 +51,17 @@ const GroupList: React.FC = () => {
         setActivePopover(activePopover === groupId ? null : groupId);
     };
 
-    // Mock stats generator (since backend doesn't provide this yet)
-    const getGroupStats = (groupId: string) => {
-        // Deterministic mock based on ID char code
-        const seed = groupId.charCodeAt(0);
+    // Stats generator
+    const getGroupStats = (group: Group) => {
+        // Real participant count
+        const realParticipants = group.participants?.length || 0;
+
+        // Mock other stats for now as they require complex backend logic not yet available
+        const seed = group.id.charCodeAt(0);
         const attendance = 60 + (seed % 35); // 60-95%
+
         return {
-            participants: 10 + (seed % 15),
+            participants: realParticipants,
             attendance,
             sessions: 4 + (seed % 8)
         };
@@ -111,7 +116,7 @@ const GroupList: React.FC = () => {
                     </div>
                 ) : (
                     filteredGroups.map((group) => {
-                        const stats = getGroupStats(group.id);
+                        const stats = getGroupStats(group);
                         return (
                             <div key={group.id} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-visible hover:shadow-md hover:border-blue-100 transition-all duration-200 flex flex-col relative">
                                 <div className="p-6 flex-1">

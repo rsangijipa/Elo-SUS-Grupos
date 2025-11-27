@@ -11,6 +11,7 @@ import { auth, db } from '../services/firebase';
 import { User } from '../utils/seedData';
 import { INITIAL_PROFESSIONAL_STATE, INITIAL_PATIENT_STATE } from '../utils/seedData';
 import { useNotifications } from './NotificationContext';
+import { patientService } from '../services/patientService';
 
 interface AuthContextType {
     user: User | null;
@@ -63,6 +64,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return () => unsubscribe();
     }, []);
+
+    // Inactivity Timeout Logic
+    useEffect(() => {
+        if (!user) return;
+
+        const INACTIVITY_LIMIT = 60 * 1000; // 1 minute
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const resetTimer = () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                console.log('User inactive for 1 minute. Logging out...');
+                logout();
+                addNotification({
+                    type: 'info',
+                    title: 'Sessão Expirada',
+                    message: 'Você foi desconectado por inatividade.'
+                });
+            }, INACTIVITY_LIMIT);
+        };
+
+        const handleActivity = () => {
+            resetTimer();
+        };
+
+        // Initial timer start
+        resetTimer();
+
+        // Listen for user activity
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('keydown', handleActivity);
+        window.addEventListener('click', handleActivity);
+        window.addEventListener('scroll', handleActivity);
+        window.addEventListener('touchstart', handleActivity);
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('keydown', handleActivity);
+            window.removeEventListener('click', handleActivity);
+            window.removeEventListener('scroll', handleActivity);
+            window.removeEventListener('touchstart', handleActivity);
+        };
+    }, [user]);
 
     const login = async (email: string, password?: string) => {
         setIsLoading(true);
@@ -120,6 +165,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
+
+            // If role is patient, also create a record in 'pacientes' collection
+            if (data.role === 'patient') {
+                await patientService.createWithId(firebaseUser.uid, {
+                    name: data.name,
+                    email: data.email,
+                    cpf: data.cpf,
+                    cns: data.cns,
+                    // Initialize with default/empty values for required fields
+                    birthDate: '',
+                    sexo: 'Outro',
+                    phone: '',
+                    address: '',
+                    neighborhood: '',
+                    unidadeSaudeId: '',
+                    status: 'active',
+                    observacoes: 'Cadastrado via App'
+                });
+            }
 
             setUser(newUser);
             addNotification({

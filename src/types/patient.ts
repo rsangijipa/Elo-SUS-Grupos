@@ -5,6 +5,7 @@ export interface Patient {
     sexo?: 'M' | 'F' | 'Outro';
     cpf?: string;
     cns?: string;
+    email?: string; // Added for user sync
     phone: string;
     status: 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout';
     groupId?: string;

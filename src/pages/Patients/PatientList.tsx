@@ -42,13 +42,22 @@ const PatientList: React.FC = () => {
                         Lista de pacientes cadastrados na unidade.
                     </p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-medium"
-                >
-                    <Building2 size={20} />
-                    Encaminhar Paciente
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => navigate('/patients/new')}
+                        className="flex items-center gap-2 bg-white text-[#0054A6] border border-[#0054A6] px-5 py-2.5 rounded-lg hover:bg-blue-50 transition-all shadow-sm font-medium"
+                    >
+                        <Plus size={20} />
+                        Novo Paciente
+                    </button>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-medium"
+                    >
+                        <Building2 size={20} />
+                        Encaminhar Paciente
+                    </button>
+                </div>
             </div>
 
             {/* Search */}

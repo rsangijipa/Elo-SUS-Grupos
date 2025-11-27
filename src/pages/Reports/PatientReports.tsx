@@ -1,28 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Moon, Brain, Lightbulb } from 'lucide-react';
-import { healthService, SleepData } from '../../services/integrations/healthService';
+import { moodService, MoodEntry } from '../../services/integrations/moodService';
 import { useAuth } from '../../contexts/AuthContext';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area } from 'recharts';
 
 const PatientReports: React.FC = () => {
     const { user } = useAuth();
-    const [sleepData, setSleepData] = useState<SleepData[]>([]);
-
-    // Mock Mood Data (aligned with sleep dates)
-    const [moodData, setMoodData] = useState<any[]>([]);
+    const [moodData, setMoodData] = useState<MoodEntry[]>([]);
 
     useEffect(() => {
-        healthService.getSleepData().then(data => {
-            setSleepData(data);
-            // Generate mock mood data based on sleep to show correlation
-            const moods = data.map(d => ({
-                date: d.date,
-                moodScore: d.hours > 7 ? 8 + Math.random() * 2 : 4 + Math.random() * 3, // Better sleep = better mood
-                sleepHours: d.hours
-            }));
-            setMoodData(moods);
-        });
-    }, []);
+        if (user?.id) {
+            moodService.getMoodHistory(user.id).then(data => {
+                setMoodData(data);
+            });
+        }
+    }, [user]);
 
     return (
         <div className="space-y-8 animate-fade-in pb-12">
