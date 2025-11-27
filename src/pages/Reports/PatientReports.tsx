@@ -16,6 +16,35 @@ const PatientReports: React.FC = () => {
         }
     }, [user]);
 
+    const averageMood = moodData.length > 0
+        ? (moodData.reduce((acc, curr) => acc + curr.moodScore, 0) / moodData.length).toFixed(1)
+        : '-';
+
+    const averageSleep = moodData.length > 0
+        ? (moodData.reduce((acc, curr) => acc + curr.sleepHours, 0) / moodData.length).toFixed(1)
+        : '-';
+
+    if (moodData.length === 0) {
+        return (
+            <div className="space-y-8 animate-fade-in pb-12">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Relatórios de Progresso</h2>
+                    <p className="text-slate-500 mt-1">Análise integrada da sua saúde mental e física.</p>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex flex-col items-center justify-center text-center">
+                    <div className="p-4 bg-slate-50 rounded-full mb-4">
+                        <Brain size={32} className="text-slate-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-700 mb-2">Ainda não há dados suficientes</h3>
+                    <p className="text-slate-500 max-w-md">
+                        Comece a registrar seu humor e sono diariamente para visualizar seus relatórios e receber insights personalizados.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-fade-in pb-12">
             <div>
@@ -31,9 +60,7 @@ const PatientReports: React.FC = () => {
                 <div>
                     <h3 className="text-lg font-bold mb-1">Insight da Semana</h3>
                     <p className="text-indigo-100 leading-relaxed">
-                        Nos dias que você dorme mais de <span className="font-bold text-white">7 horas</span>,
-                        seu humor melhora em média <span className="font-bold text-white">40%</span>.
-                        Continue priorizando sua higiene do sono!
+                        Continue registrando seu humor e sono para receber insights personalizados sobre seus padrões de bem-estar.
                     </p>
                 </div>
             </div>
@@ -86,7 +113,7 @@ const PatientReports: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-slate-500 text-sm font-bold uppercase">Média de Humor</p>
-                        <h4 className="text-2xl font-bold text-slate-900">7.2 <span className="text-sm text-green-500 font-medium">+0.5</span></h4>
+                        <h4 className="text-2xl font-bold text-slate-900">{averageMood}</h4>
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
@@ -95,7 +122,7 @@ const PatientReports: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-slate-500 text-sm font-bold uppercase">Média de Sono</p>
-                        <h4 className="text-2xl font-bold text-slate-900">6.8h <span className="text-sm text-red-500 font-medium">-0.2h</span></h4>
+                        <h4 className="text-2xl font-bold text-slate-900">{averageSleep}h</h4>
                     </div>
                 </div>
             </div>
