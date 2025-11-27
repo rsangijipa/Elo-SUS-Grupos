@@ -20,7 +20,7 @@ export default function AddParticipantModal({ isOpen, onClose, onAdd, currentPar
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 animate-fade-in">
             <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
                     <h3 className="font-bold text-lg text-slate-800">Adicionar Participante</h3>

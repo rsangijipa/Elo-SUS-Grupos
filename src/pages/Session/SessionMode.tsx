@@ -97,7 +97,7 @@ const SessionMode: React.FC = () => {
         <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-20 relative">
             {/* Protocol Modal */}
             {selectedPatientForProtocol && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
                             <h3 className="font-bold text-slate-800 text-lg">

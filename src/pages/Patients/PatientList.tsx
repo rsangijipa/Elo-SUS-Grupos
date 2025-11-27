@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
-import AddPatientModal from '../../components/Modals/AddPatientModal';
+import ReferralModal from '../../components/Modals/ReferralModal';
 
 const PatientList: React.FC = () => {
     const { patients, loading, deletePatient } = useData();
@@ -46,8 +46,8 @@ const PatientList: React.FC = () => {
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-medium"
                 >
-                    <Plus size={20} />
-                    Novo Paciente
+                    <Building2 size={20} />
+                    Encaminhar Paciente
                 </button>
             </div>
 
@@ -155,7 +155,7 @@ const PatientList: React.FC = () => {
                 </div>
             </div>
 
-            <AddPatientModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <ReferralModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </div>
     );
 };

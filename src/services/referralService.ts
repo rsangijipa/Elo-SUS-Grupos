@@ -27,6 +27,7 @@ export interface Referral {
     id: string;
     patientId: string;
     patientName: string;
+    patientCns?: string;
 
     // Origin Details
     originUnitId?: string;
@@ -37,6 +38,7 @@ export interface Referral {
     // Clinical Details
     reason: string; // e.g., "Tabagismo", "Ansiedade"
     mainComplaint?: string; // Motivo detalhado
+    diagnosis?: string;
     riskLevel: 'baixo' | 'moderado' | 'alto';
     priority: 'normal' | 'urgente';
 

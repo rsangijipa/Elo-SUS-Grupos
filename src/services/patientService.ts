@@ -8,7 +8,11 @@ import {
     query,
     where,
     serverTimestamp,
-    getDoc
+    getDoc,
+    orderBy,
+    startAt,
+    endAt,
+    limit
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Patient } from '../types/patient';
@@ -60,5 +64,29 @@ export const patientService = {
             return { id: snapshot.id, ...snapshot.data() } as Patient;
         }
         return null;
+    },
+
+    searchPatients: async (searchTerm: string): Promise<Patient[]> => {
+        if (!searchTerm || searchTerm.length < 2) return [];
+
+        const patientsRef = collection(db, COLLECTION_NAME);
+        // Simple prefix search on name
+        const q = query(
+            patientsRef,
+            where('name', '>=', searchTerm),
+            where('name', '<=', searchTerm + '\uf8ff'),
+            limit(5)
+        );
+
+        try {
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Patient));
+        } catch (error) {
+            console.error("Error searching patients:", error);
+            return [];
+        }
     }
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Plus, X, CheckCircle2, Filter, Search, ChevronRight, User } from 'lucide-react';
+import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Filter, Search, ChevronRight, X } from 'lucide-react';
 import { MOCK_GROUPS, DEMO_PATIENTS, MOCK_APPOINTMENTS } from '../../utils/seedData';
 import { useAuth } from '../../contexts/AuthContext';
 import { referralService, Referral } from '../../services/referralService';
@@ -13,7 +13,7 @@ const ProfessionalDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'visao-geral' | 'triagem'>('visao-geral');
     const [referrals, setReferrals] = useState<Referral[]>([]);
-    const [showReferralModal, setShowReferralModal] = useState(false);
+
     const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
     const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
     const [loading, setLoading] = useState(false);
@@ -22,17 +22,7 @@ const ProfessionalDashboard: React.FC = () => {
     const [filterRisk, setFilterRisk] = useState<string>('all');
     const [filterOrigin, setFilterOrigin] = useState<string>('all');
 
-    // Referral Form State
-    const [referralForm, setReferralForm] = useState({
-        patientName: '',
-        originUnitName: '',
-        referringProfessionalName: '',
-        referringProfessionalRole: '',
-        reason: '',
-        mainComplaint: '',
-        riskLevel: 'baixo' as 'baixo' | 'moderado' | 'alto',
-        priority: 'normal' as 'normal' | 'urgente'
-    });
+
 
     const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -73,36 +63,7 @@ const ProfessionalDashboard: React.FC = () => {
         setReferrals(data);
     };
 
-    const handleCreateReferral = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            await referralService.create({
-                patientId: 'new', // Mock ID
-                patientName: referralForm.patientName,
-                originUnitName: referralForm.originUnitName,
-                referringProfessionalName: referralForm.referringProfessionalName,
-                referringProfessionalRole: referralForm.referringProfessionalRole,
-                reason: referralForm.reason,
-                mainComplaint: referralForm.mainComplaint,
-                riskLevel: referralForm.riskLevel,
-                priority: referralForm.priority
-            });
-            await loadReferrals();
-            setShowReferralModal(false);
-            setReferralForm({
-                patientName: '', originUnitName: '', referringProfessionalName: '',
-                referringProfessionalRole: '', reason: '', mainComplaint: '',
-                riskLevel: 'baixo', priority: 'normal'
-            });
-            toast.success('Paciente encaminhado com sucesso!');
-        } catch (error) {
-            console.error(error);
-            toast.error('Erro ao encaminhar paciente.');
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     const openTriage = (referral: Referral) => {
         setSelectedReferral(referral);
@@ -181,13 +142,7 @@ const ProfessionalDashboard: React.FC = () => {
                         )}
                     </button>
                 </div>
-                <button
-                    onClick={() => setShowReferralModal(true)}
-                    className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2 text-sm"
-                >
-                    <Plus size={18} />
-                    Encaminhar Paciente
-                </button>
+
             </div>
 
             {activeTab === 'visao-geral' ? (
@@ -506,182 +461,7 @@ const ProfessionalDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Referral Modal */}
-            {showReferralModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-[100] p-0 md:p-4 animate-fade-in">
-                    <div className="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col h-[90vh] md:h-auto md:max-h-[90vh]">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
-                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                                <ClipboardList size={20} className="text-blue-600" />
-                                Encaminhar Paciente
-                            </h3>
-                            <button onClick={() => setShowReferralModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <X size={20} />
-                            </button>
-                        </div>
 
-                        <form onSubmit={handleCreateReferral} className="p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-4">
-                                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Dados do Paciente</h4>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Nome Completo</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={referralForm.patientName}
-                                            onChange={e => setReferralForm({ ...referralForm, patientName: e.target.value })}
-                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                                            placeholder="Nome do paciente"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Unidade de Origem</label>
-                                        <select
-                                            required
-                                            value={referralForm.originUnitName}
-                                            onChange={e => setReferralForm({ ...referralForm, originUnitName: e.target.value })}
-                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white"
-                                        >
-                                            <option value="">Selecione a unidade...</option>
-                                            <option value="UBS Centro">UBS Centro</option>
-                                            <option value="UBS Jardim das Palmeiras">UBS Jardim das Palmeiras</option>
-                                            <option value="CAPS II">CAPS II</option>
-                                            <option value="CAPS AD">CAPS AD</option>
-                                            <option value="NASF">NASF</option>
-                                            <option value="Hospital Municipal">Hospital Municipal</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Profissional Solicitante</h4>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Nome do Profissional</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={referralForm.referringProfessionalName}
-                                            onChange={e => setReferralForm({ ...referralForm, referringProfessionalName: e.target.value })}
-                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                                            placeholder="Seu nome"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Cargo / Função</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={referralForm.referringProfessionalRole}
-                                            onChange={e => setReferralForm({ ...referralForm, referringProfessionalRole: e.target.value })}
-                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                                            placeholder="Ex: Médico, Enfermeiro, Psicólogo"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Dados Clínicos</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Motivo do Encaminhamento</label>
-                                        <select
-                                            required
-                                            value={referralForm.reason}
-                                            onChange={e => setReferralForm({ ...referralForm, reason: e.target.value })}
-                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white"
-                                        >
-                                            <option value="">Selecione o motivo...</option>
-                                            <option value="Tabagismo">Tabagismo</option>
-                                            <option value="Ansiedade">Ansiedade / Depressão</option>
-                                            <option value="Gestante">Pré-natal / Gestante</option>
-                                            <option value="Uso de Substâncias">Uso de Substâncias</option>
-                                            <option value="Outro">Outro</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Prioridade</label>
-                                        <div className="flex gap-3 h-[46px] items-center">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="priority"
-                                                    value="normal"
-                                                    checked={referralForm.priority === 'normal'}
-                                                    onChange={() => setReferralForm({ ...referralForm, priority: 'normal' })}
-                                                    className="text-blue-600 focus:ring-blue-500"
-                                                />
-                                                <span className="text-sm text-slate-700">Normal</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="priority"
-                                                    value="urgente"
-                                                    checked={referralForm.priority === 'urgente'}
-                                                    onChange={() => setReferralForm({ ...referralForm, priority: 'urgente' })}
-                                                    className="text-red-600 focus:ring-red-500"
-                                                />
-                                                <span className="text-sm text-red-700 font-bold">Urgente</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Queixa Principal / Observações</label>
-                                        <textarea
-                                            required
-                                            rows={3}
-                                            value={referralForm.mainComplaint}
-                                            onChange={e => setReferralForm({ ...referralForm, mainComplaint: e.target.value })}
-                                            className="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
-                                            placeholder="Descreva brevemente o caso e o motivo do encaminhamento..."
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="text-xs font-bold text-slate-700 uppercase mb-1 block">Classificação de Risco</label>
-                                        <div className="grid grid-cols-3 gap-3">
-                                            {['baixo', 'moderado', 'alto'].map((risk) => (
-                                                <button
-                                                    key={risk}
-                                                    type="button"
-                                                    onClick={() => setReferralForm({ ...referralForm, riskLevel: risk as any })}
-                                                    className={`py-3 rounded-xl text-sm font-bold capitalize border transition-all ${referralForm.riskLevel === risk
-                                                        ? risk === 'alto' ? 'bg-red-50 border-red-200 text-red-700 ring-2 ring-red-100' : risk === 'moderado' ? 'bg-amber-50 border-amber-200 text-amber-700 ring-2 ring-amber-100' : 'bg-green-50 border-green-200 text-green-700 ring-2 ring-green-100'
-                                                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                                                        }`}
-                                                >
-                                                    {risk}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-slate-400 mt-2">
-                                            * Alto risco: Ideação suicida, risco de agressão, vulnerabilidade social extrema.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowReferralModal(false)}
-                                    className="px-6 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
-                                >
-                                    {loading ? 'Enviando...' : 'Confirmar Encaminhamento'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             {/* Anamnesis Modal */}
             {showAnamnesisModal && selectedReferral && (

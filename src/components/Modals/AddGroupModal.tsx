@@ -37,7 +37,7 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4">
+        <div className="fixed inset-0 flex items-start justify-center z-50 animate-fade-in p-4 pt-20">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100">
                 {/* Header */}
                 <div className="bg-[#0054A6] p-6 flex justify-between items-center text-white">
