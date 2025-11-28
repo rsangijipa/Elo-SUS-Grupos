@@ -13,17 +13,19 @@ import {
     startAt,
     endAt,
     limit,
-    setDoc
+    setDoc,
+    type Query
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Patient } from '../types/patient';
 
-const COLLECTION_NAME = 'pacientes';
+const COLLECTION_NAME = 'users';
 
 export const patientService = {
     create: async (patient: Omit<Patient, 'id'>) => {
         const docRef = await addDoc(collection(db, COLLECTION_NAME), {
             ...patient,
+            role: 'patient',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -34,9 +36,10 @@ export const patientService = {
         const docRef = doc(db, COLLECTION_NAME, id);
         await setDoc(docRef, {
             ...patient,
+            role: 'patient',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-        });
+        }, { merge: true });
     },
 
     update: async (id: string, patient: Partial<Patient>) => {
@@ -53,11 +56,13 @@ export const patientService = {
     },
 
     getAll: async (unidadeSaudeId?: string) => {
-        let q = collection(db, COLLECTION_NAME);
+        let q: Query = collection(db, COLLECTION_NAME);
 
         if (unidadeSaudeId) {
-            // @ts-ignore - Query constraint type mismatch in some firebase versions, but valid
-            q = query(collection(db, COLLECTION_NAME), where('unidadeSaudeId', '==', unidadeSaudeId));
+            // @ts-ignore
+            q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'), where('unidadeSaudeId', '==', unidadeSaudeId));
+        } else {
+            q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'));
         }
 
         const snapshot = await getDocs(q);
@@ -83,6 +88,7 @@ export const patientService = {
         // Simple prefix search on name
         const q = query(
             patientsRef,
+            where('role', '==', 'patient'),
             where('name', '>=', searchTerm),
             where('name', '<=', searchTerm + '\uf8ff'),
             limit(5)
@@ -106,6 +112,7 @@ export const patientService = {
         const patientsRef = collection(db, COLLECTION_NAME);
         const q = query(
             patientsRef,
+            where('role', '==', 'patient'),
             where('email', '==', email),
             limit(1)
         );

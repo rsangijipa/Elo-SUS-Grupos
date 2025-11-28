@@ -24,4 +24,12 @@ export interface User {
     cns?: string;
     unidadeSaudeId?: string;
     originalRole?: 'professional' | 'patient' | 'admin';
+    // Extended Patient fields
+    birthDate?: string;
+    sexo?: 'M' | 'F' | 'Outro';
+    neighborhood?: string;
+    observacoes?: string;
+    whatsappResponsavel?: string;
+    nomeResponsavel?: string;
+    status?: 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout';
 }

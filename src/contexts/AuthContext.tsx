@@ -178,31 +178,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 updatedAt: serverTimestamp()
             };
 
+            // If role is patient, merge patient state
+            if (data.role === 'patient') {
+                Object.assign(newUser, {
+                    cns: data.cns,
+                    birthDate: '',
+                    sexo: 'Outro',
+                    phone: data.phone || '',
+                    address: data.address || '',
+                    neighborhood: data.neighborhood || '',
+                    status: 'active',
+                    observacoes: 'Cadastrado via App',
+                    emergencyContact: data.emergencyContact || ''
+                });
+            }
+
             // Create user document in Firestore
             await setDoc(doc(db, 'users', firebaseUser.uid), {
                 ...newUser,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             });
-
-            // If role is patient, also create a record in 'pacientes' collection
-            if (data.role === 'patient') {
-                await patientService.createWithId(firebaseUser.uid, {
-                    name: data.name,
-                    email: data.email,
-                    cpf: data.cpf,
-                    cns: data.cns,
-                    // Initialize with default/empty values for required fields
-                    birthDate: '',
-                    sexo: 'Outro',
-                    phone: '',
-                    address: '',
-                    neighborhood: '',
-                    unidadeSaudeId: '',
-                    status: 'active',
-                    observacoes: 'Cadastrado via App'
-                });
-            }
 
             setUser(newUser);
             addNotification({
