@@ -17,4 +17,5 @@ export interface Group {
         totalSessions?: number;
         materials?: string[];
     };
+    maxParticipants?: number;
 }

@@ -30,7 +30,8 @@ export default function AddGroupModal({ isOpen, onClose }: AddGroupModalProps) {
             room: formData.room,
             status: 'active',
             facilitatorId: 'u1', // Default to current user or mock
-            protocol: formData.protocol
+            protocol: formData.protocol,
+            maxParticipants: 10
         });
         onClose();
         setFormData({ name: '', description: '', schedule: '', room: '', protocol: 'STANDARD' });

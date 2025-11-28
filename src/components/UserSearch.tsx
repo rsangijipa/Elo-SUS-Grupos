@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, User as UserIcon } from 'lucide-react';
-import { userService } from '../services/userService';
-import type { User } from '../types/user';
+import { patientService } from '../services/patientService';
+import type { Patient } from '../types/patient';
 
 interface UserSearchProps {
-    onSelect: (user: User) => void;
+    onSelect: (patient: Patient) => void;
     placeholder?: string;
     excludeIds?: string[];
 }
 
 export default function UserSearch({ onSelect, placeholder = "Buscar por nome ou e-mail...", excludeIds = [] }: UserSearchProps) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [results, setResults] = useState<User[]>([]);
+    const [results, setResults] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -22,9 +22,9 @@ export default function UserSearch({ onSelect, placeholder = "Buscar por nome ou
             if (searchTerm.length >= 2) {
                 setLoading(true);
                 try {
-                    const users = await userService.searchUsers(searchTerm);
+                    const patients = await patientService.searchPatients(searchTerm);
                     // Filter out excluded IDs
-                    const filtered = users.filter(u => !excludeIds.includes(u.id));
+                    const filtered = patients.filter(p => !excludeIds.includes(p.id!));
                     setResults(filtered);
                     setIsOpen(true);
                 } catch (error) {
@@ -52,8 +52,8 @@ export default function UserSearch({ onSelect, placeholder = "Buscar por nome ou
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelect = (user: User) => {
-        onSelect(user);
+    const handleSelect = (patient: Patient) => {
+        onSelect(patient);
         setSearchTerm('');
         setIsOpen(false);
     };
@@ -75,18 +75,18 @@ export default function UserSearch({ onSelect, placeholder = "Buscar por nome ou
 
             {isOpen && results.length > 0 && (
                 <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden max-h-64 overflow-y-auto animate-fade-in">
-                    {results.map((user) => (
+                    {results.map((patient) => (
                         <button
-                            key={user.id}
-                            onClick={() => handleSelect(user)}
+                            key={patient.id}
+                            onClick={() => handleSelect(patient)}
                             className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50 last:border-0"
                         >
                             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
-                                {user.avatar || <UserIcon size={14} />}
+                                {patient.name.substring(0, 2).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-800 truncate">{user.name}</p>
-                                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                                <p className="text-sm font-medium text-slate-800 truncate">{patient.name}</p>
+                                <p className="text-xs text-slate-500 truncate">{patient.email || 'Sem e-mail'}</p>
                             </div>
                         </button>
                     ))}

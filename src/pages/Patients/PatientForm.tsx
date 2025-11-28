@@ -3,14 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, MapPin } from 'lucide-react';
 import { patientService } from '../../services/patientService';
 import { healthUnitService } from '../../services/healthUnitService';
+import { groupService } from '../../services/groupService';
 import type { Patient } from '../../types/patient';
 import type { HealthUnit } from '../../types/HealthUnit';
+import type { Group } from '../../types/group';
+import { PlusCircle, Users } from 'lucide-react';
 
 const PatientForm: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [healthUnits, setHealthUnits] = useState<HealthUnit[]>([]);
+    const [activeGroups, setActiveGroups] = useState<Group[]>([]);
     const [formData, setFormData] = useState<Partial<Patient>>({
         name: '',
         birthDate: '',
@@ -31,6 +35,7 @@ const PatientForm: React.FC = () => {
         loadHealthUnits();
         if (id) {
             loadPatient(id);
+            loadActiveGroups();
         }
     }, [id]);
 
@@ -66,6 +71,29 @@ const PatientForm: React.FC = () => {
             }
         } catch (error) {
             console.error('Error loading patient:', error);
+        }
+    };
+
+    const loadActiveGroups = async () => {
+        try {
+            const groups = await groupService.getAll();
+            // Filter active groups. If UBS logic exists, filter by UBS too.
+            // For now, just active groups.
+            setActiveGroups(groups.filter(g => g.status === 'active'));
+        } catch (error) {
+            console.error('Error loading groups:', error);
+        }
+    };
+
+    const handleAddToGroup = async (groupId: string) => {
+        if (!id) return;
+        try {
+            await groupService.addParticipant(groupId, id);
+            alert('Paciente adicionado ao grupo com sucesso!');
+            loadActiveGroups(); // Refresh to update counts if needed
+        } catch (error) {
+            console.error('Error adding to group:', error);
+            alert('Erro ao adicionar paciente ao grupo. Verifique se há vagas.');
         }
     };
 
@@ -309,6 +337,56 @@ const PatientForm: React.FC = () => {
                             placeholder="Informações adicionais importantes..."
                         />
                     </div>
+
+                    {/* Active Groups Section - Only visible in Edit Mode */}
+                    {id && (
+                        <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-2">
+                            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <Users size={18} className="text-blue-600" />
+                                Grupos Disponíveis na UBS
+                            </h3>
+
+                            {activeGroups.length === 0 ? (
+                                <p className="text-sm text-slate-500 italic">Nenhum grupo ativo encontrado no momento.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {activeGroups.map(group => {
+                                        const participantCount = group.participants?.length || 0;
+                                        const maxParticipants = group.maxParticipants || 10; // Default to 10 if not set
+                                        const isFull = participantCount >= maxParticipants;
+                                        const isParticipating = group.participants?.includes(id);
+
+                                        if (isParticipating) return null; // Don't show if already in group (or maybe show as "Participando")
+
+                                        return (
+                                            <div key={group.id} className="border border-slate-200 rounded-xl p-4 flex justify-between items-center hover:border-blue-200 transition-colors bg-slate-50">
+                                                <div>
+                                                    <h4 className="font-bold text-slate-800 text-sm">{group.name}</h4>
+                                                    <p className="text-xs text-slate-500 mt-1">{group.schedule} • {group.room}</p>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isFull ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                                            {participantCount}/{maxParticipants} Vagas
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    disabled={isFull}
+                                                    onClick={() => handleAddToGroup(group.id)}
+                                                    className={`p-2 rounded-lg transition-colors ${isFull
+                                                        ? 'text-slate-300 cursor-not-allowed'
+                                                        : 'text-blue-600 hover:bg-blue-100'}`}
+                                                    title={isFull ? 'Grupo Lotado' : 'Adicionar ao Grupo'}
+                                                >
+                                                    <PlusCircle size={20} />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-6 border-t border-slate-100">
