@@ -25,7 +25,7 @@ const INITIAL_PATIENT_STATE = {
     address: '',
     neighborhood: '',
     unidadeSaudeId: '',
-    status: 'active',
+    status: 'active' as 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout',
     observacoes: ''
 };
 import { patientService } from '../services/patientService';
