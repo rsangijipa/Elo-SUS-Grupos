@@ -232,45 +232,48 @@ const ProfessionalDashboard: React.FC = () => {
                             </div>
 
                             <div className="space-y-4">
-                                {todaysAppointments.map(apt => (
-                                    <div key={apt.id} className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                                        <div className="flex-shrink-0 w-16 text-center">
-                                            <div className="text-sm font-bold text-slate-900">
-                                                {apt.date.getHours()}:{apt.date.getMinutes().toString().padStart(2, '0')}
+                                {todaysAppointments.map(apt => {
+                                    const aptDate = new Date(apt.date);
+                                    return (
+                                        <div key={apt.id} className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
+                                            <div className="flex-shrink-0 w-16 text-center">
+                                                <div className="text-sm font-bold text-slate-900">
+                                                    {aptDate.getHours()}:{aptDate.getMinutes().toString().padStart(2, '0')}
+                                                </div>
+                                                <div className="text-xs text-slate-500">
+                                                    {aptDate.getHours() + 1}:00
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-slate-500">
-                                                {apt.date.getHours() + 1}:00
+                                            <div className="w-1 bg-blue-200 self-stretch rounded-full"></div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-slate-900">
+                                                    {myGroups.find(g => g.id === apt.groupId)?.name || 'Sessão de Grupo'}
+                                                </h4>
+                                                <p className="text-sm text-slate-600 mt-1">{apt.topic}</p>
+                                                <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <Users size={14} />
+                                                        12 confirmados
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock size={14} />
+                                                        60 min
+                                                    </span>
+                                                </div>
                                             </div>
+                                            {apt.meetLink && (
+                                                <a
+                                                    href={apt.meetLink}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="px-3 py-1.5 bg-blue-100 text-[#0054A6] text-xs font-bold rounded-lg hover:bg-blue-200 transition-colors"
+                                                >
+                                                    Entrar no Meet
+                                                </a>
+                                            )}
                                         </div>
-                                        <div className="w-1 bg-blue-200 self-stretch rounded-full"></div>
-                                        <div className="flex-1">
-                                            <h4 className="font-bold text-slate-900">
-                                                {myGroups.find(g => g.id === apt.groupId)?.name || 'Sessão de Grupo'}
-                                            </h4>
-                                            <p className="text-sm text-slate-600 mt-1">{apt.topic}</p>
-                                            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1">
-                                                    <Users size={14} />
-                                                    12 confirmados
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Clock size={14} />
-                                                    60 min
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {apt.meetLink && (
-                                            <a
-                                                href={apt.meetLink}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="px-3 py-1.5 bg-blue-100 text-[#0054A6] text-xs font-bold rounded-lg hover:bg-blue-200 transition-colors"
-                                            >
-                                                Entrar no Meet
-                                            </a>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
 
                                 {todaysAppointments.length === 0 && (
                                     <div className="text-center py-8 text-slate-500">

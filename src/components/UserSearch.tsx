@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, User as UserIcon } from 'lucide-react';
 import { userService } from '../services/userService';
-import type { User } from '../utils/seedData';
+import type { User } from '../types/user';
 
 interface UserSearchProps {
     onSelect: (user: User) => void;

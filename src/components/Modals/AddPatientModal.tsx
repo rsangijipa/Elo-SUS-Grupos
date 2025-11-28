@@ -30,7 +30,7 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
             status: 'active',
             cpf: formData.cpf
             // Assuming Patient type has these fields or we map them.
-            // Let's check Patient type in seedData.ts. 
+            // Let's check Patient type. 
             // It has: id, name, cns, birthDate, status, groupId, phone.
             // It does NOT have CPF. I should probably add it or map it.
             // For now, I'll just store it if possible or ignore it if the type is strict.

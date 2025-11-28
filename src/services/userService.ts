@@ -9,7 +9,7 @@ import {
     endAt
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { User } from '../utils/seedData';
+import type { User } from '../types/user';
 
 export const userService = {
     searchUsers: async (searchTerm: string): Promise<User[]> => {

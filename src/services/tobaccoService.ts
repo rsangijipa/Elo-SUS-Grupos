@@ -56,7 +56,7 @@ export const tobaccoService = {
             }
 
             // Calculate Average Dependence Score
-            const totalScore = anamneses.reduce((sum, a) => sum + a.fagerstrom.score, 0);
+            const totalScore = anamneses.reduce((sum, a) => sum + a.fagerstrom.totalScore, 0);
             const averageDependenceScore = Number((totalScore / totalPatients).toFixed(1));
 
             // Calculate distribution
