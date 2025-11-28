@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Save, ArrowLeft, FileText, BookOpen, Loader2 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import ProtocolRenderer from '../../components/ProtocolRenderer';
+import toast from 'react-hot-toast';
 
 const SessionMode: React.FC = () => {
     const { id } = useParams();
@@ -57,13 +58,13 @@ const SessionMode: React.FC = () => {
 
         // Simulate saving
         await new Promise(resolve => setTimeout(resolve, 1000));
-        alert('Sessão finalizada com sucesso!');
+        toast.success('Sessão finalizada com sucesso!');
         navigate('/dashboard');
     };
 
     const handleSaveProtocolData = (data: any) => {
         console.log('Protocol Data Saved:', data);
-        alert('Dados do protocolo salvos com sucesso!');
+        toast.success('Dados do protocolo salvos com sucesso!');
         setSelectedPatientForProtocol(null);
     };
 

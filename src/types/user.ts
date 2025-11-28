@@ -19,4 +19,9 @@ export interface User {
     youtubePlaylistId?: string;
     createdAt: any; // Firestore Timestamp
     updatedAt?: any;
+    // Additional fields used in AuthContext
+    cpf?: string;
+    cns?: string;
+    unidadeSaudeId?: string;
+    originalRole?: 'professional' | 'patient' | 'admin';
 }

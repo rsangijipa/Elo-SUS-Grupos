@@ -166,10 +166,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {/* User Footer */}
                 <div className="p-4 border-t border-slate-100 bg-[#F6F8FE]/50">
                     {/* Dev Tool: Role Switcher */}
+                    {/* Dev Tool: Role Switcher - DISABLED FOR VERIFICATION
                     <div className="mb-4 space-y-2">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Modo de Teste</p>
                         <div className="grid grid-cols-3 gap-1">
-                            {/* Encaminhar: Visible to Admin and Professional */}
                             {['admin', 'professional'].includes(user?.originalRole || user?.role || '') && (
                                 <button
                                     onClick={() => switchDevRole('referrer')}
@@ -183,7 +183,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 </button>
                             )}
 
-                            {/* Atender: Visible to Admin, Professional, and Patient */}
                             {['admin', 'professional', 'patient'].includes(user?.originalRole || user?.role || '') && (
                                 <button
                                     onClick={() => switchDevRole('executor')}
@@ -197,7 +196,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 </button>
                             )}
 
-                            {/* Paciente: Visible to Admin only */}
                             {['admin'].includes(user?.originalRole || user?.role || '') && (
                                 <button
                                     onClick={() => switchDevRole('patient')}
@@ -212,6 +210,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             )}
                         </div>
                     </div>
+                    */}
 
                     <Link to="/profile" className="block" onClick={() => window.innerWidth < 768 && onClose()}>
                         <div className="bg-white rounded-2xl p-3 flex items-center gap-3 mb-3 cursor-pointer hover:shadow-md transition-all border border-slate-100 group">

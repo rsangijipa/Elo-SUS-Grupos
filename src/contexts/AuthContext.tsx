@@ -8,9 +8,26 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
-import { User } from '../utils/seedData';
-import { INITIAL_PROFESSIONAL_STATE, INITIAL_PATIENT_STATE } from '../utils/seedData';
+import { User } from '../types/user';
 import { useNotifications } from './NotificationContext';
+
+const INITIAL_PROFESSIONAL_STATE = {
+    crp: '',
+    specialty: '',
+    approach: '',
+    bio: ''
+};
+
+const INITIAL_PATIENT_STATE = {
+    cns: '',
+    emergencyContact: '',
+    phone: '',
+    address: '',
+    neighborhood: '',
+    unidadeSaudeId: '',
+    status: 'active',
+    observacoes: ''
+};
 import { patientService } from '../services/patientService';
 
 interface AuthContextType {
@@ -156,7 +173,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 cpf: data.cpf,
                 avatar: data.name.substring(0, 2).toUpperCase(),
                 // Ensure these fields are present
-                unidadeSaudeId: 'all'
+                unidadeSaudeId: 'all',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             };
 
             // Create user document in Firestore

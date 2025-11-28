@@ -1,4 +1,5 @@
 import EmptyState from '../components/ui/EmptyState';
+import toast from 'react-hot-toast';
 
 export default function Reports() {
     return (
@@ -8,7 +9,7 @@ export default function Reports() {
                 title="Nenhum relatório gerado"
                 description="Selecione um período ou grupo específico para gerar relatórios de produção (BPA) e frequência."
                 actionLabel="Gerar Novo Relatório"
-                onAction={() => console.log('Gerar relatório')}
+                onAction={() => toast.success('Funcionalidade de Relatórios será implementada em breve')}
             />
         </div>
     );
