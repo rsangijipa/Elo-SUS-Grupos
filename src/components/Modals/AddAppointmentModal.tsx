@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, User, Users, FileText } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { toast } from 'react-hot-toast';
 
 interface AddAppointmentModalProps {
     isOpen: boolean;
@@ -59,7 +60,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onClo
             type: 'group',
             topic: ''
         });
-        alert('Agendamento criado com sucesso!');
+        toast.success('Agendamento criado com sucesso!');
     };
 
     return (

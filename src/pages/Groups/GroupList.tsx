@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Users, ArrowRight, MapPin, Clock, X, BarChart3, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import AddGroupModal from '../../components/Modals/AddGroupModal';
 import { Group } from '../../types/group';
+import { toast } from 'react-hot-toast';
 
 const GroupList: React.FC = () => {
     const { groups, loading, refreshData } = useData();
@@ -22,7 +24,7 @@ const GroupList: React.FC = () => {
                 setActivePopover(null);
             } catch (error) {
                 console.error('Error deleting group:', error);
-                alert('Erro ao excluir grupo.');
+                toast.error('Erro ao excluir grupo.');
             }
         }
     };

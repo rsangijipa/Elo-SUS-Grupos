@@ -110,6 +110,11 @@ function App() {
                       <PatientForm />
                     </RoleGuard>
                   } />
+                  <Route path="patients/edit/:id" element={
+                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                      <PatientForm />
+                    </RoleGuard>
+                  } />
 
                   {/* Admin Only */}
                   <Route path="developer" element={

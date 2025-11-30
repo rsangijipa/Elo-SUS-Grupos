@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Lock, Mail, ArrowRight, Activity, ShieldCheck, User, Eye, EyeOff, Send, X, FileText } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Activity, ShieldCheck, User, Eye, EyeOff, FileText } from 'lucide-react';
+import TermsModal from '../../components/Auth/TermsModal';
+import PrivacyModal from '../../components/Auth/PrivacyModal';
+import HelpModal from '../../components/Auth/HelpModal';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -38,12 +41,7 @@ export default function Login() {
         name: ''
     });
 
-    const [helpData, setHelpData] = useState({
-        name: '',
-        surname: '',
-        email: '',
-        message: ''
-    });
+
 
     // Set default role to patient on mount
     useEffect(() => {
@@ -90,27 +88,7 @@ export default function Login() {
         return isValid;
     };
 
-    const handleHelpSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
 
-        const subject = `Suporte EloSUS - ${helpData.name} ${helpData.surname}`;
-        const body = `Nome: ${helpData.name} ${helpData.surname}\nEmail: ${helpData.email}\n\nMensagem:\n${helpData.message}`;
-
-        // Construct mailto link
-        const mailtoLink = `mailto:doll.ricardoll@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-        // Open email client
-        window.location.href = mailtoLink;
-
-        setActiveModal(null);
-        setHelpData({ name: '', surname: '', email: '', message: '' });
-
-        addNotification({
-            type: 'success',
-            title: 'Cliente de email aberto',
-            message: 'Por favor, envie o email através do seu aplicativo padrão.'
-        });
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -157,22 +135,7 @@ export default function Login() {
         }
     };
 
-    // Reusable Modal Component
-    const ModalContent = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
-        <div className="absolute inset-0 z-50 bg-white rounded-3xl flex flex-col overflow-hidden animate-fade-in shadow-2xl">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 className={`text-xl font-bold flex items-center gap-2 ${theme === 'patient' ? 'text-purple-700' : 'text-blue-700'}`}>
-                    {title}
-                </h3>
-                <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors p-2 hover:bg-slate-100 rounded-full">
-                    <X size={24} />
-                </button>
-            </div>
-            <div className="p-6 overflow-y-auto custom-scrollbar">
-                {children}
-            </div>
-        </div>
-    );
+
 
 
 
@@ -221,122 +184,15 @@ export default function Login() {
 
                     {/* Modal Overlays */}
                     {activeModal === 'help' && (
-                        <ModalContent title="Suporte" onClose={() => setActiveModal(null)}>
-                            <div className="space-y-6">
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-slate-600 text-sm">
-                                    <p className="font-medium mb-1">Precisa de ajuda?</p>
-                                    <p>Descreva sua dúvida ou problema no campo abaixo. Nossa equipe vai analisar sua mensagem e retornar pelo e-mail informado o mais breve possível. 💬</p>
-                                </div>
-                                <form onSubmit={handleHelpSubmit} className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Nome"
-                                            required
-                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all"
-                                            style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
-                                            value={helpData.name}
-                                            onChange={e => setHelpData({ ...helpData, name: e.target.value })}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Sobrenome"
-                                            required
-                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all"
-                                            style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
-                                            value={helpData.surname}
-                                            onChange={e => setHelpData({ ...helpData, surname: e.target.value })}
-                                        />
-                                    </div>
-                                    <input
-                                        type="email"
-                                        placeholder="Seu email"
-                                        required
-                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all"
-                                        style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
-                                        value={helpData.email}
-                                        onChange={e => setHelpData({ ...helpData, email: e.target.value })}
-                                    />
-                                    <textarea
-                                        placeholder="Como podemos ajudar?"
-                                        required
-                                        rows={5}
-                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all resize-none"
-                                        style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
-                                        value={helpData.message}
-                                        onChange={e => setHelpData({ ...helpData, message: e.target.value })}
-                                    />
-                                    <button
-                                        type="submit"
-                                        className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${theme === 'patient' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-                                    >
-                                        Enviar Mensagem <Send size={18} />
-                                    </button>
-                                </form>
-                            </div>
-                        </ModalContent>
+                        <HelpModal onClose={() => setActiveModal(null)} />
                     )}
 
                     {activeModal === 'terms' && (
-                        <ModalContent title="Termos de Uso" onClose={() => setActiveModal(null)}>
-                            <div className="prose prose-slate max-w-none text-sm text-slate-600 space-y-4">
-                                <p className="font-bold">1. Termos de Uso – EloSUS Grupos (23/11/2025)</p>
-                                <h4 className="font-bold text-slate-800">1. Quem somos</h4>
-                                <p>O EloSUS Grupos é uma plataforma digital destinada ao apoio à gestão e participação em grupos terapêuticos no âmbito do SUS, podendo ser utilizada por: Profissionais de saúde e Usuários/pacientes.</p>
-                                <h4 className="font-bold text-slate-800">2. Objetivo do aplicativo</h4>
-                                <p>Profissionais: auxiliar na organização, registro e acompanhamento de grupos terapêuticos. Usuários/pacientes: atuar como um companion de saúde mental.</p>
-                                <h4 className="font-bold text-slate-800">3. Público-alvo e perfis de acesso</h4>
-                                <p>O aplicativo pode ser utilizado em dois perfis principais: Profissional de saúde / SUS e Usuário/paciente.</p>
-                                <h4 className="font-bold text-slate-800">4. Cadastro e autenticação</h4>
-                                <p>Para utilizar todas as funcionalidades, é necessário realizar cadastro e login. Você se compromete a informar dados verdadeiros e manter sua senha em sigilo.</p>
-                                <h4 className="font-bold text-slate-800">5. Responsabilidades do usuário</h4>
-                                <p>Não utilizar o aplicativo para fins ilícitos. Respeitar a confidencialidade das informações.</p>
-                                <h4 className="font-bold text-slate-800">6. Responsabilidades do EloSUS Grupos</h4>
-                                <p>Empregar esforços de segurança e manter a disponibilidade do serviço. O aplicativo não substitui atendimento clínico individual.</p>
-                                <h4 className="font-bold text-slate-800">7. Funcionalidades principais</h4>
-                                <p>Cadastro e gestão de grupos, registro de presenças, agenda, painéis de indicadores, visualização de encontros, check-in emocional.</p>
-                                <h4 className="font-bold text-slate-800">8. Privacidade e proteção de dados</h4>
-                                <p>O tratamento de dados pessoais é regulado pela Política de Privacidade.</p>
-                                <h4 className="font-bold text-slate-800">9. Propriedade intelectual</h4>
-                                <p>Marcas e elementos do EloSUS Grupos são protegidos por direitos de propriedade intelectual.</p>
-                                <h4 className="font-bold text-slate-800">10. Suspensão, alteração e encerramento</h4>
-                                <p>O EloSUS Grupos poderá suspender o acesso ou alterar estes termos com aviso prévio.</p>
-                                <h4 className="font-bold text-slate-800">11. Contato e suporte</h4>
-                                <p>E-mail: [inserir e-mail oficial]</p>
-                                <h4 className="font-bold text-slate-800">12. Foro</h4>
-                                <p>Fica eleito o foro da Comarca de [cidade/UF].</p>
-                            </div>
-                        </ModalContent>
+                        <TermsModal onClose={() => setActiveModal(null)} />
                     )}
 
                     {activeModal === 'privacy' && (
-                        <ModalContent title="Política de Privacidade" onClose={() => setActiveModal(null)}>
-                            <div className="prose prose-slate max-w-none text-sm text-slate-600 space-y-4">
-                                <p className="font-bold">Política de Privacidade – EloSUS Grupos (23/11/2025)</p>
-                                <h4 className="font-bold text-slate-800">1. Introdução</h4>
-                                <p>Esta Política explica como coletamos, utilizamos e protegemos seus dados pessoais em conformidade com a LGPD.</p>
-                                <h4 className="font-bold text-slate-800">2. Dados pessoais que podemos coletar</h4>
-                                <p>Dados de identificação, dados profissionais, dados de saúde e participação em grupos (dados sensíveis), dados de uso e navegação.</p>
-                                <h4 className="font-bold text-slate-800">3. Para que utilizamos seus dados</h4>
-                                <p>Gestão de grupos terapêuticos, organização da assistência, comunicação, monitoramento, geração de indicadores, segurança.</p>
-                                <h4 className="font-bold text-slate-800">4. Bases legais (LGPD)</h4>
-                                <p>Execução de políticas públicas, contrato, obrigação legal, legítimo interesse, consentimento.</p>
-                                <h4 className="font-bold text-slate-800">5. Compartilhamento de dados</h4>
-                                <p>Com serviços de saúde, gestores, fornecedores de tecnologia, mediante requisição legal.</p>
-                                <h4 className="font-bold text-slate-800">6. Armazenamento e segurança</h4>
-                                <p>Adotamos medidas técnicas e organizacionais para proteger os dados. Nenhum sistema é totalmente isento de riscos.</p>
-                                <h4 className="font-bold text-slate-800">7. Direitos do titular de dados</h4>
-                                <p>Confirmar, acessar, corrigir, anonimizar, portar, revogar consentimento.</p>
-                                <h4 className="font-bold text-slate-800">8. Cookies</h4>
-                                <p>Podemos utilizar cookies para manter sessão e gerar estatísticas.</p>
-                                <h4 className="font-bold text-slate-800">9. Retenção e descarte</h4>
-                                <p>Dados mantidos pelo tempo necessário para cumprimento das finalidades e obrigações legais.</p>
-                                <h4 className="font-bold text-slate-800">10. Crianças e adolescentes</h4>
-                                <p>Tratamento de dados observará disposições específicas da LGPD e vínculo com responsável legal.</p>
-                                <h4 className="font-bold text-slate-800">11. Atualizações</h4>
-                                <p>Esta política poderá ser atualizada periodicamente.</p>
-                            </div>
-                        </ModalContent>
+                        <PrivacyModal onClose={() => setActiveModal(null)} />
                     )}
 
                     {/* Header with Logo */}

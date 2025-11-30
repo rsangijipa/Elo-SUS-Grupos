@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, Share, FileCheck, Printer, Upload, X, CheckCircle2 } from 'lucide-react';
 import { contentService, ClinicalDocument, Material } from '../../services/integrations/contentService';
+import { toast } from 'react-hot-toast';
 
 const Materials: React.FC = () => {
     const [documents, setDocuments] = useState<ClinicalDocument[]>([]);
@@ -26,7 +27,7 @@ const Materials: React.FC = () => {
             };
             setUploadedDocs([newDoc, ...uploadedDocs]);
             setIsUploading(false);
-            alert('Documento enviado com sucesso!');
+            toast.success('Documento enviado com sucesso!');
         }, 1500);
     };
 

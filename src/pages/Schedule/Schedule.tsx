@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, User, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import AddAppointmentModal from '../../components/Modals/AddAppointmentModal';
+import { toast } from 'react-hot-toast';
 
 const Schedule: React.FC = () => {
     const { appointments, groups, loading } = useData();
@@ -118,7 +119,7 @@ const Schedule: React.FC = () => {
                             {/* Event Card */}
                             {events.map((event, index) => (
                                 <div key={index} className="absolute top-24 left-[14.28%] w-[14.28%] p-1 pointer-events-none">
-                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-2 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer h-20 pointer-events-auto" onClick={(e) => { e.stopPropagation(); alert('Detalhes do agendamento: ' + event.topic); }}>
+                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-2 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer h-20 pointer-events-auto" onClick={(e) => { e.stopPropagation(); toast(`Detalhes do agendamento: ${event.topic}`, { icon: '📅' }); }}>
                                         <p className="text-xs font-bold text-blue-700 truncate">{event.title}</p>
                                         <p className="text-[10px] text-blue-600 flex items-center gap-1 mt-1">
                                             <Clock size={10} /> {event.time}

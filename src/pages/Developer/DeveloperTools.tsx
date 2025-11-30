@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, AlertTriangle, Map as MapIcon, Cloud } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const DeveloperTools: React.FC = () => {
     const { user } = useAuth();
@@ -10,10 +11,10 @@ const DeveloperTools: React.FC = () => {
             try {
                 const { cleanupDatabase } = await import('../../utils/cleanup');
                 await cleanupDatabase();
-                alert('Banco de dados limpo com sucesso.');
+                toast.success('Banco de dados limpo com sucesso.');
             } catch (error) {
                 console.error('Erro ao limpar banco de dados:', error);
-                alert('Erro ao limpar banco de dados. Verifique o console.');
+                toast.error('Erro ao limpar banco de dados. Verifique o console.');
             }
         }
     };
@@ -74,10 +75,10 @@ const DeveloperTools: React.FC = () => {
                             try {
                                 const { healthUnitService } = await import('../../services/healthUnitService');
                                 const count = await healthUnitService.syncInitialHealthUnits(true);
-                                alert(`${count} Unidades Sincronizadas com Sucesso!`);
+                                toast.success(`${count} Unidades Sincronizadas com Sucesso!`);
                             } catch (error) {
                                 console.error('Erro ao sincronizar UBS:', error);
-                                alert('Erro ao sincronizar UBS. Verifique o console.');
+                                toast.error('Erro ao sincronizar UBS. Verifique o console.');
                             }
                         }}
                         className="w-full py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-blue-200"

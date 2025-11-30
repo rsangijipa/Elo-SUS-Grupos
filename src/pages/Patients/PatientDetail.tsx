@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight } from 'lucide-react';
 import { patientService } from '../../services/patientService';
 import type { Patient } from '../../types/patient';
+import { toast } from 'react-hot-toast';
 
 const PatientDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -195,7 +196,7 @@ const PatientDetail: React.FC = () => {
                                     input.onchange = (e) => {
                                         const file = (e.target as HTMLInputElement).files?.[0];
                                         if (file) {
-                                            alert(`Documento "${file.name}" enviado com sucesso!`);
+                                            toast.success(`Documento "${file.name}" enviado com sucesso!`);
                                             // In a real app, we would upload this file
                                         }
                                     };

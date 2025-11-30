@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle, X, FileText, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
+import { toast } from 'react-hot-toast';
 
 export default function PatientDashboard() {
     const { user } = useAuth();
@@ -63,7 +64,7 @@ export default function PatientDashboard() {
         await referralService.acceptInvite(selectedInvite.id, user?.name || 'Paciente', user?.id || 'unknown');
 
         // Show success feedback
-        alert('Anamnese salva com sucesso! Você agora faz parte do grupo.');
+        toast.success('Anamnese salva com sucesso! Você agora faz parte do grupo.');
 
         setShowAcceptModal(false);
         setSelectedInvite(null);

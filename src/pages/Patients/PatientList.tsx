@@ -3,6 +3,7 @@ import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import ReferralModal from '../../components/Modals/ReferralModal';
+import { getAge, formatDate } from '../../utils/dateUtils';
 
 const PatientList: React.FC = () => {
     const { patients, loading, deletePatient } = useData();
@@ -16,21 +17,7 @@ const PatientList: React.FC = () => {
         (p.cpf && p.cpf.includes(searchTerm))
     );
 
-    const getAge = (birthDateString?: string) => {
-        if (!birthDateString) return '-';
-        const birthDate = new Date(birthDateString);
-        if (isNaN(birthDate.getTime())) return '-';
-        const ageDifMs = Date.now() - birthDate.getTime();
-        const ageDate = new Date(ageDifMs);
-        return Math.abs(ageDate.getUTCFullYear() - 1970);
-    };
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '-';
-        return date.toLocaleDateString('pt-BR');
-    };
 
     return (
         <div className="space-y-8">
@@ -137,7 +124,7 @@ const PatientList: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-2">
                                                 <button
-                                                    onClick={() => navigate(`/pacientes/${patient.id}`)}
+                                                    onClick={() => navigate(`/patients/edit/${patient.id}`)}
                                                     className="p-2 text-slate-400 hover:text-[#0054A6] hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Editar"
                                                 >

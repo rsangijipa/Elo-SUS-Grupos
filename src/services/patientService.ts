@@ -59,7 +59,6 @@ export const patientService = {
         let q: Query = collection(db, COLLECTION_NAME);
 
         if (unidadeSaudeId) {
-            // @ts-ignore
             q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'), where('unidadeSaudeId', '==', unidadeSaudeId));
         } else {
             q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'));

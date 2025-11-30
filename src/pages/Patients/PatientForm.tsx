@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, MapPin } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { patientService } from '../../services/patientService';
 import { healthUnitService } from '../../services/healthUnitService';
 import { groupService } from '../../services/groupService';
@@ -89,11 +90,11 @@ const PatientForm: React.FC = () => {
         if (!id) return;
         try {
             await groupService.addParticipant(groupId, id);
-            alert('Paciente adicionado ao grupo com sucesso!');
+            toast.success('Paciente adicionado ao grupo com sucesso!');
             loadActiveGroups(); // Refresh to update counts if needed
         } catch (error) {
             console.error('Error adding to group:', error);
-            alert('Erro ao adicionar paciente ao grupo. Verifique se há vagas.');
+            toast.error('Erro ao adicionar paciente ao grupo. Verifique se há vagas.');
         }
     };
 
@@ -109,7 +110,7 @@ const PatientForm: React.FC = () => {
             navigate('/pacientes');
         } catch (error) {
             console.error('Error saving patient:', error);
-            alert('Erro ao salvar paciente.');
+            toast.error('Erro ao salvar paciente.');
         } finally {
             setLoading(false);
         }

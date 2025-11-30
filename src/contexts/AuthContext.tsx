@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         if (!user) return;
 
-        const INACTIVITY_LIMIT = 60 * 1000; // 1 minute
+        const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
         let timeoutId: ReturnType<typeof setTimeout>;
 
         const resetTimer = () => {
