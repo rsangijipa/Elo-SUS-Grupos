@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle, X, FileText, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
+import { tobaccoService } from '../../services/tobaccoService';
 import { toast } from 'react-hot-toast';
 
 export default function PatientDashboard() {
@@ -11,13 +12,7 @@ export default function PatientDashboard() {
     const { groups } = useData();
     const navigate = useNavigate();
     const [invites, setInvites] = useState<Referral[]>([]);
-    const [showAcceptModal, setShowAcceptModal] = useState(false);
-    const [selectedInvite, setSelectedInvite] = useState<Referral | null>(null);
-
-    // Anamnesis State
-    const [anamnesisStep, setAnamnesisStep] = useState(0); // 0 = Intro, 1 = Questions
-    const [anamnesisAnswers, setAnamnesisAnswers] = useState<Record<string, string>>({});
-    const [anamnesisError, setAnamnesisError] = useState<string | null>(null);
+    const [checkingAnamnesis, setCheckingAnamnesis] = useState(false);
 
     useEffect(() => {
         loadInvites();
@@ -32,44 +27,30 @@ export default function PatientDashboard() {
         setInvites(myInvites);
     };
 
-    const handleAcceptClick = (invite: Referral) => {
-        setSelectedInvite(invite);
-        setAnamnesisStep(0);
-        setAnamnesisAnswers({});
-        setAnamnesisError(null);
-        setShowAcceptModal(true);
-    };
+    const handleAcceptClick = async (invite: Referral) => {
+        if (!user) return;
 
-    const handleAnswerChange = (questionId: string, value: string) => {
-        setAnamnesisAnswers(prev => ({ ...prev, [questionId]: value }));
-        if (anamnesisError) setAnamnesisError(null);
-    };
+        setCheckingAnamnesis(true);
+        try {
+            // 1. Check if user has anamnesis
+            const hasAnamnesis = await tobaccoService.checkAnamnesis(user.id);
 
-    const validateAnamnesis = () => {
-        const requiredQuestions = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
-        const missing = requiredQuestions.filter(q => !anamnesisAnswers[q]);
-
-        if (missing.length > 0) {
-            setAnamnesisError('Por favor, responda todas as perguntas para continuar.');
-            return false;
+            if (hasAnamnesis) {
+                // 2. If yes, accept invite directly
+                await referralService.acceptInvite(invite.id, user.name, user.id);
+                toast.success('Você foi adicionado ao grupo com sucesso!');
+                loadInvites();
+                navigate(0); // Refresh to show new group
+            } else {
+                // 3. If no, redirect to Anamnesis page
+                navigate(`/anamnese?pendingInvite=${invite.id}`);
+            }
+        } catch (error) {
+            console.error('Error checking anamnesis:', error);
+            toast.error('Erro ao verificar requisitos. Tente novamente.');
+        } finally {
+            setCheckingAnamnesis(false);
         }
-        return true;
-    };
-
-    const confirmAcceptance = async () => {
-        if (!selectedInvite) return;
-
-        if (!validateAnamnesis()) return;
-
-        await referralService.acceptInvite(selectedInvite.id, user?.name || 'Paciente', user?.id || 'unknown');
-
-        // Show success feedback
-        toast.success('Anamnese salva com sucesso! Você agora faz parte do grupo.');
-
-        setShowAcceptModal(false);
-        setSelectedInvite(null);
-        loadInvites();
-        navigate(0);
     };
 
     // Filter groups where the patient is a participant
@@ -82,62 +63,6 @@ export default function PatientDashboard() {
         if (attendanceRate >= 70) return { color: 'bg-amber-500', text: 'text-amber-600', label: 'Atenção à Frequência', rate: attendanceRate };
         return { color: 'bg-red-500', text: 'text-red-600', label: 'Risco de Desligamento', rate: attendanceRate };
     };
-
-    // Fagerström Questions
-    const questions = [
-        {
-            id: 'q1',
-            text: '1. Quanto tempo após acordar você fuma o primeiro cigarro?',
-            options: [
-                { label: 'Dentro de 5 minutos', value: '3' },
-                { label: 'Entre 6 e 30 minutos', value: '2' },
-                { label: 'Entre 31 e 60 minutos', value: '1' },
-                { label: 'Após 60 minutos', value: '0' }
-            ]
-        },
-        {
-            id: 'q2',
-            text: '2. Você acha difícil não fumar em locais proibidos?',
-            options: [
-                { label: 'Sim', value: '1' },
-                { label: 'Não', value: '0' }
-            ]
-        },
-        {
-            id: 'q3',
-            text: '3. Qual o cigarro do dia que traz mais satisfação?',
-            options: [
-                { label: 'O primeiro da manhã', value: '1' },
-                { label: 'Outros', value: '0' }
-            ]
-        },
-        {
-            id: 'q4',
-            text: '4. Quantos cigarros você fuma por dia?',
-            options: [
-                { label: 'Menos de 10', value: '0' },
-                { label: 'De 11 a 20', value: '1' },
-                { label: 'De 21 a 30', value: '2' },
-                { label: 'Mais de 31', value: '3' }
-            ]
-        },
-        {
-            id: 'q5',
-            text: '5. Você fuma mais frequentemente pela manhã?',
-            options: [
-                { label: 'Sim', value: '1' },
-                { label: 'Não', value: '0' }
-            ]
-        },
-        {
-            id: 'q6',
-            text: '6. Você fuma mesmo quando está doente?',
-            options: [
-                { label: 'Sim', value: '1' },
-                { label: 'Não', value: '0' }
-            ]
-        }
-    ];
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
@@ -225,9 +150,17 @@ export default function PatientDashboard() {
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => handleAcceptClick(invite)}
-                                            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-orange-200"
+                                            disabled={checkingAnamnesis}
+                                            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-orange-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
-                                            Quero participar
+                                            {checkingAnamnesis ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    Verificando...
+                                                </>
+                                            ) : (
+                                                'Quero participar'
+                                            )}
                                         </button>
                                         <button
                                             onClick={() => navigate('/support')}
@@ -334,133 +267,6 @@ export default function PatientDashboard() {
                     </div>
                 )}
             </div>
-
-            {/* Acceptance Modal - Refined */}
-            {showAcceptModal && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col overflow-hidden">
-
-                        {/* Header */}
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur-md sticky top-0 z-10">
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                    <FileText className="text-blue-600" size={24} />
-                                    Anamnese – Grupo de Tabagismo
-                                </h3>
-                                <p className="text-sm text-slate-500">Responda para finalizar sua inscrição</p>
-                            </div>
-                            <button onClick={() => setShowAcceptModal(false)} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 bg-slate-50/30">
-
-                            {/* Intro Step */}
-                            {anamnesisStep === 0 && (
-                                <div className="space-y-6 text-center py-8">
-                                    <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-blue-600 mb-4">
-                                        <FileText size={48} />
-                                    </div>
-                                    <h4 className="text-2xl font-bold text-slate-800">Bem-vindo ao Grupo!</h4>
-                                    <p className="text-slate-600 max-w-md mx-auto leading-relaxed">
-                                        Para que a equipe possa te ajudar da melhor forma, precisamos entender um pouco mais sobre seus hábitos.
-                                        <br /><br />
-                                        Vamos responder a um breve questionário (Teste de Fagerström) para avaliar seu grau de dependência de nicotina.
-                                    </p>
-                                    <div className="pt-4">
-                                        <button
-                                            onClick={() => setAnamnesisStep(1)}
-                                            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all transform hover:scale-105 flex items-center gap-2 mx-auto"
-                                        >
-                                            Começar Anamnese <ChevronRight size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Questionnaire Step */}
-                            {anamnesisStep === 1 && (
-                                <div className="space-y-8">
-                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-blue-800 text-sm mb-6">
-                                        <p className="font-bold flex items-center gap-2">
-                                            <AlertCircle size={16} />
-                                            Importante
-                                        </p>
-                                        <p>Todas as perguntas são obrigatórias para garantir uma avaliação precisa.</p>
-                                    </div>
-
-                                    <div className="space-y-8">
-                                        {questions.map((q) => (
-                                            <div key={q.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                                <p className="font-bold text-slate-800 mb-4 text-lg">{q.text} <span className="text-red-500">*</span></p>
-                                                <div className="space-y-3">
-                                                    {q.options.map((opt) => (
-                                                        <label
-                                                            key={opt.label}
-                                                            className={`
-                                                                flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all
-                                                                ${anamnesisAnswers[q.id] === opt.value
-                                                                    ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                                                                    : 'border-slate-200 hover:bg-slate-50 hover:border-slate-300'}
-                                                            `}
-                                                        >
-                                                            <div className={`
-                                                                w-6 h-6 rounded-full border-2 flex items-center justify-center
-                                                                ${anamnesisAnswers[q.id] === opt.value ? 'border-blue-600' : 'border-slate-300'}
-                                                            `}>
-                                                                {anamnesisAnswers[q.id] === opt.value && (
-                                                                    <div className="w-3 h-3 bg-blue-600 rounded-full" />
-                                                                )}
-                                                            </div>
-                                                            <input
-                                                                type="radio"
-                                                                name={q.id}
-                                                                value={opt.value}
-                                                                checked={anamnesisAnswers[q.id] === opt.value}
-                                                                onChange={() => handleAnswerChange(q.id, opt.value)}
-                                                                className="hidden"
-                                                            />
-                                                            <span className="text-slate-700 font-medium">{opt.label}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="p-6 border-t border-slate-100 bg-white flex flex-col gap-3">
-                            {anamnesisError && (
-                                <div className="text-red-500 text-sm font-bold text-center animate-pulse">
-                                    {anamnesisError}
-                                </div>
-                            )}
-
-                            {anamnesisStep === 1 && (
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={() => setShowAcceptModal(false)}
-                                        className="flex-1 py-3.5 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-200"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={confirmAcceptance}
-                                        className="flex-[2] py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
-                                    >
-                                        Salvar e Continuar <CheckCircle2 size={20} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

@@ -1,23 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import ReferralModal from '../../components/Modals/ReferralModal';
+import { patientService } from '../../services/patientService';
 import { getAge, formatDate } from '../../utils/dateUtils';
 
 const PatientList: React.FC = () => {
-    const { patients, loading, deletePatient } = useData();
+    const { deletePatient: deletePatientContext } = useData();
+    const [localPatients, setLocalPatients] = useState<any[]>([]);
+    const [lastDoc, setLastDoc] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
-    const filteredPatients = patients.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.cns && p.cns.includes(searchTerm)) ||
-        (p.cpf && p.cpf.includes(searchTerm))
-    );
+    // Initial load
+    useEffect(() => {
+        loadPatients();
+    }, []);
 
+    // Search effect with debounce could be better, but for now simple effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm) {
+                handleSearch(searchTerm);
+            } else {
+                // Reset to paginated view if search is cleared
+                loadPatients(true);
+            }
+        }, 500);
 
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const loadPatients = async (reset = false) => {
+        try {
+            if (reset) {
+                setLoading(true);
+            } else {
+                setLoadingMore(true);
+            }
+
+            const currentLastDoc = reset ? null : lastDoc;
+            const result = await patientService.getPatientsPaginated(currentLastDoc);
+
+            if (reset) {
+                setLocalPatients(result.patients);
+            } else {
+                setLocalPatients(prev => [...prev, ...result.patients]);
+            }
+
+            setLastDoc(result.lastDoc);
+            setHasMore(result.patients.length === 20); // Assuming limit is 20
+        } catch (error) {
+            console.error("Error loading patients:", error);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    const handleSearch = async (term: string) => {
+        setLoading(true);
+        try {
+            const results = await patientService.searchPatients(term);
+            setLocalPatients(results);
+            setHasMore(false); // Disable load more during search
+        } catch (error) {
+            console.error("Error searching:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (patient: any) => {
+        if (window.confirm('Tem certeza que deseja excluir este paciente?')) {
+            try {
+                await deletePatientContext(patient.id);
+                setLocalPatients(prev => prev.filter(p => p.id !== patient.id));
+            } catch (error) {
+                console.error("Error deleting patient:", error);
+            }
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -53,7 +121,7 @@ const PatientList: React.FC = () => {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Buscar por nome, CPF ou CNS..."
+                        placeholder="Buscar por nome..."
                         className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none transition-all bg-slate-50 focus:bg-white placeholder:text-slate-400"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -75,7 +143,7 @@ const PatientList: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-100">
-                            {loading ? (
+                            {loading && localPatients.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center">
                                         <div className="flex justify-center">
@@ -83,14 +151,14 @@ const PatientList: React.FC = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : filteredPatients.length === 0 ? (
+                            ) : localPatients.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                                         Nenhum paciente encontrado.
                                     </td>
                                 </tr>
                             ) : (
-                                filteredPatients.map((patient) => (
+                                localPatients.map((patient) => (
                                     <tr key={patient.id} className="hover:bg-slate-50/80 transition-colors group">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -131,11 +199,7 @@ const PatientList: React.FC = () => {
                                                     <Edit size={18} />
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        if (window.confirm('Tem certeza que deseja excluir este paciente?')) {
-                                                            if (patient.id) deletePatient(patient.id);
-                                                        }
-                                                    }}
+                                                    onClick={() => handleDelete(patient)}
                                                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Excluir"
                                                 >
@@ -149,6 +213,26 @@ const PatientList: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Load More Button */}
+                {!searchTerm && hasMore && (
+                    <div className="p-4 border-t border-slate-100 flex justify-center">
+                        <button
+                            onClick={() => loadPatients()}
+                            disabled={loadingMore}
+                            className="text-[#0054A6] font-medium hover:text-[#004080] disabled:opacity-50 transition-colors flex items-center gap-2"
+                        >
+                            {loadingMore ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                    Carregando...
+                                </>
+                            ) : (
+                                'Carregar Mais Pacientes'
+                            )}
+                        </button>
+                    </div>
+                )}
             </div>
 
             <ReferralModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />

@@ -11,6 +11,7 @@ import {
     getDoc,
     orderBy,
     startAt,
+    startAfter,
     endAt,
     limit,
     setDoc,
@@ -125,6 +126,41 @@ export const patientService = {
         } catch (error) {
             console.error("Error searching patient by email:", error);
             return [];
+        }
+    },
+
+    getPatientsPaginated: async (lastDoc?: any, limitCount: number = 20) => {
+        try {
+            let q = query(
+                collection(db, COLLECTION_NAME),
+                where('role', '==', 'patient'),
+                orderBy('name'),
+                limit(limitCount)
+            );
+
+            if (lastDoc) {
+                q = query(
+                    collection(db, COLLECTION_NAME),
+                    where('role', '==', 'patient'),
+                    orderBy('name'),
+                    startAfter(lastDoc),
+                    limit(limitCount)
+                );
+            }
+
+            const snapshot = await getDocs(q);
+            const patients = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Patient));
+
+            return {
+                patients,
+                lastDoc: snapshot.docs[snapshot.docs.length - 1]
+            };
+        } catch (error) {
+            console.error("Error fetching paginated patients:", error);
+            return { patients: [], lastDoc: null };
         }
     }
 };

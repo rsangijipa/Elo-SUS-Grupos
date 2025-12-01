@@ -25,6 +25,7 @@ import PatientDetail from './pages/Patients/PatientDetail';
 import GroupList from './pages/Groups/GroupList';
 import PatientList from './pages/Patients/PatientList';
 import PatientForm from './pages/Patients/PatientForm';
+import AnamnesisPage from './pages/Anamnesis/AnamnesisPage';
 
 import GroupManagement from './pages/Groups/GroupManagement';
 import DeveloperTools from './pages/Developer/DeveloperTools';
@@ -115,6 +116,7 @@ function App() {
                       <PatientForm />
                     </RoleGuard>
                   } />
+                  <Route path="anamnese" element={<AnamnesisPage />} />
 
                   {/* Admin Only */}
                   <Route path="developer" element={

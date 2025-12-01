@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, addDoc, limit } from 'firebase/firestore';
 import { TobaccoAnamnesis, DependenceLevel } from '../types/protocols/tobacco';
 
 export interface TobaccoGroupStats {
@@ -96,6 +96,33 @@ export const tobaccoService = {
                 dependenceLevels: [],
                 successRate: 0
             };
+        }
+    },
+
+    checkAnamnesis: async (userId: string): Promise<boolean> => {
+        try {
+            const q = query(
+                collection(db, 'tobacco_anamnesis'),
+                where('patientId', '==', userId),
+                limit(1)
+            );
+            const snapshot = await getDocs(q);
+            return !snapshot.empty;
+        } catch (error) {
+            console.error('Error checking anamnesis:', error);
+            return false;
+        }
+    },
+
+    saveAnamnesis: async (data: any): Promise<void> => {
+        try {
+            await addDoc(collection(db, 'tobacco_anamnesis'), {
+                ...data,
+                createdAt: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error saving anamnesis:', error);
+            throw error;
         }
     }
 };
