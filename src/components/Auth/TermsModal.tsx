@@ -31,7 +31,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ onClose }) => {
                 <h4 className="font-bold text-slate-800">10. Suspensão, alteração e encerramento</h4>
                 <p>O EloSUS Grupos poderá suspender o acesso ou alterar estes termos com aviso prévio.</p>
                 <h4 className="font-bold text-slate-800">11. Contato e suporte</h4>
-                <p>E-mail: [inserir e-mail oficial]</p>
+                <p>E-mail: [richardbraian@hotmail.com]</p>
                 <h4 className="font-bold text-slate-800">12. Foro</h4>
                 <p>Fica eleito o foro da Comarca de [cidade/UF].</p>
             </div>

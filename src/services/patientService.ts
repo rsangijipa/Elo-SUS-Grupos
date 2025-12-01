@@ -24,61 +24,91 @@ const COLLECTION_NAME = 'users';
 
 export const patientService = {
     create: async (patient: Omit<Patient, 'id'>) => {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-            ...patient,
-            role: 'patient',
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-        return docRef.id;
+        try {
+            const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+                ...patient,
+                role: 'patient',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("Erro em create:", error);
+            throw error;
+        }
     },
 
     createWithId: async (id: string, patient: Omit<Patient, 'id'>) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        await setDoc(docRef, {
-            ...patient,
-            role: 'patient',
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await setDoc(docRef, {
+                ...patient,
+                role: 'patient',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            }, { merge: true });
+        } catch (error) {
+            console.error("Erro em createWithId:", error);
+            throw error;
+        }
     },
 
     update: async (id: string, patient: Partial<Patient>) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        await updateDoc(docRef, {
-            ...patient,
-            updatedAt: serverTimestamp(),
-        });
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await updateDoc(docRef, {
+                ...patient,
+                updatedAt: serverTimestamp(),
+            });
+        } catch (error) {
+            console.error("Erro em update:", error);
+            throw error;
+        }
     },
 
     delete: async (id: string) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        await deleteDoc(docRef);
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await deleteDoc(docRef);
+        } catch (error) {
+            console.error("Erro em delete:", error);
+            throw error;
+        }
     },
 
     getAll: async (unidadeSaudeId?: string) => {
-        let q: Query = collection(db, COLLECTION_NAME);
+        try {
+            let q: Query = collection(db, COLLECTION_NAME);
 
-        if (unidadeSaudeId) {
-            q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'), where('unidadeSaudeId', '==', unidadeSaudeId));
-        } else {
-            q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'));
+            if (unidadeSaudeId) {
+                q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'), where('unidadeSaudeId', '==', unidadeSaudeId));
+            } else {
+                q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'));
+            }
+
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Patient));
+        } catch (error) {
+            console.error("Erro em getAll:", error);
+            throw error;
         }
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Patient));
     },
 
     getById: async (id: string) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        const snapshot = await getDoc(docRef);
-        if (snapshot.exists()) {
-            return { id: snapshot.id, ...snapshot.data() } as Patient;
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            const snapshot = await getDoc(docRef);
+            if (snapshot.exists()) {
+                return { id: snapshot.id, ...snapshot.data() } as Patient;
+            }
+            return null;
+        } catch (error) {
+            console.error("Erro em getById:", error);
+            throw error;
         }
-        return null;
     },
 
     searchPatients: async (searchTerm: string): Promise<Patient[]> => {
@@ -102,7 +132,7 @@ export const patientService = {
             } as Patient));
         } catch (error) {
             console.error("Error searching patients:", error);
-            return [];
+            throw error;
         }
     },
 
@@ -125,7 +155,7 @@ export const patientService = {
             } as Patient));
         } catch (error) {
             console.error("Error searching patient by email:", error);
-            return [];
+            throw error;
         }
     },
 
@@ -160,7 +190,7 @@ export const patientService = {
             };
         } catch (error) {
             console.error("Error fetching paginated patients:", error);
-            return { patients: [], lastDoc: null };
+            throw error;
         }
     }
 };

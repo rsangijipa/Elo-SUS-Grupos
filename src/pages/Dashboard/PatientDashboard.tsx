@@ -45,9 +45,14 @@ export default function PatientDashboard() {
                 // 3. If no, redirect to Anamnesis page
                 navigate(`/anamnese?pendingInvite=${invite.id}`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error checking anamnesis:', error);
-            toast.error('Erro ao verificar requisitos. Tente novamente.');
+            if (error.message === 'REQ_ANAMNESE') {
+                toast.error("Para participar, precisamos te conhecer melhor. Preencha sua ficha primeiro.");
+                navigate(`/anamnese?pendingInvite=${invite.id}`);
+            } else {
+                toast.error('Erro ao verificar requisitos. Tente novamente.');
+            }
         } finally {
             setCheckingAnamnesis(false);
         }

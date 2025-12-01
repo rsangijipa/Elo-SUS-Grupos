@@ -75,23 +75,28 @@ const ProfessionalDashboard: React.FC = () => {
         if (!selectedReferral) return;
 
         if (window.confirm('Deseja salvar a triagem e convidar o paciente para o grupo?')) {
-            // Select a suitable group
-            const targetGroup = groups.find(g => g.protocol === 'TABAGISMO') || groups[0];
+            try {
+                // Select a suitable group
+                const targetGroup = groups.find(g => g.protocol === 'TABAGISMO') || groups[0];
 
-            if (!targetGroup) {
-                toast.error('Nenhum grupo disponível para convite.');
-                return;
+                if (!targetGroup) {
+                    toast.error('Nenhum grupo disponível para convite.');
+                    return;
+                }
+
+                await referralService.invitePatient(selectedReferral.id, {
+                    groupId: targetGroup.id,
+                    professionalName: user?.name || 'Profissional'
+                });
+
+                setShowAnamnesisModal(false);
+                setSelectedReferral(null);
+                loadReferrals();
+                toast.success('Triagem salva e convite enviado com sucesso!');
+            } catch (error) {
+                console.error("Erro ao salvar triagem:", error);
+                toast.error("Erro ao processar convite. Tente novamente.");
             }
-
-            await referralService.invitePatient(selectedReferral.id, {
-                groupId: targetGroup.id,
-                professionalName: user?.name || 'Profissional'
-            });
-
-            setShowAnamnesisModal(false);
-            setSelectedReferral(null);
-            loadReferrals();
-            toast.success('Triagem salva e convite enviado com sucesso!');
         }
     };
 

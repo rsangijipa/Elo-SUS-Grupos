@@ -19,58 +19,88 @@ const COLLECTION_NAME = 'grupos';
 
 export const groupService = {
     create: async (group: Omit<Group, 'id'>) => {
-        const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-            ...group,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-        return docRef.id;
+        try {
+            const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+                ...group,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("Erro em create:", error);
+            throw error;
+        }
     },
 
     update: async (id: string, group: Partial<Group>) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        await updateDoc(docRef, {
-            ...group,
-            updatedAt: serverTimestamp(),
-        });
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await updateDoc(docRef, {
+                ...group,
+                updatedAt: serverTimestamp(),
+            });
+        } catch (error) {
+            console.error("Erro em update:", error);
+            throw error;
+        }
     },
 
     delete: async (id: string) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        await deleteDoc(docRef);
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await deleteDoc(docRef);
+        } catch (error) {
+            console.error("Erro em delete:", error);
+            throw error;
+        }
     },
 
     getAll: async (unidadeSaudeId?: string) => {
-        let q = collection(db, COLLECTION_NAME);
+        try {
+            let q = collection(db, COLLECTION_NAME);
 
-        if (unidadeSaudeId) {
-            // @ts-ignore
-            q = query(collection(db, COLLECTION_NAME), where('unidadeSaudeId', '==', unidadeSaudeId));
+            if (unidadeSaudeId) {
+                // @ts-ignore
+                q = query(collection(db, COLLECTION_NAME), where('unidadeSaudeId', '==', unidadeSaudeId));
+            }
+
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Group));
+        } catch (error) {
+            console.error("Erro em getAll:", error);
+            throw error;
         }
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Group));
     },
 
     getById: async (id: string) => {
-        const docRef = doc(db, COLLECTION_NAME, id);
-        const snapshot = await getDoc(docRef);
-        if (snapshot.exists()) {
-            return { id: snapshot.id, ...snapshot.data() } as Group;
+        try {
+            const docRef = doc(db, COLLECTION_NAME, id);
+            const snapshot = await getDoc(docRef);
+            if (snapshot.exists()) {
+                return { id: snapshot.id, ...snapshot.data() } as Group;
+            }
+            return null;
+        } catch (error) {
+            console.error("Erro em getById:", error);
+            throw error;
         }
-        return null;
     },
 
     getByTherapist: async (terapeutaId: string) => {
-        const q = query(collection(db, COLLECTION_NAME), where('terapeutaResponsavelId', '==', terapeutaId));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Group));
+        try {
+            const q = query(collection(db, COLLECTION_NAME), where('terapeutaResponsavelId', '==', terapeutaId));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Group));
+        } catch (error) {
+            console.error("Erro em getByTherapist:", error);
+            throw error;
+        }
     },
 
     addParticipant: async (groupId: string, patientId: string) => {
@@ -155,27 +185,32 @@ export const groupService = {
     },
 
     getParticipants: async (groupId: string) => {
-        const groupRef = doc(db, COLLECTION_NAME, groupId);
-        const groupSnap = await getDoc(groupRef);
+        try {
+            const groupRef = doc(db, COLLECTION_NAME, groupId);
+            const groupSnap = await getDoc(groupRef);
 
-        if (groupSnap.exists()) {
-            const data = groupSnap.data();
-            const participantIds = data.participants || [];
+            if (groupSnap.exists()) {
+                const data = groupSnap.data();
+                const participantIds = data.participants || [];
 
-            if (participantIds.length === 0) return [];
+                if (participantIds.length === 0) return [];
 
-            // Firestore 'in' query supports up to 10 items. For more, we need multiple queries or document gets.
-            // For simplicity and scalability, we'll fetch individual docs since we have IDs.
-            // Or use 'in' batches if we expect < 30 participants usually.
-            // Let's use Promise.all with getDoc for now as it's straightforward.
+                // Firestore 'in' query supports up to 10 items. For more, we need multiple queries or document gets.
+                // For simplicity and scalability, we'll fetch individual docs since we have IDs.
+                // Or use 'in' batches if we expect < 30 participants usually.
+                // Let's use Promise.all with getDoc for now as it's straightforward.
 
-            const patientPromises = participantIds.map((id: string) => getDoc(doc(db, 'users', id)));
-            const patientSnaps = await Promise.all(patientPromises);
+                const patientPromises = participantIds.map((id: string) => getDoc(doc(db, 'users', id)));
+                const patientSnaps = await Promise.all(patientPromises);
 
-            return patientSnaps
-                .filter(snap => snap.exists())
-                .map(snap => ({ id: snap.id, ...snap.data() }));
+                return patientSnaps
+                    .filter(snap => snap.exists())
+                    .map(snap => ({ id: snap.id, ...snap.data() }));
+            }
+            return [];
+        } catch (error) {
+            console.error("Erro em getParticipants:", error);
+            throw error;
         }
-        return [];
     }
 };
