@@ -28,8 +28,7 @@ export const userService = {
         } else {
             // Name search (Starts with)
             // Firestore range query for "starts with"
-            const strSearch = searchTerm.toLowerCase();
-            const strEnd = strSearch + '\uf8ff';
+            // Firestore range query for "starts with"
 
             // Note: This assumes you have a lowercase field or are searching case-sensitive.
             // For true case-insensitive search in Firestore without third-party (Algolia), 
