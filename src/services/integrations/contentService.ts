@@ -7,10 +7,13 @@ export interface Video {
 }
 
 export interface Material {
-    id: string;
+    id: string | number;
     title: string;
-    type: 'pdf' | 'link';
+    description?: string;
+    type: string;
+    date?: string;
     url: string;
+    category?: string;
 }
 
 export interface ClinicalDocument {
@@ -47,10 +50,34 @@ const RECOMMENDED_VIDEOS: Video[] = [
     }
 ];
 
-const PDF_MATERIALS: Material[] = [
-    { id: '1', title: 'Cartilha Tabagismo - Sessão 1.pdf', type: 'pdf', url: '#' },
-    { id: '2', title: 'Diário de Emoções.pdf', type: 'pdf', url: '#' },
-    { id: '3', title: 'Direitos do Usuário SUS.pdf', type: 'pdf', url: '#' }
+export const materialsData: Material[] = [
+    {
+        id: 1,
+        title: "Programa Nacional de Controle do Tabagismo",
+        description: "Diretrizes oficiais e informações sobre o tratamento no SUS.",
+        type: "PDF",
+        date: "2024",
+        url: "https://www.gov.br/saude/pt-br/composicao/saes/dapes/doencas-cronicas-nao-transmissiveis/tabagismo/publicacoes/pcdt_tabagismo.pdf",
+        category: "institucional"
+    },
+    {
+        id: 2,
+        title: "Cartilha: Deixando de Fumar sem Mistérios",
+        description: "Manual do participante com estratégias práticas.",
+        type: "PDF",
+        date: "Material de Apoio",
+        url: "https://bvsms.saude.gov.br/bvs/publicacoes/deixando_fumar_sem_misterios_manual_participante.pdf",
+        category: "educativo"
+    },
+    {
+        id: 3,
+        title: "Diário de Gatilhos e Emoções",
+        description: "Ferramenta para registro diário de ansiedade e consumo.",
+        type: "DOC",
+        date: "Exercício",
+        url: "",
+        category: "pratico"
+    }
 ];
 
 const CLINICAL_DOCUMENTS: ClinicalDocument[] = [
@@ -79,7 +106,7 @@ export const contentService = {
     },
 
     getMaterials: (tag?: string): Promise<Material[]> => {
-        return Promise.resolve(PDF_MATERIALS);
+        return Promise.resolve(materialsData);
     },
 
     getClinicalDocuments: (): Promise<ClinicalDocument[]> => {

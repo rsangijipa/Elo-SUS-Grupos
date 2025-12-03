@@ -104,12 +104,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 {/* Brand Header */}
-                <div className="h-24 flex items-center justify-between px-6 border-b border-slate-100 bg-gradient-to-r from-[#F6F8FE] to-white">
+                <div className="h-24 flex items-center justify-between px-6 border-b border-slate-100 bg-gradient-to-r from-brand-patient-surface to-white">
                     <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <img src="/elosusgrupos_logo.png" alt="EloSUS" className="h-10 w-auto" />
                         <div className="flex flex-col">
-                            <span className="font-bold text-[#0054A6] text-lg leading-tight">EloSUS</span>
-                            <span className="text-[10px] font-bold text-[#6C4FFE] tracking-wider uppercase">Grupos</span>
+                            <span className="font-bold text-brand-professional text-lg leading-tight">EloSUS</span>
+                            <span className="text-[10px] font-bold text-brand-patient tracking-wider uppercase">Grupos</span>
                         </div>
                     </Link>
                     {/* Mobile Close Button */}
@@ -128,17 +128,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive(item.path)
                                 ? item.path === '/developer'
                                     ? 'bg-red-50 text-red-600 shadow-sm font-bold'
-                                    : 'bg-gradient-to-r from-[#0054A6]/10 to-[#6C4FFE]/5 text-[#0054A6] shadow-sm font-bold'
+                                    : 'bg-gradient-to-r from-brand-professional/10 to-brand-patient/5 text-brand-professional shadow-sm font-bold'
                                 : item.path === '/developer'
                                     ? 'text-slate-500 hover:bg-red-50 hover:text-red-600'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-[#0054A6]'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-brand-professional'
                                 }`}
                         >
                             <item.icon
                                 size={20}
                                 className={isActive(item.path)
-                                    ? (item.path === '/developer' ? 'text-red-600' : 'text-[#0054A6]')
-                                    : (item.path === '/developer' ? 'text-slate-400 group-hover:text-red-600' : 'text-slate-400 group-hover:text-[#0054A6]') + ' transition-colors'}
+                                    ? (item.path === '/developer' ? 'text-red-600' : 'text-brand-professional')
+                                    : (item.path === '/developer' ? 'text-slate-400 group-hover:text-red-600' : 'text-slate-400 group-hover:text-brand-professional') + ' transition-colors'}
                             />
                             {item.label}
                         </Link>
@@ -150,13 +150,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             to="/support"
                             onClick={() => window.innerWidth < 768 && onClose()}
                             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive('/support')
-                                ? 'bg-gradient-to-r from-[#0054A6]/10 to-[#6C4FFE]/5 text-[#0054A6] shadow-sm font-bold'
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-[#0054A6]'
+                                ? 'bg-gradient-to-r from-brand-professional/10 to-brand-patient/5 text-brand-professional shadow-sm font-bold'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-brand-professional'
                                 }`}
                         >
                             <LifeBuoy
                                 size={20}
-                                className={isActive('/support') ? 'text-[#0054A6]' : 'text-slate-400 group-hover:text-[#0054A6] transition-colors'}
+                                className={isActive('/support') ? 'text-brand-professional' : 'text-slate-400 group-hover:text-brand-professional transition-colors'}
                             />
                             Central de Ajuda
                         </Link>
@@ -164,7 +164,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </nav>
 
                 {/* User Footer */}
-                <div className="p-4 border-t border-slate-100 bg-[#F6F8FE]/50">
+                <div className="p-4 border-t border-slate-100 bg-brand-patient-surface">
                     {/* Dev Tool: Role Switcher */}
                     <div className="mb-4 space-y-2">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Modo de Teste</p>
@@ -215,12 +215,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     <Link to="/profile" className="block" onClick={() => window.innerWidth < 768 && onClose()}>
                         <div className="bg-white rounded-2xl p-3 flex items-center gap-3 mb-3 cursor-pointer hover:shadow-md transition-all border border-slate-100 group">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm ${user?.role === 'patient' ? 'bg-[#6C4FFE] text-white' : 'bg-[#0054A6] text-white'
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm ${user?.role === 'patient' ? 'bg-brand-patient text-white' : 'bg-brand-professional text-white'
                                 }`}>
                                 {user?.avatar || 'US'}
                             </div>
                             <div className="overflow-hidden flex-1">
-                                <p className="text-sm font-bold text-slate-700 truncate group-hover:text-[#0054A6] transition-colors">{user?.name || 'Usuário'}</p>
+                                <p className="text-sm font-bold text-slate-700 truncate group-hover:text-brand-professional transition-colors">{user?.name || 'Usuário'}</p>
                                 <p className="text-[10px] text-slate-500 truncate font-medium">
                                     {user?.role === 'professional'
                                         ? (user.crp ? `CRP ${user.crp}` : 'Psicólogo(a)')
@@ -228,7 +228,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     }
                                 </p>
                             </div>
-                            <Settings size={16} className="text-slate-300 group-hover:text-[#0054A6] transition-colors" />
+                            <Settings size={16} className="text-slate-300 group-hover:text-brand-professional transition-colors" />
                         </div>
                     </Link>
 

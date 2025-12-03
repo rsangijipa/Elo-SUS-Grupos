@@ -1,44 +1,41 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { DataProvider } from './contexts/DataContext';
 import { Toaster } from 'react-hot-toast';
-import EnvTest from './components/EnvTest';
+import LoadingFallback from './components/Common/LoadingFallback';
 
-import Login from './pages/Login/Login';
+// Lazy load pages
+const Login = lazy(() => import('./pages/Login/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Schedule = lazy(() => import('./pages/Schedule/Schedule'));
+const Reports = lazy(() => import('./pages/Reports/Reports'));
+const Profile = lazy(() => import('./pages/Profile/Profile'));
+const SessionMode = lazy(() => import('./pages/Session/SessionMode'));
+const Support = lazy(() => import('./pages/Support/Support'));
+const NetworkManager = lazy(() => import('./pages/Network/NetworkManager'));
+const GroupProtocols = lazy(() => import('./pages/Protocols/GroupProtocols'));
+const Resources = lazy(() => import('./pages/Resources/Resources'));
+const Materials = lazy(() => import('./pages/Materials/Materials'));
+const WellbeingCenter = lazy(() => import('./pages/Wellbeing/WellbeingCenter'));
+const PatientDetail = lazy(() => import('./pages/Patients/PatientDetail'));
+const GroupList = lazy(() => import('./pages/Groups/GroupList'));
+const PatientList = lazy(() => import('./pages/Patients/PatientList'));
+const PatientForm = lazy(() => import('./pages/Patients/PatientForm'));
+const AnamnesisPage = lazy(() => import('./pages/Anamnesis/AnamnesisPage'));
+const GroupManagement = lazy(() => import('./pages/Groups/GroupManagement'));
+const DeveloperTools = lazy(() => import('./pages/Developer/DeveloperTools'));
+
 import RoleGuard from './components/Auth/RoleGuard';
-import Dashboard from './pages/Dashboard';
-import Schedule from './pages/Schedule/Schedule';
-import Reports from './pages/Reports/Reports';
-import Profile from './pages/Profile/Profile';
-import SessionMode from './pages/Session/SessionMode';
-import Support from './pages/Support/Support';
 import Layout from './components/Layout/Layout';
-import NetworkManager from './pages/Network/NetworkManager';
-import GroupProtocols from './pages/Protocols/GroupProtocols';
-import Resources from './pages/Resources/Resources';
-import Materials from './pages/Materials/Materials';
-import WellbeingCenter from './pages/Wellbeing/WellbeingCenter';
-import PatientDetail from './pages/Patients/PatientDetail';
-import GroupList from './pages/Groups/GroupList';
-import PatientList from './pages/Patients/PatientList';
-import PatientForm from './pages/Patients/PatientForm';
-import AnamnesisPage from './pages/Anamnesis/AnamnesisPage';
-
-import GroupManagement from './pages/Groups/GroupManagement';
-import DeveloperTools from './pages/Developer/DeveloperTools';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   if (!isAuthenticated) {
@@ -56,79 +53,81 @@ function App() {
           <ThemeProvider>
             <DataProvider>
               <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Layout />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="schedule" element={<Schedule />} />
-                  <Route path="reports" element={<Reports />} />
-                  <Route path="profile" element={<Profile />} />
-                  <Route path="session/:id" element={<SessionMode />} />
-                  <Route path="support" element={<Support />} />
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Layout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="schedule" element={<Schedule />} />
+                    <Route path="reports" element={<Reports />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="session/:id" element={<SessionMode />} />
+                    <Route path="support" element={<Support />} />
 
-                  {/* Clinical Routes - Admin & Professional */}
-                  <Route path="network" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <NetworkManager />
-                    </RoleGuard>
-                  } />
-                  <Route path="protocols" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <GroupProtocols />
-                    </RoleGuard>
-                  } />
-                  <Route path="resources" element={<Resources />} />
-                  <Route path="materials" element={<Materials />} />
-                  <Route path="wellbeing" element={<WellbeingCenter />} />
+                    {/* Clinical Routes - Admin & Professional */}
+                    <Route path="network" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <NetworkManager />
+                      </RoleGuard>
+                    } />
+                    <Route path="protocols" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <GroupProtocols />
+                      </RoleGuard>
+                    } />
+                    <Route path="resources" element={<Resources />} />
+                    <Route path="materials" element={<Materials />} />
+                    <Route path="wellbeing" element={<WellbeingCenter />} />
 
-                  <Route path="patients/:id" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <PatientDetail />
-                    </RoleGuard>
-                  } />
-                  <Route path="groups" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <GroupList />
-                    </RoleGuard>
-                  } />
-                  <Route path="groups/:id/manage" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <GroupManagement />
-                    </RoleGuard>
-                  } />
-                  <Route path="patients" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <PatientList />
-                    </RoleGuard>
-                  } />
-                  <Route path="patients/new" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <PatientForm />
-                    </RoleGuard>
-                  } />
-                  <Route path="patients/edit/:id" element={
-                    <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                      <PatientForm />
-                    </RoleGuard>
-                  } />
-                  <Route path="anamnese" element={<AnamnesisPage />} />
+                    <Route path="patients/:id" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <PatientDetail />
+                      </RoleGuard>
+                    } />
+                    <Route path="groups" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <GroupList />
+                      </RoleGuard>
+                    } />
+                    <Route path="groups/:id/manage" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <GroupManagement />
+                      </RoleGuard>
+                    } />
+                    <Route path="patients" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <PatientList />
+                      </RoleGuard>
+                    } />
+                    <Route path="patients/new" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <PatientForm />
+                      </RoleGuard>
+                    } />
+                    <Route path="patients/edit/:id" element={
+                      <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                        <PatientForm />
+                      </RoleGuard>
+                    } />
+                    <Route path="anamnese" element={<AnamnesisPage />} />
 
-                  {/* Admin Only */}
-                  <Route path="developer" element={
-                    <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
-                      <DeveloperTools />
-                    </RoleGuard>
-                  } />
-                </Route>
+                    {/* Admin Only */}
+                    <Route path="developer" element={
+                      <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                        <DeveloperTools />
+                      </RoleGuard>
+                    } />
+                  </Route>
 
-                {/* Catch all */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
+                  {/* Catch all */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </Suspense>
             </DataProvider>
           </ThemeProvider>
         </AuthProvider>
