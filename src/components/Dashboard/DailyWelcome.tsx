@@ -3,8 +3,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { motivationalQuotes } from '../../data/motivationalQuotes';
 
 const DailyWelcome: React.FC = () => {
-    const { user } = useAuth();
-    const firstName = user?.name?.split(' ')[0] || 'Visitante';
+    const { user, isLoading } = useAuth();
+    const firstName = user?.name?.split(' ')[0];
 
     // Lógica de Seleção Diária
     const { quote, avatarUrl } = useMemo(() => {
@@ -48,8 +48,13 @@ const DailyWelcome: React.FC = () => {
 
                 {/* Texto */}
                 <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-                        Olá, <span className="text-indigo-600">{firstName}!</span>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        Olá,
+                        {isLoading || !firstName ? (
+                            <div className="h-8 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
+                        ) : (
+                            <span className="text-indigo-600">{firstName}!</span>
+                        )}
                     </h2>
                     <div className="relative">
                         <p className="text-gray-700 text-lg font-medium leading-relaxed italic">

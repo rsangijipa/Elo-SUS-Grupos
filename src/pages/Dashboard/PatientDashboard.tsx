@@ -9,7 +9,7 @@ import { toast } from 'react-hot-toast';
 import DailyWelcome from '../../components/Dashboard/DailyWelcome';
 
 export default function PatientDashboard() {
-    const { user } = useAuth();
+    const { user, isLoading } = useAuth();
     const { groups } = useData();
     const navigate = useNavigate();
     const [invites, setInvites] = useState<Referral[]>([]);
@@ -18,6 +18,14 @@ export default function PatientDashboard() {
     useEffect(() => {
         loadInvites();
     }, [user]);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6C4FFE]"></div>
+            </div>
+        );
+    }
 
     const loadInvites = async () => {
         if (!user) return;

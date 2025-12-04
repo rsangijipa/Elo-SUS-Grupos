@@ -114,22 +114,21 @@ export const patientService = {
     searchPatients: async (searchTerm: string): Promise<Patient[]> => {
         if (!searchTerm || searchTerm.length < 2) return [];
 
-        const patientsRef = collection(db, COLLECTION_NAME);
-        // Simple prefix search on name
-        const q = query(
-            patientsRef,
-            where('role', '==', 'patient'),
-            where('name', '>=', searchTerm),
-            where('name', '<=', searchTerm + '\uf8ff'),
-            limit(5)
-        );
-
         try {
+            // Fetch all patients to perform client-side case-insensitive filtering
+            // Note: For large datasets, this should be replaced by a dedicated search service (e.g., Algolia) or a normalized 'name_lower' field in Firestore.
+            const q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'));
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({
+
+            const lowerTerm = searchTerm.toLowerCase();
+            const allPatients = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as Patient));
+
+            return allPatients
+                .filter(p => p.name.toLowerCase().includes(lowerTerm))
+                .slice(0, 5);
         } catch (error) {
             console.error("Error searching patients:", error);
             throw error;

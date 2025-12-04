@@ -144,13 +144,13 @@ export default function Login() {
                     <div className="max-w-lg space-y-8">
                         {/* Title */}
                         <div className="space-y-4">
-                            <h1 className="text-4xl lg:text-5xl font-bold text-slate-800 leading-[1.15]">
+                            <h1 className="text-4xl lg:text-5xl font-bold text-brand-text leading-[1.15]">
                                 Cuidar de você <br />
                                 <span className={`bg-clip-text text-transparent bg-gradient-to-r ${theme === 'patient' ? 'from-brand-patient to-brand-secondary-pink' : 'from-brand-professional to-brand-secondary-cyan'}`}>
                                     começa aqui.
                                 </span>
                             </h1>
-                            <p className="text-lg lg:text-xl text-slate-600 font-medium leading-relaxed max-w-md mx-auto lg:mx-0">
+                            <p className="text-lg lg:text-xl text-brand-text-muted font-medium leading-relaxed max-w-md mx-auto lg:mx-0">
                                 Seu espaço pessoal de saúde mental no SUS, feito para acompanhar sua jornada com leveza e acolhimento.
                             </p>
                         </div>
@@ -197,10 +197,10 @@ export default function Login() {
                             </h1>
                         </div>
 
-                        <h2 className="text-3xl font-bold text-slate-800 mb-2">
+                        <h2 className="text-3xl font-bold text-brand-text mb-2">
                             {isLogin ? 'Entre no seu espaço' : 'Crie sua conta'}
                         </h2>
-                        <p className="text-slate-500 font-medium">
+                        <p className="text-brand-text-muted font-medium">
                             {isLogin ? 'Escolha seu perfil para continuar.' : 'Preencha seus dados para começar.'}
                         </p>
                     </div>

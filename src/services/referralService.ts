@@ -88,6 +88,16 @@ export const referralService = {
             };
 
             const docRef = await addDoc(collection(db, COLLECTION_NAME), newReferralData);
+
+            // Update patient status to 'encaminhado'
+            if (referralData.patientId) {
+                const userRef = doc(db, 'users', referralData.patientId);
+                await updateDoc(userRef, {
+                    status: 'encaminhado',
+                    updatedAt: new Date().toISOString()
+                });
+            }
+
             return { id: docRef.id, ...newReferralData } as Referral;
         } catch (error) {
             console.error("Erro em create:", error);

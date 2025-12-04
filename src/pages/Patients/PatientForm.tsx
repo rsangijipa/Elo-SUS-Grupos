@@ -350,7 +350,7 @@ const PatientForm: React.FC = () => {
                             {activeGroups.length === 0 ? (
                                 <p className="text-sm text-slate-500 italic">Nenhum grupo ativo encontrado no momento.</p>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                     {activeGroups.map(group => {
                                         const participantCount = group.participants?.length || 0;
                                         const maxParticipants = group.maxParticipants || 10; // Default to 10 if not set

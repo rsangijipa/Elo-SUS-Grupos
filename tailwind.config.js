@@ -38,6 +38,11 @@ export default {
             pink: '#EC4899', // From Login gradient
             cyan: '#06B6D4', // From Login gradient
             orange: '#F97316', // From Login gradient
+          },
+          text: {
+            DEFAULT: '#1e293b', // slate-800
+            muted: '#64748b',   // slate-500
+            light: '#94a3b8',   // slate-400
           }
         }
       }
