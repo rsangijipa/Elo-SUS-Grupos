@@ -33,4 +33,12 @@ export interface User {
     nomeResponsavel?: string;
     status?: 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout';
     active?: boolean; // For system access control
+
+    // Gamification
+    stats?: {
+        loginStreak: number;
+        lastLogin: any; // Firestore Timestamp or Date
+        totalSessions: number;
+    };
+    achievements?: string[]; // Array of unlocked achievement IDs
 }

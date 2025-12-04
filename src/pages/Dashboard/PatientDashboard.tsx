@@ -9,16 +9,52 @@ import { toast } from 'react-hot-toast';
 import DailyWelcome from '../../components/Dashboard/DailyWelcome';
 import MoodTracker from '../../components/Widgets/MoodTracker';
 
+import confetti from 'canvas-confetti';
+import { gamificationService, ACHIEVEMENTS } from '../../services/gamificationService';
+import AchievementBadge from '../../components/Gamification/AchievementBadge';
+
 export default function PatientDashboard() {
     const { user, isLoading } = useAuth();
     const { groups } = useData();
     const navigate = useNavigate();
     const [invites, setInvites] = useState<Referral[]>([]);
     const [checkingAnamnesis, setCheckingAnamnesis] = useState(false);
+    const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
 
     useEffect(() => {
         loadInvites();
+        checkAchievements();
     }, [user]);
+
+    const checkAchievements = async () => {
+        if (!user) return;
+
+        // Load current achievements first to show immediately
+        const current = await gamificationService.getUserAchievements(user.id);
+        setUnlockedAchievements(current);
+
+        // Check for new unlocks
+        const newUnlocks = await gamificationService.checkAndUnlockAchievements(user.id);
+
+        if (newUnlocks.length > 0) {
+            // Update local state
+            setUnlockedAchievements(prev => [...prev, ...newUnlocks.map(a => a.id)]);
+
+            // Celebration!
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            newUnlocks.forEach(achievement => {
+                toast.success(`Nova Conquista: ${achievement.title} ${achievement.icon}`, {
+                    duration: 5000,
+                    icon: '🏆'
+                });
+            });
+        }
+    };
 
     if (isLoading) {
         return (
@@ -84,6 +120,46 @@ export default function PatientDashboard() {
 
             {/* Mood Tracker */}
             <MoodTracker />
+
+            {/* Gamification Section */}
+            <section>
+                <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    Minhas Conquistas
+                </h2>
+                <div className="grid grid-cols-3 gap-4">
+                    {ACHIEVEMENTS.map(achievement => {
+                        const isUnlocked = unlockedAchievements.includes(achievement.id);
+                        let progress = '';
+
+                        if (!isUnlocked) {
+                            if (achievement.id === 'on_fire') {
+                                progress = `${user?.stats?.loginStreak || 0}/3 dias`;
+                            } else if (achievement.id === 'active_voice') {
+                                progress = `${user?.stats?.totalSessions || 0}/5 sessões`;
+                            }
+                        }
+
+                        return (
+                            <div key={achievement.id} onClick={() => {
+                                if (!isUnlocked) {
+                                    toast(achievement.description, {
+                                        icon: '🔒',
+                                        style: { background: '#f1f5f9', color: '#64748b' }
+                                    });
+                                }
+                            }}>
+                                <AchievementBadge
+                                    title={achievement.title}
+                                    description={achievement.description}
+                                    icon={achievement.icon}
+                                    isUnlocked={isUnlocked}
+                                    progress={progress}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
 
             {/* Next Appointment Card */}
             {myGroups.length > 0 && (
