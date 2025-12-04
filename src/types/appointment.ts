@@ -9,6 +9,8 @@ export interface Appointment {
     topic?: string;
     googleCalendarId?: string;
     meetLink?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createdAt?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updatedAt?: any;
 }

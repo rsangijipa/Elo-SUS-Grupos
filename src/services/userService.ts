@@ -85,5 +85,23 @@ export const userService = {
             console.error("Error updating user status:", error);
             throw error;
         }
+    },
+
+    updateUserData: async (userId: string, data: Partial<User>) => {
+        try {
+            const userRef = doc(db, 'users', userId);
+            // Remove undefined fields to avoid Firestore errors
+            const cleanData = Object.fromEntries(
+                Object.entries(data).filter(([_, v]) => v !== undefined)
+            );
+
+            await updateDoc(userRef, {
+                ...cleanData,
+                updatedAt: new Date() // Use serverTimestamp() in real app, but Date is fine for now if consistent
+            });
+        } catch (error) {
+            console.error("Error updating user data:", error);
+            throw error;
+        }
     }
 };

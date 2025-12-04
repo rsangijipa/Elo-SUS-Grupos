@@ -18,4 +18,10 @@ export interface Patient {
     createdAt?: any;
     updatedAt?: any;
     hasAlert?: boolean; // Flag for emotional risk alert
+    stats?: {
+        loginStreak: number;
+        lastLogin: any;
+        totalSessions?: number;
+    };
+    achievements?: string[]; // Array of achievement IDs
 }

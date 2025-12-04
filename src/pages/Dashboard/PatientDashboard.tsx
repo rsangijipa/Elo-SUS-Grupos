@@ -12,6 +12,7 @@ import MoodTracker from '../../components/Widgets/MoodTracker';
 import confetti from 'canvas-confetti';
 import { gamificationService, ACHIEVEMENTS } from '../../services/gamificationService';
 import AchievementBadge from '../../components/Gamification/AchievementBadge';
+import QuizModule from '../../components/Dashboard/QuizModule';
 
 export default function PatientDashboard() {
     const { user, isLoading } = useAuth();
@@ -106,7 +107,7 @@ export default function PatientDashboard() {
     const myGroups = groups.filter(g => g.participants?.includes(user?.id || ''));
 
     // Calculate attendance (mock logic for now)
-    const getAttendanceStatus = (groupId: string) => {
+    const getAttendanceStatus = (_groupId: string) => {
         const attendanceRate = 85;
         if (attendanceRate >= 75) return { color: 'bg-green-500', text: 'text-green-600', label: 'Presença Excelente', rate: attendanceRate };
         if (attendanceRate >= 70) return { color: 'bg-amber-500', text: 'text-amber-600', label: 'Atenção à Frequência', rate: attendanceRate };
@@ -257,6 +258,9 @@ export default function PatientDashboard() {
                     </div>
                 </div>
             )}
+
+            {/* Quiz Module */}
+            <QuizModule />
 
             {/* My Groups Section */}
             <div>

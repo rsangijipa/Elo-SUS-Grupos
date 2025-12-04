@@ -17,7 +17,9 @@ export interface User {
     emergencyContact?: string;
     nextAppointment?: Date;
     youtubePlaylistId?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createdAt: any; // Firestore Timestamp
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updatedAt?: any;
     // Additional fields used in AuthContext
     cpf?: string;
@@ -37,6 +39,7 @@ export interface User {
     // Gamification
     stats?: {
         loginStreak: number;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         lastLogin: any; // Firestore Timestamp or Date
         totalSessions: number;
     };

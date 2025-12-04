@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight, Flame, Snowflake, Trophy, Heart } from 'lucide-react';
 import { patientService } from '../../services/patientService';
 import { moodService, MoodLog } from '../../services/moodService';
+import { quizService } from '../../services/quizService';
+import type { QuizResult } from '../../types/quiz';
 import type { Patient } from '../../types/patient';
 import { toast } from 'react-hot-toast';
 
@@ -11,6 +13,8 @@ const PatientDetail: React.FC = () => {
     const navigate = useNavigate();
     const [patient, setPatient] = useState<Patient | null>(null);
     const [moodHistory, setMoodHistory] = useState<MoodLog[]>([]);
+    const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
+    const [selfCareResult, setSelfCareResult] = useState<QuizResult | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -26,6 +30,10 @@ const PatientDetail: React.FC = () => {
             if (data) {
                 const moodData = await moodService.getPatientHistory(patientId);
                 setMoodHistory(moodData);
+                const quizData = await quizService.getQuizResultById(patientId, 'mental-health-general-13');
+                const scData = await quizService.getQuizResultById(patientId, 'self-care-smart');
+                setQuizResult(quizData);
+                setSelfCareResult(scData);
             }
         } catch (error) {
             console.error('Error loading patient:', error);
@@ -179,6 +187,114 @@ const PatientDetail: React.FC = () => {
 
                     {/* Sidebar Stats */}
                     <div className="space-y-6">
+                        {/* Engagement Panel */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <Trophy size={18} className="text-yellow-500" />
+                                Engajamento Digital
+                            </h3>
+
+                            {/* Streak Indicator */}
+                            <div className={`p-4 rounded-xl border mb-4 flex items-center gap-3 ${(patient.stats?.loginStreak || 0) > 3
+                                ? 'bg-orange-50 border-orange-100'
+                                : 'bg-slate-50 border-slate-100'
+                                }`}>
+                                <div className={`p-2 rounded-lg ${(patient.stats?.loginStreak || 0) > 3
+                                    ? 'bg-orange-100 text-orange-600'
+                                    : 'bg-slate-200 text-slate-500'
+                                    }`}>
+                                    {(patient.stats?.loginStreak || 0) > 3 ? <Flame size={24} /> : <Snowflake size={24} />}
+                                </div>
+                                <div>
+                                    <p className={`font-bold text-sm ${(patient.stats?.loginStreak || 0) > 3 ? 'text-orange-700' : 'text-slate-600'
+                                        }`}>
+                                        {(patient.stats?.loginStreak || 0) > 3 ? 'Alta Adesão' : 'Baixa Frequência'}
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                        {(patient.stats?.loginStreak || 0)} dias seguidos
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Last Access */}
+                            <div className="mb-6">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Visto por último em</p>
+                                <p className="text-sm font-medium text-slate-700">
+                                    {patient.stats?.lastLogin
+                                        ? new Date(patient.stats.lastLogin.seconds ? patient.stats.lastLogin.seconds * 1000 : patient.stats.lastLogin).toLocaleString()
+                                        : 'Nunca acessou'}
+                                </p>
+                            </div>
+
+                            {/* Achievements Gallery */}
+                            <div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Conquistas Recentes</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {patient.achievements && patient.achievements.length > 0 ? (
+                                        patient.achievements.map((badgeId, index) => (
+                                            <div key={index} className="w-8 h-8 rounded-full bg-yellow-100 border border-yellow-200 flex items-center justify-center text-xs" title={badgeId}>
+                                                🏆
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-xs text-slate-400 italic">Nenhuma conquista ainda.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Triage Result Card */}
+                        {quizResult && (
+                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                <div className={`absolute top-0 left-0 w-1 h-full ${quizResult.riskLevel === 'high' ? 'bg-red-500' : quizResult.riskLevel === 'moderate' ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}></div>
+
+                                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <Activity size={18} className="text-purple-500" />
+                                    Resultado de Triagem
+                                </h3>
+
+                                <div className="mb-4">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="text-sm font-medium text-slate-600">Pontuação de Sintomas</span>
+                                        <span className={`text-lg font-bold ${quizResult.riskLevel === 'high' ? 'text-red-600' : quizResult.riskLevel === 'moderate' ? 'text-yellow-600' : 'text-green-600'
+                                            }`}>
+                                            {quizResult.score}/{quizResult.totalQuestions}
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 rounded-full h-2">
+                                        <div
+                                            className={`h-2 rounded-full ${quizResult.riskLevel === 'high' ? 'bg-red-500' : quizResult.riskLevel === 'moderate' ? 'bg-yellow-500' : 'bg-green-500'
+                                                }`}
+                                            style={{ width: `${(quizResult.score / quizResult.totalQuestions) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                {quizResult.riskLevel === 'high' && (
+                                    <div className="bg-red-50 p-3 rounded-xl border border-red-100 mb-4">
+                                        <p className="text-xs font-bold text-red-700 flex items-center gap-1 mb-1">
+                                            <AlertTriangle size={12} />
+                                            Alerta de Risco
+                                        </p>
+                                        <p className="text-xs text-red-600 leading-tight">
+                                            Paciente apresenta múltiplos sintomas. Sistema sugere encaminhamento para Grupo de Ansiedade/Depressão.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {quizResult.riskLevel === 'high' && (
+                                    <button className="w-full py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
+                                        Encaminhar para Grupo Agora
+                                    </button>
+                                )}
+
+                                <p className="text-[10px] text-slate-400 mt-3 text-center">
+                                    Realizado em {quizResult.createdAt?.seconds ? new Date(quizResult.createdAt.seconds * 1000).toLocaleDateString() : 'Data desconhecida'}
+                                </p>
+                            </div>
+                        )}
+
                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <h3 className="font-bold text-slate-800 mb-4">Grupos Anteriores</h3>
                             <div className="space-y-4">

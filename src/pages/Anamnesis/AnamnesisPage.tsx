@@ -6,7 +6,7 @@ import { referralService } from '../../services/referralService';
 import { db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
-import { FileText, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react';
+import { FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
 import { TobaccoAnamnesis } from '../../types/protocols/tobacco';
 
@@ -19,7 +19,7 @@ const AnamnesisPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [protocol, setProtocol] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
 
     useEffect(() => {
         const checkProtocol = async () => {
@@ -61,7 +61,6 @@ const AnamnesisPage: React.FC = () => {
 
     const handleTobaccoSave = async (data: TobaccoAnamnesis) => {
         if (!user) return;
-        setIsSubmitting(true);
         try {
             // 1. Save Anamnesis
             await tobaccoService.saveAnamnesis({
@@ -83,8 +82,6 @@ const AnamnesisPage: React.FC = () => {
         } catch (error) {
             console.error('Error saving anamnesis:', error);
             toast.error('Erro ao salvar anamnese. Tente novamente.');
-        } finally {
-            setIsSubmitting(false);
         }
     };
 

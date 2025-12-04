@@ -7,6 +7,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { referralService, Referral } from '../../services/referralService';
 import TobaccoInsightsWidget from '../../components/Widgets/TobaccoInsightsWidget';
 import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
+import HealthRadar from '../../components/Dashboard/HealthRadar';
+import { moodService, MoodLog } from '../../services/moodService';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -14,6 +16,7 @@ const ProfessionalDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'visao-geral' | 'triagem'>('visao-geral');
     const [referrals, setReferrals] = useState<Referral[]>([]);
+    const [moodMap, setMoodMap] = useState<Record<string, MoodLog | null>>({});
 
     const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
     const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
@@ -65,6 +68,32 @@ const ProfessionalDashboard: React.FC = () => {
         init();
     }, []);
 
+    // Load Mood Data for Health Radar
+    useEffect(() => {
+        const loadMoods = async () => {
+            if (patients.length === 0) return;
+
+            const newMoodMap: Record<string, MoodLog | null> = {};
+            // Optimization: In a real app with many patients, we would need a better strategy or backend aggregation
+            // For now, we fetch latest mood for each patient in parallel
+            const promises = patients.map(async (p) => {
+                if (!p.id) return;
+                try {
+                    const history = await moodService.getPatientHistory(p.id, 1);
+                    newMoodMap[p.id] = history.length > 0 ? history[0] : null;
+                } catch (e) {
+                    console.error(`Failed to load mood for ${p.id}`, e);
+                    newMoodMap[p.id] = null;
+                }
+            });
+
+            await Promise.all(promises);
+            setMoodMap(newMoodMap);
+        };
+
+        loadMoods();
+    }, [patients]);
+
     const loadReferrals = async () => {
         const data = await referralService.getAll();
         setReferrals(data);
@@ -77,7 +106,7 @@ const ProfessionalDashboard: React.FC = () => {
         setShowAnamnesisModal(true);
     };
 
-    const handleAnamnesisSave = async (data: any) => {
+    const handleAnamnesisSave = async (data: unknown) => {
         if (!selectedReferral) return;
 
         if (window.confirm('Deseja salvar a triagem e convidar o paciente para o grupo?')) {
@@ -219,6 +248,11 @@ const ProfessionalDashboard: React.FC = () => {
                             <h3 className="text-slate-500 text-sm font-medium">Fila de Espera</h3>
                             <p className="text-3xl font-bold text-slate-900 mt-1">{waitingList}</p>
                         </div>
+                    </div>
+
+                    {/* Health Radar (Cross-Data Intelligence) */}
+                    <div className="w-full">
+                        <HealthRadar patients={myPatients} moodMap={moodMap} />
                     </div>
 
                     {/* Insights Widget */}

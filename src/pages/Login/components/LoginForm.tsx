@@ -4,9 +4,17 @@ import { Lock, Mail, ArrowRight, Activity, ShieldCheck, User, Eye, EyeOff, FileT
 interface LoginFormProps {
     isLogin: boolean;
     theme: string;
-    formData: any;
+    formData: {
+        name: string;
+        email: string;
+        password: string;
+        confirmPassword?: string;
+        cpf: string;
+        crp: string;
+        cns: string;
+    };
     setFormData: (data: any) => void;
-    errors: any;
+    errors: Record<string, string>;
     isLoading: boolean;
     showPassword: boolean;
     setShowPassword: (show: boolean) => void;
