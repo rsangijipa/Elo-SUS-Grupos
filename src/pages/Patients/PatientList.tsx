@@ -92,25 +92,18 @@ const PatientList: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Pacientes</h2>
+                    <h2 className="text-2xl font-bold text-slate-900">Hub de Triagem</h2>
                     <p className="text-slate-500 mt-1">
-                        Lista de pacientes cadastrados na unidade.
+                        Gerencie pacientes e encaminhamentos da unidade.
                     </p>
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => navigate('/patients/new')}
-                        className="flex items-center gap-2 bg-white text-[#0054A6] border border-[#0054A6] px-5 py-2.5 rounded-lg hover:bg-blue-50 transition-all shadow-sm font-medium"
+                        onClick={() => setIsModalOpen(true)}
+                        className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-bold"
                     >
                         <Plus size={20} />
-                        Novo Paciente
-                    </button>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 bg-[#0054A6] text-white px-5 py-2.5 rounded-lg hover:bg-[#004080] transition-all shadow-sm hover:shadow-md font-medium"
-                    >
-                        <Building2 size={20} />
-                        Encaminhar Paciente
+                        Novo Encaminhamento
                     </button>
                 </div>
             </div>
@@ -159,7 +152,11 @@ const PatientList: React.FC = () => {
                                 </tr>
                             ) : (
                                 localPatients.map((patient) => (
-                                    <tr key={patient.id} className="hover:bg-slate-50/80 transition-colors group">
+                                    <tr
+                                        key={patient.id}
+                                        className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                                        onClick={() => navigate(`/patients/${patient.id}`)}
+                                    >
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center text-[#0054A6] font-bold text-sm border border-blue-100">
@@ -190,7 +187,7 @@ const PatientList: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <button
                                                     onClick={() => navigate(`/patients/edit/${patient.id}`)}
                                                     className="p-2 text-slate-400 hover:text-[#0054A6] hover:bg-blue-50 rounded-lg transition-colors"

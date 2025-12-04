@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight } from 'lucide-react';
 import { patientService } from '../../services/patientService';
+import { moodService, MoodLog } from '../../services/moodService';
 import type { Patient } from '../../types/patient';
 import { toast } from 'react-hot-toast';
 
@@ -9,6 +10,7 @@ const PatientDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [patient, setPatient] = useState<Patient | null>(null);
+    const [moodHistory, setMoodHistory] = useState<MoodLog[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -21,6 +23,10 @@ const PatientDetail: React.FC = () => {
         try {
             const data = await patientService.getById(patientId);
             setPatient(data);
+            if (data) {
+                const moodData = await moodService.getPatientHistory(patientId);
+                setMoodHistory(moodData);
+            }
         } catch (error) {
             console.error('Error loading patient:', error);
         } finally {
@@ -61,7 +67,7 @@ const PatientDetail: React.FC = () => {
     };
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeTab, setActiveTab] = useState<'overview' | 'documents'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'emotional'>('overview');
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -118,6 +124,16 @@ const PatientDetail: React.FC = () => {
                 >
                     Documentos do Paciente
                     {activeTab === 'documents' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0054A6] rounded-t-full"></div>}
+                </button>
+                <button
+                    onClick={() => setActiveTab('emotional')}
+                    className={`pb-3 px-2 text-sm font-bold transition-all relative ${activeTab === 'emotional'
+                        ? 'text-[#0054A6]'
+                        : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                >
+                    Sinais Vitais Emocionais
+                    {activeTab === 'emotional' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0054A6] rounded-t-full"></div>}
                 </button>
             </div>
 
@@ -184,7 +200,7 @@ const PatientDetail: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            ) : (
+            ) : activeTab === 'documents' ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-bold text-slate-800">Documentos Enviados pelo Paciente</h2>
@@ -236,6 +252,111 @@ const PatientDetail: React.FC = () => {
 
                     <div className="mt-8 p-6 bg-[#F6F8FE] rounded-xl border border-dashed border-slate-300 text-center">
                         <p className="text-slate-500 text-sm">Nenhum outro documento encontrado.</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {/* Alert Card */}
+                    {patient.hasAlert && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                            <AlertTriangle className="text-red-600 shrink-0" size={24} />
+                            <div>
+                                <h3 className="font-bold text-red-800">Atenção: Risco Emocional Detectado</h3>
+                                <p className="text-sm text-red-700 mt-1">
+                                    O paciente apresenta tendência de piora emocional recente (média &lt; 2 nos últimos registros).
+                                    Recomenda-se contato ativo.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Chart Section (Simplified Visual) */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 className="font-bold text-slate-800 mb-6">Tendência de Humor (Últimos 15 dias)</h3>
+                            <div className="h-64 flex items-end justify-between gap-2 px-4 border-b border-slate-200 pb-2">
+                                {moodHistory.map((log, index) => (
+                                    <div key={log.id || index} className="flex flex-col items-center gap-2 group w-full">
+                                        <div
+                                            className={`w-full max-w-[30px] rounded-t-lg transition-all duration-500 relative group-hover:opacity-80
+                                                ${log.value >= 4 ? 'bg-green-400' : log.value === 3 ? 'bg-yellow-400' : 'bg-red-400'}
+                                            `}
+                                            style={{ height: `${(log.value / 5) * 100}%` }}
+                                        >
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                                {log.createdAt?.seconds ? new Date(log.createdAt.seconds * 1000).toLocaleDateString() : 'Hoje'} - Nota: {log.value}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {moodHistory.length === 0 && (
+                                    <div className="w-full text-center text-slate-400 py-10">
+                                        Nenhum registro encontrado.
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex justify-between mt-2 text-xs text-slate-400 font-medium">
+                                <span>Antigo</span>
+                                <span>Recente</span>
+                            </div>
+                        </div>
+
+                        {/* Tag Cloud */}
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h3 className="font-bold text-slate-800 mb-6">Nuvem de Tags (Fatores Recorrentes)</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {Array.from(new Set(moodHistory.flatMap(log => log.tags))).map(tag => {
+                                    const count = moodHistory.filter(l => l.tags.includes(tag)).length;
+                                    return (
+                                        <span
+                                            key={tag}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-bold border
+                                                ${count > 2 ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-slate-50 text-slate-600 border-slate-100'}
+                                            `}
+                                        >
+                                            {tag} <span className="opacity-60 ml-1">({count})</span>
+                                        </span>
+                                    );
+                                })}
+                                {moodHistory.length === 0 && (
+                                    <p className="text-slate-400 text-sm">Nenhuma tag registrada.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Recent Logs List */}
+                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-50">
+                            <h3 className="font-bold text-slate-800">Histórico Detalhado</h3>
+                        </div>
+                        <div className="divide-y divide-slate-50">
+                            {moodHistory.map((log) => (
+                                <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors flex items-start gap-4">
+                                    <div className={`text-2xl p-2 rounded-xl ${log.value >= 4 ? 'bg-green-50' : log.value === 3 ? 'bg-yellow-50' : 'bg-red-50'}`}>
+                                        {log.value === 1 ? '😡' : log.value === 2 ? '😢' : log.value === 3 ? '😐' : log.value === 4 ? '🙂' : '😁'}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="font-bold text-slate-700">
+                                                {log.value === 1 ? 'Muito Mal' : log.value === 2 ? 'Mal' : log.value === 3 ? 'Normal' : log.value === 4 ? 'Bem' : 'Muito Bem'}
+                                            </h4>
+                                            <span className="text-xs text-slate-400 font-medium">
+                                                {log.createdAt?.seconds ? new Date(log.createdAt.seconds * 1000).toLocaleString() : 'Data inválida'}
+                                            </span>
+                                        </div>
+                                        {log.note && <p className="text-sm text-slate-600 mt-1">"{log.note}"</p>}
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {log.tags.map(tag => (
+                                                <span key={tag} className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                                                    #{tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

@@ -17,4 +17,5 @@ export interface Patient {
     observacoes?: string;
     createdAt?: any;
     updatedAt?: any;
+    hasAlert?: boolean; // Flag for emotional risk alert
 }

@@ -7,6 +7,7 @@ import { referralService, Referral } from '../../services/referralService';
 import { tobaccoService } from '../../services/tobaccoService';
 import { toast } from 'react-hot-toast';
 import DailyWelcome from '../../components/Dashboard/DailyWelcome';
+import MoodTracker from '../../components/Widgets/MoodTracker';
 
 export default function PatientDashboard() {
     const { user, isLoading } = useAuth();
@@ -80,6 +81,9 @@ export default function PatientDashboard() {
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
             {/* Daily Welcome Component */}
             <DailyWelcome />
+
+            {/* Mood Tracker */}
+            <MoodTracker />
 
             {/* Next Appointment Card */}
             {myGroups.length > 0 && (

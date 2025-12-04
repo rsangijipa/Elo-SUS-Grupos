@@ -27,6 +27,7 @@ const PatientForm = lazy(() => import('./pages/Patients/PatientForm'));
 const AnamnesisPage = lazy(() => import('./pages/Anamnesis/AnamnesisPage'));
 const GroupManagement = lazy(() => import('./pages/Groups/GroupManagement'));
 const DeveloperTools = lazy(() => import('./pages/Developer/DeveloperTools'));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
 
 import RoleGuard from './components/Auth/RoleGuard';
 import Layout from './components/Layout/Layout';
@@ -117,6 +118,11 @@ function App() {
                     <Route path="anamnese" element={<AnamnesisPage />} />
 
                     {/* Admin Only */}
+                    <Route path="admin" element={
+                      <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                        <AdminDashboard />
+                      </RoleGuard>
+                    } />
                     <Route path="developer" element={
                       <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
                         <DeveloperTools />

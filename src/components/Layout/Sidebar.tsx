@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import RoleGuard from '../Auth/RoleGuard';
 import {
     LayoutDashboard,
     Users,
@@ -9,13 +8,12 @@ import {
     LogOut,
     Stethoscope,
     Settings,
-    RefreshCw,
     Heart,
     Activity,
     LifeBuoy,
-    UserPlus,
+    Shield,
     User,
-    Code
+    Briefcase
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,60 +26,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navigate = useNavigate();
     const { user, logout, switchDevRole } = useAuth();
 
-    const allMenuItems = [
-        {
-            path: '/dashboard',
-            label: user?.role === 'patient' ? 'Início' : 'Visão Geral',
-            icon: LayoutDashboard,
-            visibleTo: ['admin', 'professional', 'patient']
-        },
-        {
-            path: '/groups',
-            label: 'Meus Grupos',
-            icon: Users,
-            visibleTo: ['admin', 'professional']
-        },
-        {
-            path: '/patients',
-            label: 'Pacientes',
-            icon: Stethoscope,
-            visibleTo: ['admin', 'professional']
-        },
-        {
-            path: '/schedule',
-            label: user?.role === 'patient' ? 'Minha Agenda' : 'Agenda',
-            icon: Calendar,
-            visibleTo: ['admin', 'professional', 'patient']
-        },
-        {
-            path: '/reports',
-            label: user?.role === 'patient' ? 'Meu Progresso' : 'Relatórios',
-            icon: user?.role === 'patient' ? Activity : FileText,
-            visibleTo: ['admin', 'professional', 'patient']
-        },
-        {
-            path: '/wellbeing',
-            label: 'Bem-Estar',
-            icon: Heart,
-            visibleTo: ['patient']
-        },
-        {
-            path: '/materials',
-            label: 'Meus Documentos',
-            icon: FileText,
-            visibleTo: ['patient']
-        },
-        {
-            path: '/developer',
-            label: 'Desenvolvedor',
-            icon: Code,
-            visibleTo: ['admin']
-        }
+    // Menu Configurations
+    const professionalMenuItems = [
+        { path: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard },
+        { path: '/patients', label: 'Pacientes', icon: Users },
+        { path: '/groups', label: 'Grupos', icon: Calendar },
+        { path: '/materials', label: 'Materiais', icon: FileText },
+        // Admin link only if admin
+        ...(user?.role === 'admin' ? [{ path: '/admin', label: 'Admin', icon: Shield }] : [])
     ];
 
-    const menuItems = allMenuItems.filter(item =>
-        user?.role && item.visibleTo.includes(user.role)
-    );
+    const patientMenuItems = [
+        { path: '/dashboard', label: 'Meu Espaço', icon: LayoutDashboard },
+        { path: '/groups', label: 'Meu Grupo', icon: Heart }, // Mapping /my-group to /groups for now
+        { path: '/materials', label: 'Materiais', icon: FileText },
+        { path: '/reports', label: 'Minha Jornada', icon: Activity } // Mapping /progress to /reports
+    ];
+
+    // Select menu based on role
+    const menuItems = user?.role === 'patient' ? patientMenuItems : professionalMenuItems;
 
     const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -112,10 +75,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <span className="text-[10px] font-bold text-brand-patient tracking-wider uppercase">Grupos</span>
                         </div>
                     </Link>
-                    {/* Mobile Close Button */}
-                    <button onClick={onClose} className="md:hidden text-slate-400 hover:text-slate-600">
-                        <LogOut size={20} className="rotate-180" />
-                    </button>
                 </div>
 
                 {/* Navigation */}
@@ -126,19 +85,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             to={item.path}
                             onClick={() => window.innerWidth < 768 && onClose()}
                             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive(item.path)
-                                ? item.path === '/developer'
-                                    ? 'bg-red-50 text-red-600 shadow-sm font-bold'
-                                    : 'bg-brand-professional/5 text-brand-professional shadow-sm font-bold'
-                                : item.path === '/developer'
-                                    ? 'text-slate-500 hover:bg-red-50 hover:text-red-600'
-                                    : 'text-slate-500 hover:bg-white/50 hover:shadow-sm hover:text-brand-professional'
+                                ? 'bg-brand-professional/5 text-brand-professional shadow-sm font-bold'
+                                : 'text-slate-500 hover:bg-white/50 hover:shadow-sm hover:text-brand-professional'
                                 }`}
                         >
                             <item.icon
                                 size={20}
                                 className={isActive(item.path)
-                                    ? (item.path === '/developer' ? 'text-red-600' : 'text-brand-professional')
-                                    : (item.path === '/developer' ? 'text-slate-400 group-hover:text-red-600' : 'text-slate-400 group-hover:text-brand-professional') + ' transition-colors'}
+                                    ? 'text-brand-professional'
+                                    : 'text-slate-400 group-hover:text-brand-professional transition-colors'}
                             />
                             {item.label}
                         </Link>
@@ -165,51 +120,34 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* User Footer */}
                 <div className="p-4 border-t border-slate-100 bg-brand-patient-surface">
-                    {/* Dev Tool: Role Switcher */}
-                    <div className="mb-4 space-y-2">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Modo de Teste</p>
-                        <div className="grid grid-cols-3 gap-1">
-                            {/* Encaminhar: Visible to Admin and Professional */}
-                            {['admin', 'professional'].includes(user?.originalRole || user?.role || '') && (
-                                <button
-                                    onClick={() => switchDevRole('referrer')}
-                                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'doc_ref_01'
-                                        ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
-                                        : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                                    title="Médico/Enfermeiro (Encaminhar)"
-                                >
-                                    <UserPlus size={14} />
-                                    <span className="text-[9px] font-bold">Encaminhar</span>
-                                </button>
-                            )}
-
-                            {/* Atender: Visible to Admin, Professional, and Patient */}
-                            {['admin', 'professional', 'patient'].includes(user?.originalRole || user?.role || '') && (
-                                <button
-                                    onClick={() => switchDevRole('executor')}
-                                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.id === 'psi_exec_01' || (user?.role === 'professional' && user?.id !== 'doc_ref_01')
-                                        ? 'bg-purple-50 border-purple-200 text-purple-700 shadow-sm'
-                                        : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                                    title="Terapeuta (Atender)"
-                                >
-                                    <Stethoscope size={14} />
-                                    <span className="text-[9px] font-bold">Atender</span>
-                                </button>
-                            )}
-
-                            {/* Paciente: Visible to Admin only */}
-                            {['admin'].includes(user?.originalRole || user?.role || '') && (
-                                <button
-                                    onClick={() => switchDevRole('patient')}
-                                    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'patient'
-                                        ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm'
-                                        : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
-                                    title="Paciente"
-                                >
-                                    <User size={14} />
-                                    <span className="text-[9px] font-bold">Paciente</span>
-                                </button>
-                            )}
+                    {/* Profile Simulator (Test Mode) */}
+                    <div className="mb-4 bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">Simulador de Perfil</p>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    switchDevRole('executor'); // Sets as professional
+                                    navigate('/dashboard');
+                                }}
+                                className={`flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'professional' || user?.role === 'admin'
+                                    ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
+                                    : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
+                            >
+                                <Briefcase size={16} />
+                                <span className="text-[10px] font-bold">Profissional</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    switchDevRole('patient');
+                                    navigate('/dashboard');
+                                }}
+                                className={`flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'patient'
+                                    ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm'
+                                    : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
+                            >
+                                <User size={16} />
+                                <span className="text-[10px] font-bold">Paciente</span>
+                            </button>
                         </div>
                     </div>
 
@@ -222,9 +160,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <div className="overflow-hidden flex-1">
                                 <p className="text-sm font-bold text-slate-700 truncate group-hover:text-brand-professional transition-colors">{user?.name || 'Usuário'}</p>
                                 <p className="text-[10px] text-slate-500 truncate font-medium">
-                                    {user?.role === 'professional'
-                                        ? (user.crp ? `CRP ${user.crp}` : 'Psicólogo(a)')
-                                        : (user?.nextAppointment ? `Próx: ${new Date(user.nextAppointment).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}` : 'Paciente')
+                                    {user?.role === 'professional' || user?.role === 'admin'
+                                        ? (user.crp ? `CRP ${user.crp}` : 'Profissional')
+                                        : 'Paciente'
                                     }
                                 </p>
                             </div>

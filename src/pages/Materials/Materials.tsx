@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Download, Share, FileCheck, Printer, Upload, X, CheckCircle2 } from 'lucide-react';
 import { contentService, ClinicalDocument, Material } from '../../services/integrations/contentService';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Materials: React.FC = () => {
+    const { user } = useAuth();
     const [documents, setDocuments] = useState<ClinicalDocument[]>([]);
     const [groupMaterials, setGroupMaterials] = useState<Material[]>([]);
     const [uploadedDocs, setUploadedDocs] = useState<Array<{ id: string; name: string; date: string; status: 'enviado' | 'analise' }>>([
@@ -43,40 +45,42 @@ const Materials: React.FC = () => {
                 </button>
             </div>
 
-            {/* Upload Section */}
-            <section>
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex-1">
-                        <h3 className="text-lg font-bold text-blue-900 mb-2">Enviar Documento</h3>
-                        <p className="text-sm text-blue-700 mb-4">
-                            Precisa enviar exames ou relatórios externos para seu terapeuta? Utilize esta área para anexar arquivos.
-                        </p>
-                        <button
-                            onClick={handleFileUpload}
-                            disabled={isUploading}
-                            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2"
-                        >
-                            {isUploading ? 'Enviando...' : <><Upload size={20} /> Selecionar Arquivo</>}
-                        </button>
-                    </div>
-                    <div className="w-full md:w-1/3 bg-white rounded-xl border border-blue-100 p-4">
-                        <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Meus Envios Recentes</h4>
-                        <div className="space-y-2">
-                            {uploadedDocs.map(doc => (
-                                <div key={doc.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                        <FileText size={16} className="text-slate-400 shrink-0" />
-                                        <span className="text-sm text-slate-700 truncate">{doc.name}</span>
+            {/* Upload Section - Professional Only */}
+            {user?.role === 'professional' && (
+                <section>
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
+                        <div className="flex-1">
+                            <h3 className="text-lg font-bold text-blue-900 mb-2">Enviar Documento</h3>
+                            <p className="text-sm text-blue-700 mb-4">
+                                Envie materiais de apoio, exames ou relatórios para os pacientes deste grupo.
+                            </p>
+                            <button
+                                onClick={handleFileUpload}
+                                disabled={isUploading}
+                                className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2"
+                            >
+                                {isUploading ? 'Enviando...' : <><Upload size={20} /> Selecionar Arquivo</>}
+                            </button>
+                        </div>
+                        <div className="w-full md:w-1/3 bg-white rounded-xl border border-blue-100 p-4">
+                            <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Meus Envios Recentes</h4>
+                            <div className="space-y-2">
+                                {uploadedDocs.map(doc => (
+                                    <div key={doc.id} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <FileText size={16} className="text-slate-400 shrink-0" />
+                                            <span className="text-sm text-slate-700 truncate">{doc.name}</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                            {doc.status}
+                                        </span>
                                     </div>
-                                    <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                                        {doc.status}
-                                    </span>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Clinical Documents Section */}
             <section>

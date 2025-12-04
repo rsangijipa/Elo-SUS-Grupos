@@ -32,4 +32,5 @@ export interface User {
     whatsappResponsavel?: string;
     nomeResponsavel?: string;
     status?: 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout';
+    active?: boolean; // For system access control
 }

@@ -6,7 +6,9 @@ import {
     limit,
     orderBy,
     startAt,
-    endAt
+    endAt,
+    updateDoc,
+    doc
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User } from '../types/user';
@@ -56,6 +58,32 @@ export const userService = {
         } catch (error) {
             console.error("Error searching users:", error);
             return [];
+        }
+    },
+
+    getProfessionals: async () => {
+        try {
+            const q = query(collection(db, 'users'), where('role', '==', 'professional'));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as User));
+        } catch (error) {
+            console.error("Error fetching professionals:", error);
+            throw error;
+        }
+    },
+
+    updateStatus: async (userId: string, status: boolean) => {
+        try {
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, {
+                active: status
+            });
+        } catch (error) {
+            console.error("Error updating user status:", error);
+            throw error;
         }
     }
 };

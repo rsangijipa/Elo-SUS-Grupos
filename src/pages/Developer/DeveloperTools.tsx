@@ -42,51 +42,11 @@ const DeveloperTools: React.FC = () => {
                 <p className="text-slate-500">Utilitários para manutenção e testes do sistema.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Database Tools */}
-                <div className="bg-white p-6 rounded-2xl border border-red-100 shadow-sm">
-                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Trash2 className="text-red-500" size={20} />
-                        Banco de Dados
-                    </h2>
-                    <p className="text-sm text-slate-600 mb-6">
-                        Ações destrutivas para resetar o ambiente de testes.
-                    </p>
-                    <button
-                        onClick={handleCleanup}
-                        className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-200"
-                    >
-                        <Trash2 size={18} />
-                        Limpar Banco de Dados (Cleanup DB)
-                    </button>
-                </div>
-
-                {/* Territory Tools */}
-                <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-                    <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <MapIcon className="text-blue-500" size={20} />
-                        Território & UBS
-                    </h2>
-                    <p className="text-sm text-slate-600 mb-6">
-                        Gerenciar unidades de saúde e sincronizar lista padrão de Ariquemes.
-                    </p>
-                    <button
-                        onClick={async () => {
-                            try {
-                                const { healthUnitService } = await import('../../services/healthUnitService');
-                                const count = await healthUnitService.syncInitialHealthUnits(true);
-                                toast.success(`${count} Unidades Sincronizadas com Sucesso!`);
-                            } catch (error) {
-                                console.error('Erro ao sincronizar UBS:', error);
-                                toast.error('Erro ao sincronizar UBS. Verifique o console.');
-                            }
-                        }}
-                        className="w-full py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-blue-200"
-                    >
-                        <Cloud className="w-5 h-5" />
-                        Sincronizar UBS Ariquemes
-                    </button>
-                </div>
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                <p className="text-slate-500">
+                    As ferramentas de banco de dados e território foram movidas ou desativadas para segurança em produção.
+                    Utilize o <a href="/admin" className="text-blue-600 font-bold hover:underline">Painel Administrativo</a> para gestão.
+                </p>
             </div>
         </div>
     );

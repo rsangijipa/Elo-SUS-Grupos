@@ -208,7 +208,7 @@ const GroupList: React.FC = () => {
                                         onClick={() => navigate(`/groups/${group.id}/manage`)}
                                         className="flex items-center gap-1 text-sm font-bold text-[#0054A6] hover:text-[#004080] transition-colors"
                                     >
-                                        Gerenciar <ArrowRight size={16} />
+                                        Acessar Turma <ArrowRight size={16} />
                                     </button>
                                 </div>
                             </div>

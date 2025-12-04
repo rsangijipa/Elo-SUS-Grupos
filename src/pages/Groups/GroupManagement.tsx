@@ -363,19 +363,19 @@ const GroupManagement: React.FC = () => {
                                     onClick={handleSaveSession}
                                     disabled={isGroupClosed}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${isGroupClosed
-                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
                                         }`}
                                 >
-                                    <Save size={16} />
-                                    Salvar Chamada
+                                    <CheckCircle2 size={16} />
+                                    Iniciar Sessão Agora
                                 </button>
                                 <button
                                     onClick={() => setIsAddModalOpen(true)}
                                     disabled={isGroupClosed}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${isGroupClosed
-                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                                         }`}
                                 >
                                     <UserPlus size={16} />
