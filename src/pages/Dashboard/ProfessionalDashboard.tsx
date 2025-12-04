@@ -174,7 +174,7 @@ const ProfessionalDashboard: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div
                             onClick={() => navigate('/patients')}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all"
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:shadow-blue-100/50 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-blue-50 rounded-xl text-[#0054A6]">
@@ -190,7 +190,7 @@ const ProfessionalDashboard: React.FC = () => {
 
                         <div
                             onClick={() => navigate('/groups')}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all"
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:shadow-blue-100/50 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
@@ -206,7 +206,7 @@ const ProfessionalDashboard: React.FC = () => {
 
                         <div
                             onClick={() => navigate('/patients')}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all"
+                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:shadow-blue-100/50 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
@@ -228,7 +228,7 @@ const ProfessionalDashboard: React.FC = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Calendar Widget */}
-                        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                                     <Calendar size={20} className="text-[#0054A6]" />
@@ -296,7 +296,7 @@ const ProfessionalDashboard: React.FC = () => {
 
                         {/* Notifications / Pending Reports */}
                         <div className="space-y-6">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300">
                                 <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                                     <AlertCircle size={20} className="text-orange-500" />
                                     Pendências
@@ -353,7 +353,7 @@ const ProfessionalDashboard: React.FC = () => {
                 </>
             ) : (
                 /* Triagem Tab Content */
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all duration-300">
                     <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -491,8 +491,8 @@ const ProfessionalDashboard: React.FC = () => {
 
             {/* Anamnesis Modal */}
             {showAnamnesisModal && selectedReferral && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-4 animate-fade-in">
+                    <div className="bg-white rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <div>
                                 <h3 className="font-bold text-slate-800 flex items-center gap-2">

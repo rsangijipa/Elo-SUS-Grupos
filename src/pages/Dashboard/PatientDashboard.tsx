@@ -85,7 +85,7 @@ export default function PatientDashboard() {
 
             {/* Next Appointment Card */}
             {myGroups.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
+                <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-100 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
                     <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#6C4FFE]"></div>
                     <div className="p-4 bg-purple-50 rounded-full text-[#6C4FFE]">
                         <Calendar size={32} />
@@ -123,7 +123,7 @@ export default function PatientDashboard() {
                             // Find group details if available
                             const group = groups.find(g => g.id === invite.groupId);
                             return (
-                                <div key={invite.id} className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-orange-500 relative overflow-hidden">
+                                <div key={invite.id} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 border-l-4 border-orange-500 relative overflow-hidden">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-1 rounded-lg">

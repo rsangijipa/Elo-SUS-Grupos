@@ -100,11 +100,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {/* Sidebar Container */}
             <aside className={`
-                w-64 bg-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm
+                w-64 bg-white md:bg-gradient-to-b md:from-[#0054A6]/10 md:to-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 {/* Brand Header */}
-                <div className="h-24 flex items-center justify-between px-6 border-b border-slate-100 bg-gradient-to-r from-brand-patient-surface to-white">
+                <div className="h-24 flex items-center justify-between px-6 border-b border-slate-100 bg-transparent">
                     <Link to="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <img src="/elosusgrupos_logo.png" alt="EloSUS" className="h-10 w-auto" />
                         <div className="flex flex-col">
@@ -128,10 +128,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive(item.path)
                                 ? item.path === '/developer'
                                     ? 'bg-red-50 text-red-600 shadow-sm font-bold'
-                                    : 'bg-gradient-to-r from-brand-professional/10 to-brand-patient/5 text-brand-professional shadow-sm font-bold'
+                                    : 'bg-brand-professional/5 text-brand-professional shadow-sm font-bold'
                                 : item.path === '/developer'
                                     ? 'text-slate-500 hover:bg-red-50 hover:text-red-600'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-brand-professional'
+                                    : 'text-slate-500 hover:bg-white/50 hover:shadow-sm hover:text-brand-professional'
                                 }`}
                         >
                             <item.icon

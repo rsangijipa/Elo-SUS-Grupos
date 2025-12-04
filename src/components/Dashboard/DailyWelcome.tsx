@@ -6,24 +6,17 @@ const DailyWelcome: React.FC = () => {
     const { user, isLoading } = useAuth();
     const firstName = user?.name?.split(' ')[0];
 
-    // Lógica de Seleção Diária
+    // Lógica de Seleção Aleatória por Sessão
     const { quote, avatarUrl } = useMemo(() => {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 0);
-        const diff = now.getTime() - start.getTime();
-        const oneDay = 1000 * 60 * 60 * 24;
-        const dayOfYear = Math.floor(diff / oneDay);
+        // Seleciona uma frase aleatória
+        const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
 
-        // Seleciona a frase baseada no dia
-        const quoteIndex = dayOfYear % motivationalQuotes.length;
-
-        // Seleciona o avatar (1 a 4) baseado no dia
-        // Se o dia for par usa avatar 2, impar avatar 1 etc... garantindo rotação
-        const avatarIndex = (dayOfYear % 4) + 1;
+        // Seleciona um avatar aleatório (1 a 4)
+        const randomAvatarIndex = Math.floor(Math.random() * 4) + 1;
 
         return {
-            quote: motivationalQuotes[quoteIndex],
-            avatarUrl: `/avatar${avatarIndex}.png`
+            quote: motivationalQuotes[randomIndex],
+            avatarUrl: `/avatar${randomAvatarIndex}.png`
         };
     }, []);
 
