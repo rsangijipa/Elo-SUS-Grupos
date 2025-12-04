@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
 import { tobaccoService } from '../../services/tobaccoService';
 import { toast } from 'react-hot-toast';
+import DailyWelcome from '../../components/Dashboard/DailyWelcome';
 
 export default function PatientDashboard() {
     const { user } = useAuth();
@@ -71,18 +72,8 @@ export default function PatientDashboard() {
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
-            {/* Welcome Header */}
-            <div className="bg-gradient-to-r from-[#6C4FFE] to-[#8B5CF6] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                <div className="relative z-10">
-                    <h1 className="text-3xl font-bold mb-2">
-                        {new Date().getHours() < 12 ? 'Bom dia' : new Date().getHours() < 18 ? 'Boa tarde' : 'Boa noite'}, {user?.name?.split(' ')[0]}!
-                    </h1>
-                    <p className="text-blue-100 text-lg max-w-xl">
-                        Hoje é um ótimo dia para cuidar de você. <span className="font-bold bg-white/20 px-2 py-0.5 rounded-lg">{myGroups.length} grupos</span> ativos.
-                    </p>
-                </div>
-            </div>
+            {/* Daily Welcome Component */}
+            <DailyWelcome />
 
             {/* Next Appointment Card */}
             {myGroups.length > 0 && (
