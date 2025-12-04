@@ -41,17 +41,32 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation
+        if (!formData.patientName || !formData.reason) {
+            toast.error("Preencha os campos obrigatórios (Nome e Motivo).");
+            return;
+        }
+
         setLoading(true);
 
         try {
-            await referralService.create({
-                ...formData as Referral,
+            const referralData: Omit<Referral, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'timeline'> = {
+                patientName: formData.patientName,
+                patientCns: formData.patientCns,
+                patientId: formData.patientId || 'new',
+                reason: formData.reason,
+                diagnosis: formData.diagnosis,
+                riskLevel: formData.riskLevel as 'baixo' | 'moderado' | 'alto',
+                priority: formData.priority as 'normal' | 'urgente',
+                notes: formData.notes,
                 originUnitName: 'Unidade Básica', // Default or fetched from user context
                 referringProfessionalRole: 'Profissional', // Default or fetched
-                professionalId: user?.id || 'prof-1', // Note: This might not be in Referral interface, check service
                 referringProfessionalName: user?.name || 'Profissional',
-                status: 'encaminhado', // Service overrides this but good for type check
-            } as any); // Casting to any to avoid strict Omit check issues if I missed something, but ideally should match
+                // professionalId: user?.id || 'prof-1' // Not in interface currently, removed to match type
+            };
+
+            await referralService.create(referralData);
 
             addNotification({
                 type: 'success',

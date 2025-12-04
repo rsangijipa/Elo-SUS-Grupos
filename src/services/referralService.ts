@@ -30,6 +30,8 @@ export interface Referral {
     patientName: string;
     patientCns?: string;
 
+    patientEmail?: string;
+
     // Origin Details
     originUnitId?: string;
     originUnitName: string; // e.g., "UBS Centro", "CAPS AD"
@@ -57,6 +59,56 @@ export interface Referral {
 }
 
 export const referralService = {
+    getPendingInvites: async (user: any): Promise<Referral[]> => {
+        try {
+            // Query for all invited referrals
+            // Note: In a large scale app, we would need composite indexes or cloud functions.
+            // For now, fetching all 'convidado' status is acceptable.
+            const q = query(collection(db, COLLECTION_NAME), where('status', '==', 'convidado'));
+            const snapshot = await getDocs(q);
+            const allInvites = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Referral));
+
+            const myInvites: Referral[] = [];
+
+            for (const invite of allInvites) {
+                let isMatch = false;
+                let needsHealing = false;
+
+                // 1. Direct Match by ID
+                if (invite.patientId === user.id) {
+                    isMatch = true;
+                }
+                // 2. CNS Match
+                else if (invite.patientCns && user.cns && invite.patientCns === user.cns) {
+                    isMatch = true;
+                    // If matched by CNS but ID is missing or placeholder, heal it
+                    if (!invite.patientId || invite.patientId === 'new') needsHealing = true;
+                }
+                // 3. Email Match
+                else if (invite.patientEmail && user.email && invite.patientEmail === user.email) {
+                    isMatch = true;
+                    if (!invite.patientId || invite.patientId === 'new') needsHealing = true;
+                }
+
+                if (isMatch) {
+                    if (needsHealing) {
+                        console.log(`[Smart Match] Self-healing referral ${invite.id} linking to user ${user.id}`);
+                        await updateDoc(doc(db, COLLECTION_NAME, invite.id), {
+                            patientId: user.id,
+                            updatedAt: new Date().toISOString()
+                        });
+                        invite.patientId = user.id; // Update local object
+                    }
+                    myInvites.push(invite);
+                }
+            }
+            return myInvites;
+        } catch (error) {
+            console.error("Error fetching pending invites:", error);
+            return [];
+        }
+    },
+
     getAll: async (): Promise<Referral[]> => {
         try {
             const q = query(collection(db, COLLECTION_NAME));
@@ -220,6 +272,15 @@ export const referralService = {
                 // Use arrayUnion to add unique value
                 transaction.update(groupRef, {
                     participants: arrayUnion(userId)
+                });
+
+                // 3. Update Patient Status and Link Group
+                const userRef = doc(db, 'users', userId);
+                transaction.update(userRef, {
+                    status: 'active',
+                    currentGroupId: targetGroupId,
+                    joinedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
                 });
             });
         } catch (e) {

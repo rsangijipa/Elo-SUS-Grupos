@@ -29,10 +29,8 @@ export default function PatientDashboard() {
 
     const loadInvites = async () => {
         if (!user) return;
-        const allReferrals = await referralService.getAll();
-
-        // Filter by user.id
-        const myInvites = allReferrals.filter(r => r.status === 'convidado' && (r.patientId === user.id || r.patientId === 'new'));
+        // Use Smart Matching to find invites by ID, CNS, or Email
+        const myInvites = await referralService.getPendingInvites(user);
         setInvites(myInvites);
     };
 

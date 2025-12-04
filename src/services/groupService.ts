@@ -125,6 +125,9 @@ export const groupService = {
                     });
                     transaction.update(patientRef, {
                         groupId: groupId,
+                        currentGroupId: groupId,
+                        status: 'active',
+                        joinedAt: new Date().toISOString(),
                         updatedAt: serverTimestamp()
                     });
                 }

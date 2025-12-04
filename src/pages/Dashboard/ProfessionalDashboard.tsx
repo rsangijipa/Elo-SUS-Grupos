@@ -122,7 +122,7 @@ const ProfessionalDashboard: React.FC = () => {
     // The original mock logic was: p.group && myGroups.some(g => g.name.includes(p.group))
     // Real logic: check if patient ID is in any of myGroups.participants
     const myPatients = patients.filter(p =>
-        myGroups.some(g => g.participants?.includes(p.id || ''))
+        myGroups.some(g => (g.participants || []).includes(p.id || ''))
     );
     const myAppointments = appointments.filter(a => myGroupIds.includes(a.groupId));
 
