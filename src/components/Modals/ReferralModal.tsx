@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { X, User, Building2, Activity, UserCircle, AlertTriangle, Stethoscope, CheckCircle2, Clock } from 'lucide-react';
 import { referralService, Referral } from '../../services/referralService';
 import { patientService } from '../../services/patientService';
