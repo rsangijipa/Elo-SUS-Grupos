@@ -42,6 +42,9 @@ export interface User {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         lastLogin: any; // Firestore Timestamp or Date
         totalSessions: number;
+        completedChallenges?: number;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        lastChallengeDate?: any; // Firestore Timestamp or Date
     };
     achievements?: string[]; // Array of unlocked achievement IDs
 }

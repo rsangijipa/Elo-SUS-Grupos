@@ -157,20 +157,16 @@ export default function Login() {
                     <AuroraCarousel />
                 </div>
 
-                {/* Mobile Header (Simplified Carousel/Branding) */}
-                <div className="lg:hidden flex flex-col items-center mb-4 order-1">
-                    <div className="flex items-center gap-2 mb-4">
-                        <img src="/elosusgrupos_logo.png" alt="EloSUS Logo" className="h-8 w-auto object-contain" />
-                        <span className="text-xl font-bold text-[#7A5CFF]">EloSUS</span>
-                    </div>
-                    {/* Simplified Mobile Carousel View could go here, or just the main message */}
-                    <div className="text-center scale-75 origin-top">
-                        <AuroraCarousel />
+                {/* Mobile Header (Logo Only) */}
+                <div className="lg:hidden flex flex-col items-center mb-6 order-1">
+                    <div className="flex items-center gap-3">
+                        <img src="/elosusgrupos_logo.png" alt="EloSUS Logo" className="h-10 w-auto object-contain" />
+                        <span className="text-2xl font-bold text-[#7A5CFF]">EloSUS</span>
                     </div>
                 </div>
 
                 {/* Right Side: Login Card */}
-                <div className="w-full max-w-[480px] mx-auto lg:mx-0 lg:ml-auto order-2">
+                <div className="w-full max-w-[480px] mx-auto lg:mx-0 lg:ml-auto order-2 px-4 md:px-0">
                     <div className="bg-white/70 backdrop-blur-xl border border-white/50 shadow-2xl shadow-[#7A5CFF]/10 rounded-[2rem] p-8 lg:p-10 flex flex-col transition-all duration-500 hover:shadow-[#7A5CFF]/20">
 
                         {/* Modal Overlays */}

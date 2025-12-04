@@ -42,7 +42,6 @@ const DailyWelcome: React.FC = () => {
                 {/* Texto */}
                 <div className="flex-1 text-center md:text-left">
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
-                        Olá,
                         {isLoading || !firstName ? (
                             <div className="h-8 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
                         ) : (

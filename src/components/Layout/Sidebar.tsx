@@ -53,6 +53,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         navigate('/login');
     };
 
+    // Color mapping for icons
+    const getIconColor = (path: string, isActive: boolean) => {
+        if (!isActive) return 'text-slate-400 group-hover:text-slate-600';
+
+        switch (path) {
+            case '/dashboard': return 'text-blue-600';
+            case '/patients': return 'text-green-600';
+            case '/groups': return 'text-purple-600';
+            case '/materials': return 'text-orange-600';
+            case '/reports': return 'text-pink-600';
+            case '/admin': return 'text-red-600';
+            default: return 'text-brand-professional';
+        }
+    };
+
     return (
         <>
             {/* Mobile Backdrop */}
@@ -63,7 +78,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {/* Sidebar Container */}
             <aside className={`
-                w-64 bg-white md:bg-gradient-to-b md:from-[#0054A6]/10 md:to-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm
+                w-64 bg-white md:bg-gradient-to-b md:from-[#0054A6]/5 md:to-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300 ease-in-out shadow-xl md:shadow-sm
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 {/* Brand Header */}
@@ -79,25 +94,42 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* Navigation */}
                 <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={() => window.innerWidth < 768 && onClose()}
-                            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive(item.path)
-                                ? 'bg-brand-professional/5 text-brand-professional shadow-sm font-bold'
-                                : 'text-slate-500 hover:bg-white/50 hover:shadow-sm hover:text-brand-professional'
-                                }`}
-                        >
-                            <item.icon
-                                size={20}
-                                className={isActive(item.path)
-                                    ? 'text-brand-professional'
-                                    : 'text-slate-400 group-hover:text-brand-professional transition-colors'}
-                            />
-                            {item.label}
-                        </Link>
-                    ))}
+                    {menuItems.map((item) => {
+                        const active = isActive(item.path);
+                        const iconColor = getIconColor(item.path, active);
+
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={() => window.innerWidth < 768 && onClose()}
+                                className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group overflow-hidden ${active
+                                    ? 'bg-white shadow-md text-slate-800 font-bold border border-slate-100'
+                                    : 'text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-700'
+                                    }`}
+                            >
+                                {/* Active Indicator Strip */}
+                                {active && (
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl ${item.path === '/dashboard' ? 'bg-blue-500' :
+                                            item.path === '/patients' ? 'bg-green-500' :
+                                                item.path === '/groups' ? 'bg-purple-500' :
+                                                    item.path === '/materials' ? 'bg-orange-500' :
+                                                        item.path === '/reports' ? 'bg-pink-500' :
+                                                            item.path === '/admin' ? 'bg-red-500' :
+                                                                'bg-brand-professional'
+                                        }`}></div>
+                                )}
+
+                                <item.icon
+                                    size={22}
+                                    className={`transition-colors duration-300 ${active ? iconColor : 'text-slate-400 group-hover:scale-110 group-hover:text-slate-600'}`}
+                                />
+                                <span className={active ? 'translate-x-1 transition-transform' : ''}>
+                                    {item.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
 
                     {/* Support Link (Bottom of Nav) */}
                     <div className="pt-4 mt-4 border-t border-slate-100">

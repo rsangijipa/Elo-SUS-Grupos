@@ -8,6 +8,7 @@ import { referralService, Referral } from '../../services/referralService';
 import TobaccoInsightsWidget from '../../components/Widgets/TobaccoInsightsWidget';
 import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
 import HealthRadar from '../../components/Dashboard/HealthRadar';
+import HeatmapWidget from '../../components/Dashboard/HeatmapWidget';
 import { moodService, MoodLog } from '../../services/moodService';
 
 const ProfessionalDashboard: React.FC = () => {
@@ -256,8 +257,13 @@ const ProfessionalDashboard: React.FC = () => {
                     </div>
 
                     {/* Insights Widget */}
-                    <div className="w-full">
-                        <TobaccoInsightsWidget />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="w-full">
+                            <TobaccoInsightsWidget />
+                        </div>
+                        <div className="w-full">
+                            <HeatmapWidget patients={myPatients} />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

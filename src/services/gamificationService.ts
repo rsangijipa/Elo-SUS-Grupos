@@ -31,6 +31,20 @@ export const ACHIEVEMENTS: Achievement[] = [
         description: 'Participe de 5 sessões de grupo.',
         icon: '🗣️',
         condition: (user) => (user.stats?.totalSessions || 0) >= 5
+    },
+    {
+        id: 'mind_explorer',
+        title: 'Explorador da Mente',
+        description: 'Complete a Avaliação de Saúde Mental.',
+        icon: '🧠',
+        condition: (user) => (user.achievements || []).includes('mind_explorer') // Manually triggered
+    },
+    {
+        id: 'self_guardian',
+        title: 'Guardião de Si',
+        description: 'Complete o Termômetro do Autocuidado.',
+        icon: '🛡️',
+        condition: (user) => (user.achievements || []).includes('self_guardian') // Manually triggered
     }
 ];
 

@@ -7,6 +7,7 @@ import { referralService, Referral } from '../../services/referralService';
 import { tobaccoService } from '../../services/tobaccoService';
 import { toast } from 'react-hot-toast';
 import DailyWelcome from '../../components/Dashboard/DailyWelcome';
+import DailyChallenge from '../../components/Dashboard/DailyChallenge';
 import MoodTracker from '../../components/Widgets/MoodTracker';
 
 import confetti from 'canvas-confetti';
@@ -119,15 +120,23 @@ export default function PatientDashboard() {
             {/* Daily Welcome Component */}
             <DailyWelcome />
 
-            {/* Mood Tracker */}
-            <MoodTracker />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    {/* Mood Tracker */}
+                    <MoodTracker />
+                </div>
+                <div>
+                    {/* Daily Challenge */}
+                    <DailyChallenge />
+                </div>
+            </div>
 
             {/* Gamification Section */}
             <section>
                 <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     Minhas Conquistas
                 </h2>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                <div className="flex flex-row overflow-x-auto gap-3 pb-2 scrollbar-thin scrollbar-thumb-brand-primary/20">
                     {ACHIEVEMENTS.map(achievement => {
                         const isUnlocked = unlockedAchievements.includes(achievement.id);
                         let progress = '';
@@ -141,7 +150,7 @@ export default function PatientDashboard() {
                         }
 
                         return (
-                            <div key={achievement.id} className="flex-shrink-0 w-32" onClick={() => {
+                            <div key={achievement.id} className="min-w-[120px] w-[120px] flex-shrink-0" onClick={() => {
                                 if (!isUnlocked) {
                                     toast(achievement.description, {
                                         icon: '🔒',
