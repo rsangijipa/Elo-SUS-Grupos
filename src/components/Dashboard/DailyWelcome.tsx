@@ -39,13 +39,11 @@ const DailyWelcome: React.FC = () => {
             <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
                 {/* Avatar Container */}
                 <div className="flex-shrink-0">
-                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-white">
-                        <img
-                            src={avatarUrl}
-                            alt="Avatar do dia"
-                            className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
-                        />
-                    </div>
+                    <img
+                        src={avatarUrl}
+                        alt="Avatar do dia"
+                        className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-700"
+                    />
                 </div>
 
                 {/* Texto */}
