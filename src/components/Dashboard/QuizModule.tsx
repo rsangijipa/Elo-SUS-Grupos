@@ -165,27 +165,7 @@ const QuizModule: React.FC = () => {
                 </h2>
             </div>
 
-            {/* Rewards Area */}
-            <div className="mb-6">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Suas Conquistas</p>
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                    {/* Badge 1: Mental Health */}
-                    <div className={`flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center border-2 transition-all ${mentalHealthResult
-                        ? 'bg-purple-100 border-purple-300 text-purple-600 shadow-purple-200 shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-300'
-                        }`} title="Explorador da Mente">
-                        {mentalHealthResult ? <Brain size={32} /> : <Lock size={24} />}
-                    </div>
 
-                    {/* Badge 2: Self Care */}
-                    <div className={`flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center border-2 transition-all ${selfCareResult
-                        ? 'bg-green-100 border-green-300 text-green-600 shadow-green-200 shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-300'
-                        }`} title="Guardião de Si">
-                        {selfCareResult ? <Shield size={32} /> : <Lock size={24} />}
-                    </div>
-                </div>
-            </div>
 
             {/* Quiz List */}
             <div className="space-y-3">
@@ -234,7 +214,7 @@ const QuizModule: React.FC = () => {
 
             {/* Quiz Modal */}
             {isModalOpen && activeQuiz && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                             <div>

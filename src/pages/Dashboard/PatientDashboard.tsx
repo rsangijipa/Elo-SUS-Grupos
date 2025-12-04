@@ -127,7 +127,7 @@ export default function PatientDashboard() {
                 <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     Minhas Conquistas
                 </h2>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                     {ACHIEVEMENTS.map(achievement => {
                         const isUnlocked = unlockedAchievements.includes(achievement.id);
                         let progress = '';
@@ -141,7 +141,7 @@ export default function PatientDashboard() {
                         }
 
                         return (
-                            <div key={achievement.id} onClick={() => {
+                            <div key={achievement.id} className="flex-shrink-0 w-32" onClick={() => {
                                 if (!isUnlocked) {
                                     toast(achievement.description, {
                                         icon: '🔒',

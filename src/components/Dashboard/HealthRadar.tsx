@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Activity, Eye, ArrowRight } from 'lucide-react';
 import type { Patient } from '../../types/patient';
 import type { MoodLog } from '../../services/moodService';
@@ -10,6 +11,7 @@ interface HealthRadarProps {
 }
 
 const HealthRadar: React.FC<HealthRadarProps> = ({ patients, moodMap }) => {
+    const navigate = useNavigate();
 
     const stats = useMemo(() => {
         let totalMood = 0;
@@ -145,20 +147,25 @@ const HealthRadar: React.FC<HealthRadarProps> = ({ patients, moodMap }) => {
                 <div className="lg:col-span-2">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-bold text-slate-800">Atenção Prioritária</h3>
-                        <button className="text-xs font-bold text-blue-600 hover:underline">Ver Relatório Completo</button>
+                        <button
+                            onClick={() => navigate('/reports/unit')}
+                            className="text-xs font-bold text-blue-600 hover:underline"
+                        >
+                            Ver Relatório Completo
+                        </button>
                     </div>
 
                     <div className="space-y-3">
                         {stats.risks.length > 0 ? (
                             stats.risks.map((risk, idx) => (
                                 <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${risk.type === 'critical' ? 'bg-red-50 border-red-100' :
-                                        risk.type === 'support' ? 'bg-yellow-50 border-yellow-100' :
-                                            'bg-blue-50 border-blue-100'
+                                    risk.type === 'support' ? 'bg-yellow-50 border-yellow-100' :
+                                        'bg-blue-50 border-blue-100'
                                     }`}>
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-lg ${risk.type === 'critical' ? 'bg-red-100 text-red-600' :
-                                                risk.type === 'support' ? 'bg-yellow-100 text-yellow-600' :
-                                                    'bg-blue-100 text-blue-600'
+                                            risk.type === 'support' ? 'bg-yellow-100 text-yellow-600' :
+                                                'bg-blue-100 text-blue-600'
                                             }`}>
                                             {risk.type === 'critical' ? <AlertTriangle size={18} /> :
                                                 risk.type === 'support' ? <Activity size={18} /> :

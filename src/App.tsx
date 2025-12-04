@@ -12,6 +12,7 @@ const Login = lazy(() => import('./pages/Login/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Schedule = lazy(() => import('./pages/Schedule/Schedule'));
 const Reports = lazy(() => import('./pages/Reports/Reports'));
+const UnitReport = lazy(() => import('./pages/Reports/UnitReport'));
 const Profile = lazy(() => import('./pages/Profile/Profile'));
 const SessionMode = lazy(() => import('./pages/Session/SessionMode'));
 const Support = lazy(() => import('./pages/Support/Support'));
@@ -66,6 +67,7 @@ function App() {
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="schedule" element={<Schedule />} />
                     <Route path="reports" element={<Reports />} />
+                    <Route path="reports/unit" element={<UnitReport />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="session/:id" element={<SessionMode />} />
                     <Route path="support" element={<Support />} />

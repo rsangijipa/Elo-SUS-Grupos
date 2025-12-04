@@ -11,7 +11,7 @@ import { setupDevEnvironment } from './services/devSeed';
 //   console.error("Failed to run dev seeding:", error);
 // }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,

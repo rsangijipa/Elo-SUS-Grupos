@@ -146,13 +146,13 @@ const ProfessionalDashboard: React.FC = () => {
     // Filter data based on the current user
     const myGroups = groups.filter(g => g.facilitatorId === user?.id);
     const myGroupIds = myGroups.map(g => g.id);
-    // Filter patients that belong to my groups
+    // Filter patients that belong to my groups OR all if admin
     // Note: This logic assumes patients have a 'group' field or we check group participants.
     // The original mock logic was: p.group && myGroups.some(g => g.name.includes(p.group))
     // Real logic: check if patient ID is in any of myGroups.participants
-    const myPatients = patients.filter(p =>
-        myGroups.some(g => (g.participants || []).includes(p.id || ''))
-    );
+    const myPatients = user?.role === 'admin'
+        ? patients
+        : patients.filter(p => myGroups.some(g => (g.participants || []).includes(p.id || '')));
     const myAppointments = appointments.filter(a => myGroupIds.includes(a.groupId));
 
     const activeGroups = myGroups.filter(g => g.status === 'active').length;
