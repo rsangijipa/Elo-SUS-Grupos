@@ -1,4 +1,4 @@
-import { User } from '../types/user';
+import { UserProfile } from '../types/schema';
 
 const ANVIL_API_KEY = import.meta.env.VITE_ANVIL_API_KEY;
 const ANVIL_URL = 'https://app.useanvil.com/api/v1/generate-pdf';
@@ -42,7 +42,7 @@ export const pdfService = {
         document.body.removeChild(a);
     },
 
-    async generateIdentityCardPdf(user: User, groupName: string) {
+    async generateIdentityCardPdf(user: UserProfile, groupName: string) {
         const css = `
             @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
             body { font-family: 'Roboto', sans-serif; margin: 0; padding: 0; }
@@ -118,7 +118,7 @@ export const pdfService = {
         this.downloadBlob(blob, `carteirinha_${user.name.split(' ')[0]}.pdf`);
     },
 
-    async generateClinicalReportPdf(user: User, moodHistory: any[], quizResults: any) {
+    async generateClinicalReportPdf(user: UserProfile, moodHistory: any[], quizResults: any) {
         const moodRows = moodHistory.map(m =>
             `| ${new Date(m.timestamp).toLocaleDateString()} | ${m.mood} | ${m.tags.join(", ")} |`
         ).join('\n');

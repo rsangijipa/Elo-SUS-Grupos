@@ -36,7 +36,7 @@ const QUESTIONS = [
 ];
 
 const PregnantModal: React.FC<PregnantModalProps> = ({ isOpen, onClose }) => {
-    const { user, refreshUserData } = useAuth();
+    const { user, refreshData } = useAuth();
     const [step, setStep] = useState<'intro' | 'questions' | 'result'>('intro');
     const [answers, setAnswers] = useState<Record<number, boolean>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,7 +105,7 @@ const PregnantModal: React.FC<PregnantModalProps> = ({ isOpen, onClose }) => {
                 }
             });
 
-            await refreshUserData();
+            await refreshData();
             setStep('result');
             toast.success("Avaliação salva com sucesso.");
         } catch (error) {
@@ -229,8 +229,8 @@ const PregnantModal: React.FC<PregnantModalProps> = ({ isOpen, onClose }) => {
                                         <button
                                             onClick={() => handleAnswer(q.id, true)}
                                             className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-2 ${answers[q.id] === true
-                                                    ? 'bg-pink-500 border-pink-500 text-white shadow-md'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-pink-50 hover:border-pink-200'
+                                                ? 'bg-pink-500 border-pink-500 text-white shadow-md'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-pink-50 hover:border-pink-200'
                                                 }`}
                                         >
                                             Sim
@@ -238,8 +238,8 @@ const PregnantModal: React.FC<PregnantModalProps> = ({ isOpen, onClose }) => {
                                         <button
                                             onClick={() => handleAnswer(q.id, false)}
                                             className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-2 ${answers[q.id] === false
-                                                    ? 'bg-slate-600 border-slate-600 text-white shadow-md'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                                                ? 'bg-slate-600 border-slate-600 text-white shadow-md'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                                                 }`}
                                         >
                                             Não

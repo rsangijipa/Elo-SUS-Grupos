@@ -39,7 +39,7 @@ const SELF_CARE_QUESTIONS = [
 type QuizType = 'mental-health' | 'self-care';
 
 const QuizModule: React.FC = () => {
-    const { user, refreshUserData } = useAuth();
+    const { user, refreshData } = useAuth();
     const [mentalHealthResult, setMentalHealthResult] = useState<QuizResult | null>(null);
     const [selfCareResult, setSelfCareResult] = useState<QuizResult | null>(null);
 
@@ -146,7 +146,7 @@ const QuizModule: React.FC = () => {
                     achievements: arrayUnion('mind_explorer')
                 });
 
-                await refreshUserData(); // Update UI immediately
+                await refreshData(); // Update UI immediately
                 toast.success('Avaliação concluída! Medalha desbloqueada.');
             } else {
                 // Self-Care Logic
@@ -170,7 +170,7 @@ const QuizModule: React.FC = () => {
                     achievements: arrayUnion('self_guardian')
                 });
 
-                await refreshUserData(); // Update UI immediately
+                await refreshData(); // Update UI immediately
 
                 setCurrentResult({
                     score,

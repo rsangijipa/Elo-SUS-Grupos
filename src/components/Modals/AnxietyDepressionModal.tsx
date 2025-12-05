@@ -5,7 +5,6 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { X, CheckCircle2, AlertTriangle, ArrowRight, Volume2, HeartHandshake } from 'lucide-react';
 import TTSButton from '../Common/TTSButton';
-import ModalContent from '../Auth/ModalContent';
 
 interface AnxietyDepressionModalProps {
     isOpen: boolean;
@@ -41,7 +40,7 @@ const QUESTIONS = [
 ];
 
 const AnxietyDepressionModal: React.FC<AnxietyDepressionModalProps> = ({ isOpen, onClose }) => {
-    const { user, refreshUserData } = useAuth();
+    const { user, refreshData } = useAuth();
     const [step, setStep] = useState<'intro' | 'questions' | 'result'>('intro');
     const [answers, setAnswers] = useState<Record<number, boolean>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +99,7 @@ const AnxietyDepressionModal: React.FC<AnxietyDepressionModalProps> = ({ isOpen,
                 }
             });
 
-            await refreshUserData();
+            await refreshData();
             setStep('result');
             toast.success("Avaliação salva com sucesso.");
         } catch (error) {
@@ -181,8 +180,8 @@ const AnxietyDepressionModal: React.FC<AnxietyDepressionModalProps> = ({ isOpen,
                                         <button
                                             onClick={() => handleAnswer(q.id, true)}
                                             className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-2 ${answers[q.id] === true
-                                                    ? 'bg-purple-600 border-purple-600 text-white shadow-md'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-purple-50 hover:border-purple-200'
+                                                ? 'bg-purple-600 border-purple-600 text-white shadow-md'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-purple-50 hover:border-purple-200'
                                                 }`}
                                         >
                                             Sim
@@ -190,8 +189,8 @@ const AnxietyDepressionModal: React.FC<AnxietyDepressionModalProps> = ({ isOpen,
                                         <button
                                             onClick={() => handleAnswer(q.id, false)}
                                             className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-2 ${answers[q.id] === false
-                                                    ? 'bg-slate-600 border-slate-600 text-white shadow-md'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                                                ? 'bg-slate-600 border-slate-600 text-white shadow-md'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                                                 }`}
                                         >
                                             Não

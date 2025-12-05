@@ -13,8 +13,10 @@ import {
     LifeBuoy,
     Shield,
     User,
-    Briefcase
+    Briefcase,
+    Download
 } from 'lucide-react';
+import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -25,6 +27,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const location = useLocation();
     const navigate = useNavigate();
     const { user, logout, switchDevRole } = useAuth();
+    const { isInstallable, triggerInstall } = useInstallPrompt();
 
     // Menu Configurations
     const professionalMenuItems = [
@@ -182,6 +185,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </div>
                     )}
 
+
+
+                    // ... (inside return)
+
                     <Link to="/profile" className="block" onClick={() => window.innerWidth < 768 && onClose()}>
                         <div className="bg-white rounded-2xl p-3 flex items-center gap-3 mb-3 cursor-pointer hover:shadow-md transition-all border border-slate-100 group">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm ${user?.role === 'patient' ? 'bg-brand-patient text-white' : 'bg-brand-professional text-white'
@@ -201,9 +208,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </div>
                     </Link>
 
+                    {isInstallable && (
+                        <button
+                            onClick={triggerInstall}
+                            className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-brand-professional hover:bg-blue-50 py-3 mb-2 rounded-xl text-sm transition-colors font-medium btn-press"
+                        >
+                            <Download size={16} />
+                            Instalar Aplicativo
+                        </button>
+                    )}
+
                     <button
                         onClick={handleLogout}
-                        className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-red-600 hover:bg-red-50 py-3 rounded-xl text-sm transition-colors font-medium"
+                        className="flex items-center justify-center gap-2 w-full text-slate-500 hover:text-red-600 hover:bg-red-50 py-3 rounded-xl text-sm transition-colors font-medium btn-press"
                     >
                         <LogOut size={16} />
                         Sair do Sistema

@@ -40,6 +40,10 @@
     background-size: 200% 200%;
     animation: mesh 15s ease infinite;
   }
+
+  .btn-press {
+    @apply active:scale-95 transition-transform duration-150 ease-in-out;
+  }
 }
 
 @keyframes fadeIn {

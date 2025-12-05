@@ -39,7 +39,7 @@ const GroupChat: React.FC<GroupChatProps> = ({ groupId }) => {
             await chatService.sendMessage(groupId, {
                 userId: user.id,
                 userName: user.name,
-                userAvatar: user.avatar,
+                userAvatar: user.avatar || '',
                 text: newMessage,
             });
             setNewMessage('');

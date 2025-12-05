@@ -14,6 +14,7 @@ import LoginForm from './components/LoginForm';
 import AuroraCarousel from './components/AuroraCarousel';
 import { seedDatabase } from '../../utils/seedDatabase';
 import { toast } from 'react-hot-toast';
+import { capitalizeName } from '../../utils/stringUtils';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -137,8 +138,8 @@ export default function Login() {
                 }
             } else {
                 await register({
-                    name: formData.name,
-                    email: formData.email,
+                    name: capitalizeName(formData.name),
+                    email: formData.email.trim().toLowerCase(),
                     password: formData.password,
                     role: theme,
                     cpf: formData.cpf,
@@ -284,7 +285,7 @@ export default function Login() {
                                     }
                                 }}
                                 disabled={isLoading}
-                                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm btn-press"
                             >
                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
                                 Entrar com Google

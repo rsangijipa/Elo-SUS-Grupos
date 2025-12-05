@@ -11,8 +11,12 @@ import { setupDevEnvironment } from './services/devSeed';
 //   console.error("Failed to run dev seeding:", error);
 // }
 
+import { ErrorBoundary } from './components/System/ErrorBoundary';
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>,
 )

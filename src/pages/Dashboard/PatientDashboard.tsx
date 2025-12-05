@@ -169,7 +169,7 @@ export default function PatientDashboard() {
                         </div>
                         <button
                             onClick={() => setIsUserCardOpen(true)}
-                            className="group relative flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-br from-[#7A5CFF] to-[#4E8FFF] text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-purple-500/40 transition-all shadow-md border-2 border-white/30 overflow-hidden"
+                            className="group relative flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-br from-[#7A5CFF] to-[#4E8FFF] text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-purple-500/40 transition-all shadow-md border-2 border-white/30 overflow-hidden btn-press"
                         >
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
                             <div className="relative flex items-center gap-3">

@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
-import { User } from '../types/user';
+import { UserProfile } from '../types/schema';
 import { useNotifications } from './NotificationContext';
 
 const INITIAL_PROFESSIONAL_STATE = {
@@ -25,20 +25,20 @@ const INITIAL_PATIENT_STATE = {
     address: '',
     neighborhood: '',
     unidadeSaudeId: '',
-    status: 'active' as 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout',
+    status: 'active' as const,
     observacoes: ''
 };
 import { patientService } from '../services/patientService';
 
 interface AuthContextType {
-    user: User | null;
+    user: UserProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     login: (email: string, password?: string) => Promise<void>;
     register: (data: any) => Promise<void>;
     logout: () => Promise<void>;
-    updateProfile: (data: Partial<User>) => Promise<void>;
-    refreshUserData: () => Promise<void>;
+    updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+    refreshData: () => Promise<void>;
     // Deprecated/Mock methods kept for compatibility but might need removal or refactor
     toggleRole: () => void;
     switchDevRole: (type: 'referrer' | 'executor' | 'patient') => void;
@@ -47,7 +47,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { addNotification } = useNotifications();
 
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             id: firebaseUser.uid,
                             ...userData,
                             email: userData.email || firebaseUser.email || ''
-                        } as User);
+                        } as UserProfile);
                     } else {
                         // Fallback if user exists in Auth but not in Firestore (shouldn't happen normally)
                         console.warn('User authenticated but no Firestore document found.');
@@ -165,19 +165,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             const baseState = data.role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
 
-            const newUser: User = {
+            const newUser: UserProfile = {
                 ...baseState,
+                uid: firebaseUser.uid,
                 id: firebaseUser.uid,
                 name: data.name,
                 email: data.email,
                 role: data.role || 'professional',
+                phoneNumber: data.phone || '',
+                // Fields from UserProfile schema that are mandatory or needed
+                tags: [],
+                createdAt: serverTimestamp(),
+                // Extended fields
                 cpf: data.cpf,
                 avatar: data.name.substring(0, 2).toUpperCase(),
-                // Ensure these fields are present
                 unidadeSaudeId: 'all',
-                createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
-            };
+            } as unknown as UserProfile; // Cast to avoid strict schema mismatches if any optional missing
 
             // If role is patient, merge patient state
             if (data.role === 'patient') {
@@ -185,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     cns: data.cns,
                     birthDate: '',
                     sexo: 'Outro',
-                    phone: data.phone || '',
+                    phone: data.phone || '', // duplicate mapped to phoneNumber
                     address: data.address || '',
                     neighborhood: data.neighborhood || '',
                     status: 'active',
@@ -237,7 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const updateProfile = async (data: Partial<User>) => {
+    const updateProfile = async (data: Partial<UserProfile>) => {
         if (!user) return;
         try {
             const userDocRef = doc(db, 'users', user.id);
@@ -280,20 +284,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Preserve ID, Name, Email, and Original Role
-        const updatedUser: User = {
+        const updatedUser: UserProfile = {
             ...user,
             ...additionalData,
-            id: user.id,
+            id: user.id || user.uid,
             name: user.name,
             email: user.email,
             role: newRole,
             originalRole: originalRole,
-            // Add specific flags for referrer/executor if needed by UI, 
-            // but for now the role switch is mainly about Patient vs Professional.
-            // If the UI distinguishes Referrer vs Executor by ID (e.g. doc_ref_01), we might need to mock the ID too,
-            // but changing ID breaks Auth. 
-            // Instead, we'll rely on the fact that 'professional' role sees the pro dashboard.
-        };
+        } as unknown as UserProfile;
 
         setUser(updatedUser);
 
@@ -304,14 +303,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    const refreshUserData = async () => {
+    const refreshData = async () => {
         if (!user) return;
         try {
             const userDocRef = doc(db, 'users', user.id);
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                setUser(prev => prev ? { ...prev, ...userData } as User : null);
+                setUser(prev => prev ? { ...prev, ...userData } as UserProfile : null);
             }
         } catch (error) {
             console.error('Error refreshing user data:', error);
@@ -327,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             register,
             logout,
             updateProfile,
-            refreshUserData,
+            refreshData,
             toggleRole,
             switchDevRole
         }}>

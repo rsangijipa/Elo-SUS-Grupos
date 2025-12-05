@@ -8,7 +8,7 @@ import { WEEKLY_CHALLENGES } from '../../data/weeklyChallenges';
 import { toast } from 'react-hot-toast';
 
 const DailyChallenge: React.FC = () => {
-    const { user, refreshUserData } = useAuth();
+    const { user, refreshData } = useAuth();
     const [challenge, setChallenge] = useState(WEEKLY_CHALLENGES[0]);
     const [isCompletedToday, setIsCompletedToday] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -62,7 +62,7 @@ const DailyChallenge: React.FC = () => {
             }
 
             // Refresh local user state to reflect XP/Stats changes immediately
-            await refreshUserData();
+            await refreshData();
 
             setIsCompletedToday(true);
             toast.success(`+${challenge.xpReward} XP! Desafio concluído.`);
@@ -102,7 +102,7 @@ const DailyChallenge: React.FC = () => {
             <button
                 onClick={handleComplete}
                 disabled={isCompletedToday || loading}
-                className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${isCompletedToday
+                className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg btn-press ${isCompletedToday
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                     : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:scale-[1.02] hover:shadow-purple-200'
                     }`}

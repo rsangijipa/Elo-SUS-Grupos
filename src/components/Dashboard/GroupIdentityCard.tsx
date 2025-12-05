@@ -2,7 +2,7 @@ import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Printer } from 'lucide-react';
 import { pdfService } from '../../services/pdfService';
-import { User } from '../../types/user';
+import { UserProfile } from '../../types/schema';
 
 import { getCleanName } from '../../utils/stringUtils';
 
@@ -12,7 +12,7 @@ interface GroupIdentityCardProps {
     startDate: string;
     attendanceCount: number;
     totalSessions?: number;
-    user?: User;
+    user?: UserProfile;
 }
 
 const GroupIdentityCard: React.FC<GroupIdentityCardProps> = ({

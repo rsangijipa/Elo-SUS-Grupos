@@ -1,6 +1,7 @@
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { UserProfile } from '../types/schema';
 
 export const authService = {
     reauthenticateUser: async (password: string) => {
@@ -29,7 +30,7 @@ export const authService = {
             throw error;
         }
     },
-    signInWithGoogle: async () => {
+    signInWithGoogle: async (): Promise<UserProfile> => {
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
@@ -41,17 +42,27 @@ export const authService = {
 
             if (!userDoc.exists()) {
                 // Create new user document using setDoc with specific UID (Security Rule Requirement)
-                await setDoc(userDocRef, {
+                const newUserData: UserProfile = {
                     uid: user.uid,
-                    email: user.email,
+                    id: user.uid,
                     name: user.displayName || 'Usuário Google',
-                    avatar: user.photoURL || null, // Using 'avatar' to match User type
-                    role: 'patient', // Default role
-                    createdAt: new Date().toISOString()
-                });
+                    email: user.email || '',
+                    role: 'patient',
+                    photoURL: user.photoURL,
+                    createdAt: new Date().toISOString(),
+                    // Default fields
+                    stats: {
+                        xp: 0,
+                        level: 1,
+                        completedChallenges: 0,
+                        streakDays: 0
+                    }
+                };
+                await setDoc(userDocRef, newUserData);
+                return newUserData;
+            } else {
+                return userDoc.data() as UserProfile;
             }
-
-            return user;
         } catch (error: any) {
             console.error("Error signing in with Google:", error);
             if (error.code === 'auth/popup-closed-by-user') {

@@ -39,4 +39,16 @@ if (app && auth) {
         });
 }
 
+import { enableIndexedDbPersistence } from 'firebase/firestore';
+
+if (db) {
+    enableIndexedDbPersistence(db).catch((err) => {
+        if (err.code == 'failed-precondition') {
+            console.warn('Persistência falhou: Múltiplas abas abertas.');
+        } else if (err.code == 'unimplemented') {
+            console.warn('Persistência não suportada neste navegador.');
+        }
+    });
+}
+
 export { auth, db };

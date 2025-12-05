@@ -4,7 +4,8 @@ import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
 import { toast } from 'react-hot-toast';
 import { User as UserIcon, Mail, Phone, Calendar, MapPin, Shield, Key, Save, Camera, Edit2 } from 'lucide-react';
-import type { User } from '../../types/user';
+import { UserProfile } from '../../types/schema';
+import { capitalizeName } from '../../utils/stringUtils';
 
 const UserProfile: React.FC = () => {
     const { user, updateProfile, logout } = useAuth();
@@ -69,8 +70,11 @@ const UserProfile: React.FC = () => {
         if (!user) return;
         setIsLoading(true);
         try {
-            const updatedData: Partial<User> = {
+            const updatedData: Partial<UserProfile> = {
                 ...formData,
+                name: capitalizeName(formData.name),
+                address: formData.address.trim(),
+                neighborhood: formData.neighborhood.trim(),
                 sexo: (formData.sexo === '' ? undefined : formData.sexo) as 'M' | 'F' | 'Outro' | undefined
             };
 

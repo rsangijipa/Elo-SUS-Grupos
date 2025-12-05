@@ -182,7 +182,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-black/5 transition-all flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] ${theme === 'patient'
+                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-black/5 transition-all flex items-center justify-center gap-2 btn-press hover:scale-[1.02] ${theme === 'patient'
                     ? 'bg-[#6C4FFE] hover:bg-[#5B3FD9] text-white shadow-purple-200'
                     : 'bg-[#0054A6] hover:bg-[#003F7D] text-white shadow-blue-200'
                     } disabled:opacity-70 disabled:cursor-not-allowed`}

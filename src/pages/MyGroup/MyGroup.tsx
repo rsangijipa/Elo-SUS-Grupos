@@ -38,7 +38,7 @@ const MyGroup: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#F8F9FC] pb-20 md:pb-8">
             {/* DEBUG: Join Group Button if no group */}
-            {(!user?.groupId && !user?.currentGroupId) && (
+            {(!user?.currentGroupId) && (
                 <div className="bg-yellow-100 p-4 text-center">
                     <p className="text-yellow-800 mb-2">Você não está em nenhum grupo.</p>
                     <button
@@ -202,7 +202,7 @@ const MyGroup: React.FC = () => {
                         </div>
 
                         {/* CHAT MODULE */}
-                        <GroupChat groupId={user?.currentGroupId || user?.groupId} />
+                        <GroupChat groupId={user?.currentGroupId} />
                     </div>
                 </div>
 

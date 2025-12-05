@@ -16,7 +16,7 @@ import { userService } from '../../services/userService';
 import { patientService } from '../../services/patientService';
 import { groupService } from '../../services/groupService';
 import { toast } from 'react-hot-toast';
-import type { User } from '../../types/user';
+import { UserProfile } from '../../types/schema';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -25,7 +25,7 @@ export default function AdminDashboard() {
         totalGroups: 0,
         riskAlerts: 0
     });
-    const [professionals, setProfessionals] = useState<User[]>([]);
+    const [professionals, setProfessionals] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleToggleStatus = async (user: User) => {
+    const handleToggleStatus = async (user: UserProfile) => {
         if (!user.id) return;
 
         const newStatus = !user.active; // If undefined, treat as true (active), so toggle to false
@@ -249,8 +249,8 @@ export default function AdminDashboard() {
                                         <button
                                             onClick={() => handleToggleStatus(pro)}
                                             className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${pro.active !== false
-                                                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                                    : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                                : 'bg-green-50 text-green-600 hover:bg-green-100'
                                                 }`}
                                         >
                                             {pro.active !== false ? 'Desativar' : 'Reativar'}
