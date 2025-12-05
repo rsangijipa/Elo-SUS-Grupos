@@ -5,7 +5,8 @@ test.describe('Jornada do Paciente Ansioso (João Silva)', () => {
     test('Deve completar o fluxo feliz de verificação de humor e acesso a recursos', async ({ page }) => {
 
         // 1. LOGIN
-        await page.goto('/login');
+        // Using seed=true to ensure user exists
+        await page.goto('/login?seed=true');
 
         // Using the standard login form based on Login.tsx
         await page.fill('input[type="email"]', 'joao.silva@email.com');

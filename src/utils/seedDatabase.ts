@@ -1,5 +1,6 @@
-import { doc, setDoc, deleteDoc, collection, getDocs, writeBatch } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { db, auth } from '../services/firebase';
 
 // Mock Data Definitions
 const USERS = [
@@ -7,7 +8,8 @@ const USERS = [
         id: 'prof_ricardo',
         name: 'Dr. Ricardo',
         email: 'ricardo@elosus.com',
-        role: 'admin', // Using admin as requested for "Dr. Ricardo (Psicólogo, Admin)"
+        password: 'password123',
+        role: 'admin',
         crp: '12345/SP',
         specialty: 'Psicologia Clínica',
         avatar: 'DR',
@@ -17,6 +19,7 @@ const USERS = [
         id: 'paciente_joao',
         name: 'João Silva',
         email: 'joao.silva@email.com',
+        password: 'password123',
         role: 'patient',
         age: 35,
         condition: 'Ansiedade',
@@ -33,6 +36,7 @@ const USERS = [
         id: 'paciente_maria',
         name: 'Maria Oliveira',
         email: 'maria.oliveira@email.com',
+        password: 'password123',
         role: 'patient',
         age: 28,
         gestationWeeks: 30,
@@ -49,47 +53,78 @@ const USERS = [
         id: 'paciente_carlos',
         name: 'Carlos Souza',
         email: 'carlos.souza@email.com',
+        password: 'password123',
         role: 'patient',
         age: 40,
         condition: 'Pai Atípico',
         avatar: 'CS',
-        isParentOfTEA: true, // Custom field for logic
+        isParentOfTEA: true,
         unidadeSaudeId: 'ubs-centro'
     }
 ];
 
 export const seedDatabase = async () => {
     console.log('🌱 Starting Database Seeding...');
-    const batch = writeBatch(db);
 
     try {
-        // 1. Clean existing users (Optional - be careful in prod!)
-        // For safety, we might only overwrite specific IDs or clear specific collections if running in emulator
-        // Here we will just overwrite the specific demo users to ensure they are fresh.
-
-        console.log('🧹 Preparing user documents...');
-
         for (const user of USERS) {
-            const userRef = doc(db, 'users', user.id);
+            console.log(`Processing user: ${user.email}`);
+            let uid = user.id; // Default to ID if we can't get Auth UID (fallback)
 
-            // Prepare base user data
+            try {
+                // 1. Try to Create User in Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, user.email, user.password);
+                uid = userCredential.user.uid;
+                console.log(`✅ Created Auth user: ${user.email}`);
+
+                // Update Profile Name
+                await updateProfile(userCredential.user, {
+                    displayName: user.name
+                });
+
+            } catch (error: any) {
+                if (error.code === 'auth/email-already-in-use') {
+                    console.log(`⚠️ User already exists: ${user.email}. Signing in to update...`);
+                    // Sign in to get UID
+                    try {
+                        const userCredential = await signInWithEmailAndPassword(auth, user.email, user.password);
+                        uid = userCredential.user.uid;
+                    } catch (loginError) {
+                        console.error(`❌ Could not login as ${user.email}`, loginError);
+                        continue; // Skip this user if we can't login
+                    }
+                } else {
+                    console.error(`❌ Error creating user ${user.email}:`, error);
+                    continue;
+                }
+            }
+
+            // 2. Create/Update Firestore Document
+            // Note: We use the Auth UID as the document ID to link them correctly
+            const userRef = doc(db, 'users', uid);
+
             const userData: any = {
                 ...user,
+                uid: uid, // Ensure UID is in the doc
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
-            // Add specific logic fields based on profile description
+            // Remove password from Firestore doc
+            delete userData.password;
+
             if (user.role === 'patient') {
                 userData.status = 'active';
                 userData.active = true;
             }
 
-            batch.set(userRef, userData, { merge: true });
+            await setDoc(userRef, userData, { merge: true });
+            console.log(`✅ Updated Firestore doc for: ${user.name}`);
         }
 
-        await batch.commit();
-        console.log('✅ Database seeded successfully with demo profiles!');
+        // 3. Sign out the last user to leave the app clean
+        await signOut(auth);
+        console.log('✅ Database seeded successfully! Signed out.');
 
         return true;
     } catch (error) {

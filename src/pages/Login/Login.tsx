@@ -12,6 +12,8 @@ import HelpModal from '../../components/Auth/HelpModal';
 import RoleSwitcher from './components/RoleSwitcher';
 import LoginForm from './components/LoginForm';
 import AuroraCarousel from './components/AuroraCarousel';
+import { seedDatabase } from '../../utils/seedDatabase';
+import { toast } from 'react-hot-toast';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -46,9 +48,25 @@ export default function Login() {
         name: ''
     });
 
+
     // Set default role to patient on mount
     useEffect(() => {
         setTheme('patient');
+
+        // Check for seed param
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('seed') === 'true') {
+            const runSeed = async () => {
+                toast.loading('Populando banco de dados...', { id: 'seed-toast' });
+                const success = await seedDatabase();
+                if (success) {
+                    toast.success('Banco populado com sucesso!', { id: 'seed-toast' });
+                } else {
+                    toast.error('Erro ao popular banco.', { id: 'seed-toast' });
+                }
+            };
+            runSeed();
+        }
     }, []);
 
     const handleRoleChange = (newRole: 'patient' | 'professional') => {

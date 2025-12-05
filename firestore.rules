@@ -8,7 +8,7 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Regras para a coleção de usuários
+    // --- REGRAS DE USUÁRIOS (SECURE) ---
     match /users/{userId} {
       // Qualquer logado pode ler perfis (necessário para grupos, mural, etc)
       allow read: if request.auth != null;
@@ -16,27 +16,32 @@ service cloud.firestore {
       // O usuário só pode criar/editar SE o ID do documento for igual ao UID dele
       allow create: if request.auth != null && request.auth.uid == userId;
       
-      // Permite atualizar dados (como avatar, telefone), mas BLOQUEIA mudar o campo 'role'
-      allow update: if request.auth != null 
-                    && request.auth.uid == userId
-                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      // Permite atualizar dados, mas BLOQUEIA mudar o campo 'role' (a menos que seja Admin)
+      allow update: if (request.auth != null && request.auth.uid == userId && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))) 
+                    || isAdmin();
+                    
+      // Admin pode fazer tudo
+      allow write: if isAdmin();
     }
 
-    // Regras para Grupos e Chat
+    // --- REGRAS DE GRUPOS E CHAT ---
     match /grupos/{groupId} {
-      // Qualquer usuário autenticado pode ler os grupos (para listar, etc)
-      // Idealmente, restringir apenas aos participantes, mas para MVP 'read' geral é aceitável ou verificar array participants
-      allow read: if request.auth != null;
+      allow read, write: if request.auth != null;
       
-      // Apenas admin ou profissionais podem criar/editar grupos (simplificado para auth != null por enquanto se não houver role check estrito no front)
-      allow write: if request.auth != null; 
-
-      // Subcoleção de mensagens
       match /messages/{messageId} {
         allow read, write: if request.auth != null;
       }
     }
+
+    // --- OUTRAS COLEÇÕES (Permissivas para Dev) ---
+    // Adicione aqui outras coleções conforme necessário
+    match /daily_logs/{document=**} { allow read, write: if request.auth != null; }
+    match /mood_logs/{document=**} { allow read, write: if request.auth != null; }
+    match /appointments/{document=**} { allow read, write: if request.auth != null; }
+    match /referrals/{document=**} { allow read, write: if request.auth != null; }
+    match /tobacco_anamnesis/{document=**} { allow read, write: if request.auth != null; }
+    match /gamification/{document=**} { allow read, write: if request.auth != null; }
+    match /feedback/{document=**} { allow read, write: if request.auth != null; }
     
-    // Regras genéricas para outras coleções se necessário, mas EVITAR 'match /{document=**}'
   }
 }
