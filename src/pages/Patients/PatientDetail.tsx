@@ -52,12 +52,10 @@ const PatientDetail: React.FC = () => {
         if (!patient) return;
         setIsAnalyzing(true);
         try {
-            const result = await AIService.analyzeRiskAndCoding({
-                patientData: patient,
-                attendanceRecords: [], // Mock attendance for now
-                distanceKm: 12.5, // Mock distance, ideally comes from patient.coordinates
-                notes: "Paciente relata desânimo constante e dificuldade de sono." // Mock or last clinical note
-            });
+            const result = await AIService.analyzeClinicalRisk(
+                patient,
+                12.5 // Mock distance, ideally comes from patient.coordinates or distanceToUnit
+            );
             setAiAnalysis(result);
             toast.success("Análise de Risco Concluída!");
         } catch (error) {

@@ -36,11 +36,11 @@ export function useDailyMessage() {
                 // Get group theme (mock for now, or fetch from active enrollment)
                 const groupTheme = "Ansiedade e Autocuidado"; // Ideally fetch from enrollment
 
-                const text = await AIService.generateDailySupportMessage({
-                    patientName: user.name.split(' ')[0],
-                    groupTheme,
-                    moodLog: lastMood
-                });
+                const text = await AIService.generateDailySupportMessage(
+                    user.name.split(' ')[0],
+                    lastMood,
+                    groupTheme
+                );
 
                 setMessage(text);
 

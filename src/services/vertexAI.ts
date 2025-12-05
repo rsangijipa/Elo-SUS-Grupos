@@ -1,164 +1,102 @@
 
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { db } from "./firebase";
-import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, limit } from "firebase/firestore";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-// Initialize Gemini
-const API_KEY = import.meta.env.VITE_GOOGLE_GEN_AI_KEY || '';
-const genAI = new GoogleGenerativeAI(API_KEY);
+const API_KEY = import.meta.env.VITE_GOOGLE_GEN_AI_KEY;
 
-// Models
-const modelFast = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const modelPro = genAI.getGenerativeModel({
-    model: "gemini-1.5-pro",
-    generationConfig: { responseMimeType: "application/json" } // For structured output
-});
+// Initialize Google AI (Web Compatible SDK)
+// Note: We use @google/generative-ai because @google-cloud/vertexai is Node.js only and does not work in Vite/Browser environments.
+const genAI = new GoogleGenerativeAI(API_KEY || '');
 
-interface DailyMessageParams {
-    patientName: string;
-    groupTheme: string;
-    moodLog: string; // "happy", "sad", etc.
-}
-
-interface ClinicalReportParams {
-    technicalReport: string;
-}
-
-interface RiskAnalysisParams {
-    patientData: any;
-    attendanceRecords: any[];
-    distanceKm: number;
-    notes: string;
-}
+// Fallback Messages
+const FALLBACK_MESSAGES = {
+    SUPPORT: "Hoje é um ótimo dia para cuidar de si mesmo. Lembre-se de respirar fundo e dar um passo de cada vez.",
+    RISK: { riskLevel: 'LOW', tfdEligible: false, suggestedCID: 'Z00.0', reasoning: 'Análise indisponível no momento.' },
+    REPORT: "Relatório indisponível para simplificação no momento. Consulte seu médico para mais detalhes."
+};
 
 export const AIService = {
-
     /**
-     * AGENTE 1: O Acolhedor
-     * Generates a short, empathetic daily message.
-     * Caches messages in Firestore to save tokens/costs.
+     * Função A: O Acolhedor
+     * Gera mensagem acolhedora para o dashboard do paciente.
      */
-    async generateDailySupportMessage({ patientName, groupTheme, moodLog }: DailyMessageParams): Promise<string> {
-        if (!API_KEY) return `Olá ${patientName}, que bom ter você aqui! Lembre-se de cuidar de si hoje.`;
+    async generateDailySupportMessage(patientName: string, mood: string, lastGroupTheme: string): Promise<string> {
+        if (!API_KEY) return FALLBACK_MESSAGES.SUPPORT;
 
         try {
-            // 1. Check Cache in Firestore
-            const messagesRef = collection(db, 'daily_messages');
-            const q = query(
-                messagesRef,
-                where('theme', '==', groupTheme),
-                where('mood', '==', moodLog),
-                limit(20) // Get a pool to pick randomly
-            );
+            const model = genAI.getGenerativeModel({
+                model: "gemini-1.5-flash",
+                systemInstruction: "Você é um psicólogo especialista em TCC e Humanização no SUS. Gere uma mensagem curta (max 250 caracteres), motivadora e pessoal. Use o nome do paciente. Valide o sentimento dele. Conecte levemente ao tema do último grupo. Tom: Empático, seguro, sem dar conselhos médicos diretos."
+            });
 
-            const snapshot = await getDocs(q);
+            const prompt = `Paciente: ${patientName}. Sentimento: ${mood}. Tema do Último Grupo: ${lastGroupTheme}.`;
 
-            if (!snapshot.empty) {
-                // Return a random stored message
-                const randomIndex = Math.floor(Math.random() * snapshot.docs.length);
-                const msg = snapshot.docs[randomIndex].data().message;
-                return msg.replace('{NAME}', patientName);
-            }
-
-            // 2. Generate New Message if cache miss
-            const prompt = `
-                Você é um assistente de saúde mental empático e acolhedor baseada em TCC e Gestalt. 
-                Gere uma mensagem curta (max 2 frases), motivadora e personalizada para o paciente {NAME} que participa do grupo sobre ${groupTheme}. 
-                Se o humor dele ontem foi ${moodLog}, adapte o tom. 
-                NÃO dê conselhos médicos. Foco no acolhimento. 
-                Aponte os avisos de notificações do sistema também e avisos importantes de saude mental.
-                Retorne apenas o texto da mensagem. Use {NAME} como placeholder para o nome.
-            `;
-
-            const result = await modelFast.generateContent(prompt);
-            const text = result.response.text().trim();
-
-            // 3. Save to Cache (Async, don't await blocking)
-            addDoc(messagesRef, {
-                theme: groupTheme,
-                mood: moodLog,
-                message: text,
-                createdAt: serverTimestamp()
-            }).catch(e => console.error("Error caching message:", e));
-
-            return text.replace('{NAME}', patientName);
-
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
         } catch (error) {
-            console.error("AI Service Error (Daily Message):", error);
-            return `Olá ${patientName}, estamos com você nessa jornada!`;
+            console.error("AI Agent 'Acolhedor' failed:", error);
+            return FALLBACK_MESSAGES.SUPPORT;
         }
     },
 
     /**
-     * AGENTE 2: O Tradutor
-     * Simplifies technical reports for patients.
+     * Função B: O Auditor de Regulação
+     * Análise de risco para o dashboard do profissional.
      */
-    async humanizeClinicalReport({ technicalReport }: ClinicalReportParams): Promise<string> {
-        if (!API_KEY) return technicalReport;
+    async analyzeClinicalRisk(patientData: any, distanceKm: number): Promise<{ riskLevel: 'LOW' | 'MEDIUM' | 'HIGH', tfdEligible: boolean, suggestedCID: string, reasoning: string }> {
+        if (!API_KEY) return FALLBACK_MESSAGES.RISK as any;
 
         try {
-            const prompt = `
-                Traduza o seguinte relatório clínico técnico para uma linguagem simples, encorajadora e fácil de entender para o paciente. 
-                Explique termos difíceis. Mantenha um tom de parceria. 
-                Exemplo: Em vez de 'Evolução favorável', diga 'Vimos um ótimo progresso'.
-                
-                Relatório Técnico: "${technicalReport}"
-            `;
+            const model = genAI.getGenerativeModel({
+                model: "gemini-1.5-pro",
+                systemInstruction: "Atue como Auditor de Regulação do SUS. Analise os dados do paciente.\n1. Verifique risco de evasão baseado na distância e frequência.\n2. Verifique elegibilidade para TFD (Tratamento Fora de Domicílio) se a distância > 50km.\n3. Sugira CID-10 baseado nas notas clínicas.\nRetorne JSON estrito: { riskLevel: 'LOW'|'MEDIUM'|'HIGH', tfdEligible: boolean, suggestedCID: string, reasoning: string }.",
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: SchemaType.OBJECT,
+                        properties: {
+                            riskLevel: { type: SchemaType.STRING, enum: ["LOW", "MEDIUM", "HIGH"] },
+                            tfdEligible: { type: SchemaType.BOOLEAN },
+                            suggestedCID: { type: SchemaType.STRING },
+                            reasoning: { type: SchemaType.STRING },
+                        },
+                        required: ["riskLevel", "tfdEligible", "suggestedCID", "reasoning"]
+                    }
+                }
+            });
 
-            const result = await modelFast.generateContent(prompt);
-            return result.response.text();
+            const prompt = `Dados do Paciente: ${JSON.stringify(patientData)}. Distância da Unidade: ${distanceKm}km.`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return JSON.parse(response.text());
         } catch (error) {
-            console.error("AI Service Error (Translator):", error);
-            return technicalReport;
+            console.error("AI Agent 'Auditor' failed:", error);
+            return FALLBACK_MESSAGES.RISK as any;
         }
     },
 
     /**
-     * AGENTE 3: O Sentinela & Codificador
-     * Professional tool for Risk Analysis and CID suggestion.
-     * Returns structured JSON.
+     * Função C: O Tradutor (Humanizador)
+     * Traduz "medicês" para o paciente ler.
      */
-    async analyzeRiskAndCoding({ patientData, attendanceRecords, distanceKm, notes }: RiskAnalysisParams): Promise<{
-        riskScore: number;
-        suggestedCID: string;
-        tfdAlert: boolean;
-        reasoning: string;
-    }> {
-        if (!API_KEY) {
-            return { riskScore: 0, suggestedCID: "N/A", tfdAlert: false, reasoning: "API Key missing." };
-        }
+    async humanizeReport(technicalText: string): Promise<string> {
+        if (!API_KEY) return technicalText; // Fallback to original text
 
         try {
-            const prompt = `
-                Atue como Auditor Clínico do SUS. Analise os dados do paciente:
-                - Nome: ${patientData.name}
-                - Distância da Unidade: ${distanceKm} km
-                - Frequência Recente: ${JSON.stringify(attendanceRecords)}
-                - Anotações Clínicas: "${notes}"
+            const model = genAI.getGenerativeModel({
+                model: "gemini-1.5-flash",
+                systemInstruction: "Reescreva o seguinte relatório clínico técnico em linguagem simples, encorajadora e clara (Nível de leitura: Ensino Fundamental). Foco nos progressos e próximos passos. Evite jargões."
+            });
 
-                Tarefas:
-                1. Calcule o Risco de Abandono (0-100%) baseado na frequência e distância.
-                2. Sugira o CID-10 mais provável baseado nas anotações.
-                3. Identifique se há critérios para TFD (Tratamento Fora de Domicílio, geralmente > 50km).
-                
-                Retorne APENAS um JSON com este formato: 
-                { "riskScore": number, "suggestedCID": string, "tfdAlert": boolean, "reasoning": string }
-            `;
+            const prompt = `Texto Técnico: "${technicalText}"`;
 
-            const result = await modelPro.generateContent(prompt);
-            const text = result.response.text();
-
-            // JSON parsing is handled by the model's responseMimeType config, but we parse explicitly to be safe
-            return JSON.parse(text);
-
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
         } catch (error) {
-            console.error("AI Service Error (Risk Analysis):", error);
-            return {
-                riskScore: 0,
-                suggestedCID: "Erro",
-                tfdAlert: false,
-                reasoning: "Falha na análise de IA."
-            };
+            console.error("AI Agent 'Tradutor' failed:", error);
+            return FALLBACK_MESSAGES.REPORT;
         }
     }
 };
