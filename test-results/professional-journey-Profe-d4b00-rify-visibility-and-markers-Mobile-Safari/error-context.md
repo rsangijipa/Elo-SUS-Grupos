@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e8]:
+    - generic [ref=e10]:
+      - img "EloSUS Logo" [ref=e11]
+      - generic [ref=e12]: EloSUS
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - heading "Entre no seu espaço" [level=2] [ref=e16]
+        - paragraph [ref=e17]: Escolha seu perfil para continuar.
+      - generic [ref=e18]:
+        - button "Paciente" [ref=e19]:
+          - img [ref=e20]
+          - text: Paciente
+        - button "Profissional" [ref=e23]:
+          - img [ref=e24]
+          - text: Profissional
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - generic [ref=e29]: E-mail
+            - generic [ref=e30]:
+              - img [ref=e31]
+              - textbox "seu.email@exemplo.com" [ref=e34]
+          - generic [ref=e35]:
+            - generic [ref=e36]: Senha
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - textbox "••••••••" [ref=e41]
+              - button [ref=e42]:
+                - img [ref=e43]
+          - button "Esqueceu a senha?" [ref=e47]
+          - button "Acessar Sistema" [ref=e48]:
+            - text: Acessar Sistema
+            - img [ref=e49]
+        - generic [ref=e55]: ou continue com
+        - button "Google Entrar com Google" [ref=e56]:
+          - img "Google" [ref=e57]
+          - text: Entrar com Google
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - text: Ainda não tem cadastro?
+          - button "Cadastre-se" [ref=e60]
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - button "Termos de Uso" [ref=e63]
+            - button "Privacidade" [ref=e64]
+            - button "Ajuda" [ref=e65]
+          - paragraph [ref=e66]: © 2025 EloSUS Grupos - Todos os direitos reservados
+  - iframe [ref=e67]:
+    
+```

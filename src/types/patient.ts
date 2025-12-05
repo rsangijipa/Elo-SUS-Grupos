@@ -33,4 +33,8 @@ export interface Patient {
         lng: number;
     };
     territorialTags?: string[];
+
+    // AI Risk Analysis
+    riskLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+    riskSummary?: string;
 }

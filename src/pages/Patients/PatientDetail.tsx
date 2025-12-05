@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight, Flame, Snowflake, Trophy, Heart, Brain, Lightbulb } from 'lucide-react';
-import { patientService } from '../../services/patientService';
-import { moodService, MoodLog } from '../../services/moodService';
-import { quizService } from '../../services/quizService';
-import { AIService } from '../../services/vertexAI';
-import type { QuizResult } from '../../types/quiz';
-import type { Patient } from '../../types/patient';
+import {
+    ArrowLeft, Activity, CheckCircle, Brain, FileText,
+    Layout, Trophy, Flame, Snowflake,
+    Plus, ArrowRight, AlertTriangle, Lightbulb, XCircle, Wand2, Sparkles, MapPin, Map
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { patientService } from '../../services/patientService';
+import { moodService } from '../../services/moodService';
+import { quizService } from '../../services/quizService';
 import { pdfService } from '../../services/pdfService';
+import { AIService } from '../../services/vertexAI';
+import { Patient } from '../../types/patient';
+import HumanizedText from '../../components/Common/HumanizedText';
+import { OrganizationSettings } from '../../config/settings';
 
-const PatientDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+const PatientDetail = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
     const [patient, setPatient] = useState<Patient | null>(null);
-    const [moodHistory, setMoodHistory] = useState<MoodLog[]>([]);
-    const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
-    const [selfCareResult, setSelfCareResult] = useState<QuizResult | null>(null);
     const [loading, setLoading] = useState(true);
-
-    // AI State
+    const [moodHistory, setMoodHistory] = useState<any[]>([]);
+    const [quizResult, setQuizResult] = useState<any | null>(null);
+    const [selfCareResult, setSelfCareResult] = useState<any | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [aiAnalysis, setAiAnalysis] = useState<{ riskScore: number; suggestedCID: string; tfdAlert: boolean; reasoning: string; } | null>(null);
+    const [aiAnalysis, setAiAnalysis] = useState<any | null>(null);
+    const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'emotional'>('overview');
+    const [showSimplified, setShowSimplified] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -54,7 +59,7 @@ const PatientDetail: React.FC = () => {
         try {
             const result = await AIService.analyzeClinicalRisk(
                 patient,
-                12.5 // Mock distance, ideally comes from patient.coordinates or distanceToUnit
+                12.5 // Mock distance, ideally comes from patient.coordinates
             );
             setAiAnalysis(result);
             toast.success("Análise de Risco Concluída!");
@@ -66,10 +71,40 @@ const PatientDetail: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Carregando prontuário...</div>;
-    if (!patient) return <div className="p-8 text-center text-slate-500">Paciente não encontrado.</div>;
+    const handleExportReport = async () => {
+        if (!patient) return;
 
-    // Mock Risk Data (In real app, this would come from the patient record)
+        try {
+            toast.loading('Gerando relatório...', { id: 'pdf-gen' });
+            await pdfService.generateClinicalReportPdf(patient as any, moodHistory, quizResult);
+            toast.success('Relatório gerado com sucesso!', { id: 'pdf-gen' });
+        } catch (error) {
+            console.error('Error generating report:', error);
+            toast.error('Erro ao gerar relatório.', { id: 'pdf-gen' });
+        }
+    };
+
+    const handleOpenRoute = () => {
+        if (!patient) return;
+
+        const unitLat = OrganizationSettings.defaultCoordinates?.lat || -9.9133;
+        const unitLng = OrganizationSettings.defaultCoordinates?.lng || -63.0408;
+
+        // If patient has coordinates, use them. Otherwise rely on address (which GMaps handles via query).
+        const origin = patient.coordinates
+            ? `${patient.coordinates.lat},${patient.coordinates.lng}`
+            : patient.address;
+
+        if (!origin) {
+            toast.error("Endereço do paciente não disponível.");
+            return;
+        }
+
+        const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${unitLat},${unitLng}&travelmode=driving`;
+        window.open(url, '_blank');
+    };
+
+    // Mock Risk Data
     const riskLevel = 'attention' as 'high' | 'attention' | 'standard';
 
     const getRiskBadge = () => {
@@ -98,22 +133,8 @@ const PatientDetail: React.FC = () => {
         }
     };
 
-    const handleExportReport = async () => {
-        if (!patient) return;
-
-        try {
-            toast.loading('Gerando relatório...', { id: 'pdf-gen' });
-            // Casting patient to any to avoid strict type mismatch if types differ slightly
-            await pdfService.generateClinicalReportPdf(patient as any, moodHistory, quizResult);
-            toast.success('Relatório gerado com sucesso!', { id: 'pdf-gen' });
-        } catch (error) {
-            console.error('Error generating report:', error);
-            toast.error('Erro ao gerar relatório.', { id: 'pdf-gen' });
-        }
-    };
-
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'emotional'>('overview');
+    if (loading) return <div className="p-8 text-center text-slate-500">Carregando prontuário...</div>;
+    if (!patient) return <div className="p-8 text-center text-slate-500">Paciente não encontrado.</div>;
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -131,6 +152,13 @@ const PatientDetail: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleOpenRoute}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-[#0054A6] rounded-lg font-bold text-sm hover:bg-blue-100 transition-colors shadow-sm"
+                        >
+                            <Map size={16} />
+                            Como Chegar
+                        </button>
                         <button
                             onClick={handleAnalyzeRisk}
                             disabled={isAnalyzing}
@@ -252,49 +280,69 @@ const PatientDetail: React.FC = () => {
             </div>
 
             {activeTab === 'overview' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Timeline */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <Clock size={20} className="text-[#0054A6]" />
-                            Histórico Clínico
-                        </h2>
-
-                        <div className="relative border-l-2 border-slate-200 ml-3 space-y-8 pb-8">
-                            {/* Timeline Item 1 */}
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-[#0054A6] border-4 border-white shadow-sm"></div>
-                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="font-bold text-slate-800">Participação em Grupo</span>
-                                        <span className="text-xs text-slate-500 font-medium">15/10/2025</span>
-                                    </div>
-                                    <p className="text-sm text-slate-600 leading-relaxed">Compareceu à 3ª sessão do Grupo de Tabagismo. Relatou diminuição no consumo.</p>
-                                    <div className="mt-4 flex gap-2">
-                                        <span className="px-2.5 py-1 bg-blue-50 text-[#0054A6] text-xs rounded-lg font-bold">Tabagismo</span>
-                                        <span className="px-2.5 py-1 bg-green-50 text-[#0B8A4D] text-xs rounded-lg font-bold">Presença Confirmada</span>
-                                    </div>
-                                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Clinical History (2/3) */}
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                    <Layout size={20} className="text-[#0054A6]" />
+                                    Histórico Clínico
+                                </h2>
+                                <button
+                                    onClick={() => setShowSimplified(!showSimplified)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${showSimplified
+                                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
+                                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                        }`}
+                                >
+                                    {showSimplified ? <Sparkles size={14} /> : <Wand2 size={14} />}
+                                    {showSimplified ? 'Versão Simplificada Ativa' : 'Simplificar Termos'}
+                                </button>
                             </div>
 
-                            {/* Timeline Item 2 */}
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-300 border-4 border-white shadow-sm"></div>
-                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="font-bold text-slate-800">Encaminhamento</span>
-                                        <span className="text-xs text-slate-500 font-medium">01/09/2025</span>
+                            <div className="relative border-l-2 border-slate-100 ml-3 space-y-8 pl-8 py-2">
+                                {/* Item 1 */}
+                                <div className="relative">
+                                    <div className="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-[#0054A6] border-4 border-white shadow-sm"></div>
+                                    <span className="text-xs font-bold text-[#0054A6] bg-blue-50 px-2 py-1 rounded mb-2 inline-block">Hoje, 14:30</span>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-2">Avaliação Psicológica Inicial</h3>
+                                    <HumanizedText
+                                        text="Paciente relata quadro de anedonia persistente e insônia terminal. Apresenta embotamento afetivo moderado. Nega ideação suicida estruturada, mas refere desesperança. Encaminhado para Terapia Cognitivo-Comportamental."
+                                        showSimplified={showSimplified}
+                                    />
+                                    <div className="flex items-center gap-3 mt-4">
+                                        <div className="flex -space-x-2">
+                                            <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold">DR</div>
+                                        </div>
+                                        <span className="text-xs text-slate-500 font-medium">Dr. Ricardo Souza • Psicólogo</span>
                                     </div>
-                                    <p className="text-sm text-slate-600 leading-relaxed">Encaminhado via SISREG para avaliação psiquiátrica no CAPS II.</p>
+                                </div>
+
+                                {/* Item 2 */}
+                                <div className="relative">
+                                    <div className="absolute -left-[41px] top-0 w-6 h-6 rounded-full bg-slate-200 border-4 border-white shadow-sm"></div>
+                                    <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded mb-2 inline-block">05 Out 2024</span>
+                                    <h3 className="text-lg font-bold text-slate-700 mb-2">Triagem Inicial CAS</h3>
+                                    <HumanizedText
+                                        text="Paciente comparece à unidade com queixas somáticas difusas (taquicardia, dispneia) sem causa orgânica aparente. Relata estressores familiares recentes. Hipótese diagnóstica: Transtorno de Ansiedade Generalizada (F41.1)."
+                                        showSimplified={showSimplified}
+                                    />
+                                    <div className="flex items-center gap-3 mt-4">
+                                        <div className="flex -space-x-2">
+                                            <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold">EN</div>
+                                        </div>
+                                        <span className="text-xs text-slate-500 font-medium">Enf. Maria Oliveira • Triagem</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Sidebar Stats */}
+                    {/* Right Column: Stats */}
                     <div className="space-y-6">
                         {/* Engagement Panel */}
-                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm" >
                             <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <Trophy size={18} className="text-yellow-500" />
                                 Engajamento Digital
@@ -347,59 +395,61 @@ const PatientDetail: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </div >
 
                         {/* Triage Result Card */}
-                        {quizResult && (
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-                                <div className={`absolute top-0 left-0 w-1 h-full ${quizResult.riskLevel === 'high' ? 'bg-red-500' : quizResult.riskLevel === 'moderate' ? 'bg-yellow-500' : 'bg-green-500'
-                                    }`}></div>
+                        {
+                            quizResult && (
+                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                    <div className={`absolute top-0 left-0 w-1 h-full ${quizResult.riskLevel === 'high' ? 'bg-red-500' : quizResult.riskLevel === 'moderate' ? 'bg-yellow-500' : 'bg-green-500'
+                                        }`}></div>
 
-                                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                    <Activity size={18} className="text-purple-500" />
-                                    Resultado de Triagem
-                                </h3>
+                                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <Activity size={18} className="text-purple-500" />
+                                        Resultado de Triagem
+                                    </h3>
 
-                                <div className="mb-4">
-                                    <div className="flex justify-between items-end mb-1">
-                                        <span className="text-sm font-medium text-slate-600">Pontuação de Sintomas</span>
-                                        <span className={`text-lg font-bold ${quizResult.riskLevel === 'high' ? 'text-red-600' : quizResult.riskLevel === 'moderate' ? 'text-yellow-600' : 'text-green-600'
-                                            }`}>
-                                            {quizResult.score}/{quizResult.totalQuestions}
-                                        </span>
+                                    <div className="mb-4">
+                                        <div className="flex justify-between items-end mb-1">
+                                            <span className="text-sm font-medium text-slate-600">Pontuação de Sintomas</span>
+                                            <span className={`text-lg font-bold ${quizResult.riskLevel === 'high' ? 'text-red-600' : quizResult.riskLevel === 'moderate' ? 'text-yellow-600' : 'text-green-600'
+                                                }`}>
+                                                {quizResult.score}/{quizResult.totalQuestions}
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full ${quizResult.riskLevel === 'high' ? 'bg-red-500' : quizResult.riskLevel === 'moderate' ? 'bg-yellow-500' : 'bg-green-500'
+                                                    }`}
+                                                style={{ width: `${(quizResult.score / quizResult.totalQuestions) * 100}%` }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2">
-                                        <div
-                                            className={`h-2 rounded-full ${quizResult.riskLevel === 'high' ? 'bg-red-500' : quizResult.riskLevel === 'moderate' ? 'bg-yellow-500' : 'bg-green-500'
-                                                }`}
-                                            style={{ width: `${(quizResult.score / quizResult.totalQuestions) * 100}%` }}
-                                        ></div>
-                                    </div>
+
+                                    {quizResult.riskLevel === 'high' && (
+                                        <div className="bg-red-50 p-3 rounded-xl border border-red-100 mb-4">
+                                            <p className="text-xs font-bold text-red-700 flex items-center gap-1 mb-1">
+                                                <AlertTriangle size={12} />
+                                                Alerta de Risco
+                                            </p>
+                                            <p className="text-xs text-red-600 leading-tight">
+                                                Paciente apresenta múltiplos sintomas. Sistema sugere encaminhamento para Grupo de Ansiedade/Depressão.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {quizResult.riskLevel === 'high' && (
+                                        <button className="w-full py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
+                                            Encaminhar para Grupo Agora
+                                        </button>
+                                    )}
+
+                                    <p className="text-[10px] text-slate-400 mt-3 text-center">
+                                        Realizado em {quizResult.createdAt?.seconds ? new Date(quizResult.createdAt.seconds * 1000).toLocaleDateString() : 'Data desconhecida'}
+                                    </p>
                                 </div>
-
-                                {quizResult.riskLevel === 'high' && (
-                                    <div className="bg-red-50 p-3 rounded-xl border border-red-100 mb-4">
-                                        <p className="text-xs font-bold text-red-700 flex items-center gap-1 mb-1">
-                                            <AlertTriangle size={12} />
-                                            Alerta de Risco
-                                        </p>
-                                        <p className="text-xs text-red-600 leading-tight">
-                                            Paciente apresenta múltiplos sintomas. Sistema sugere encaminhamento para Grupo de Ansiedade/Depressão.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {quizResult.riskLevel === 'high' && (
-                                    <button className="w-full py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
-                                        Encaminhar para Grupo Agora
-                                    </button>
-                                )}
-
-                                <p className="text-[10px] text-slate-400 mt-3 text-center">
-                                    Realizado em {quizResult.createdAt?.seconds ? new Date(quizResult.createdAt.seconds * 1000).toLocaleDateString() : 'Data desconhecida'}
-                                </p>
-                            </div>
-                        )}
+                            )
+                        }
 
                         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                             <h3 className="font-bold text-slate-800 mb-4">Grupos Anteriores</h3>
@@ -501,8 +551,8 @@ const PatientDetail: React.FC = () => {
                                     <div key={log.id || index} className="flex flex-col items-center gap-2 group w-full">
                                         <div
                                             className={`w-full max-w-[30px] rounded-t-lg transition-all duration-500 relative group-hover:opacity-80
-                                                ${log.value >= 4 ? 'bg-green-400' : log.value === 3 ? 'bg-yellow-400' : 'bg-red-400'}
-                                            `}
+                                                    ${log.value >= 4 ? 'bg-green-400' : log.value === 3 ? 'bg-yellow-400' : 'bg-red-400'}
+                                                `}
                                             style={{ height: `${(log.value / 5) * 100}%` }}
                                         >
                                             <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
@@ -533,8 +583,8 @@ const PatientDetail: React.FC = () => {
                                         <span
                                             key={tag}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-bold border
-                                                ${count > 2 ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-slate-50 text-slate-600 border-slate-100'}
-                                            `}
+                                                    ${count > 2 ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-slate-50 text-slate-600 border-slate-100'}
+                                                `}
                                         >
                                             {tag} <span className="opacity-60 ml-1">({count})</span>
                                         </span>
@@ -582,7 +632,7 @@ const PatientDetail: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 };
 

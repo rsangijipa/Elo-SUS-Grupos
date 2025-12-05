@@ -4,17 +4,23 @@ import { motivationalQuotes } from '../../data/motivationalQuotes';
 import TTSButton from '../Common/TTSButton';
 import { patientService } from '../../services/patientService';
 import { getCleanName } from '../../utils/stringUtils';
-import { AlertTriangle, Calendar, Activity, CheckCircle2, Sparkles } from 'lucide-react';
+import { AlertTriangle, Calendar, Activity, CheckCircle2, Sparkles, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface AIAgentWelcomeProps {
     role: 'patient' | 'professional';
+    message?: string;
+    loading?: boolean;
 }
 
-const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
+const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role, message, loading }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [analyzing, setAnalyzing] = useState(true);
+    const [internalAnalyzing, setInternalAnalyzing] = useState(true);
+
+    // Use prop loading if provided, otherwise internal state
+    const isAnalyzing = loading !== undefined ? loading : internalAnalyzing;
+
     const [riskCount, setRiskCount] = useState(0);
     const [totalPatients, setTotalPatients] = useState(0);
 
@@ -35,14 +41,12 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
             if (role === 'professional') {
                 try {
                     // Fetch all patients to count risks
-                    // Optimization: In a real large app, this should be a specific count query
                     const patients = await patientService.getAll();
                     const risks = patients.filter(p => p.hasAlert).length;
                     setRiskCount(risks);
                     setTotalPatients(patients.length);
                 } catch (error) {
                     console.error("Error fetching patient data for AI Agent:", error);
-                    // Fallback/Mock if error
                     setRiskCount(3);
                 }
             }
@@ -50,16 +54,17 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
 
         fetchData();
 
-        // Simulate AI "Thinking"
-        const timer = setTimeout(() => {
-            setAnalyzing(false);
-        }, 1500);
-
-        return () => clearTimeout(timer);
-    }, [role]);
+        // Simulate AI "Thinking" ONLY if loading prop is NOT provided
+        if (loading === undefined) {
+            const timer = setTimeout(() => {
+                setInternalAnalyzing(false);
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [role, loading]);
 
     // Content Logic
-    const { quote, avatarUrl, insight } = useMemo(() => {
+    const { quote, avatarUrl, insight, TimeIcon, isDay } = useMemo(() => {
         const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
         const randomAvatarIndex = Math.floor(Math.random() * 4) + 1;
 
@@ -71,23 +76,28 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
         ];
         const randomInsight = insights[Math.floor(Math.random() * insights.length)];
 
+        const currentHour = new Date().getHours();
+        const isDay = currentHour >= 6 && currentHour < 18;
+
         return {
             quote: motivationalQuotes[randomIndex],
             avatarUrl: `/avatar${randomAvatarIndex}.png`,
-            insight: randomInsight
+            insight: message || randomInsight, // Use AI message if available
+            TimeIcon: isDay ? Sun : Moon,
+            isDay
         };
-    }, [cleanName]);
+    }, [cleanName, message]);
 
     // Render Logic
     const isPatient = role === 'patient';
 
     // Theme Configuration
     const theme = isPatient ? {
-        gradient: 'from-[#7A5CFF] to-[#FFB7D5]',
+        gradient: isDay ? 'from-[#7A5CFF] to-[#FFB7D5]' : 'from-[#4B0082] to-[#483D8B]', // Day vs Night Gradient
         shadow: 'shadow-purple-200',
-        textColor: 'text-indigo-900',
-        highlight: 'text-purple-600',
-        iconColor: 'text-purple-500'
+        textColor: isDay ? 'text-indigo-900' : 'text-white', // Text color adaptation
+        highlight: isDay ? 'text-purple-600' : 'text-purple-200',
+        iconColor: isDay ? 'text-purple-500' : 'text-purple-300'
     } : {
         gradient: 'from-[#4E8FFF] to-[#1E2A40]',
         shadow: 'shadow-blue-200',
@@ -103,13 +113,13 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
                 style={{ backgroundSize: '400% 400%', animation: 'gradient-xy 15s ease infinite' }}></div>
 
             {/* Overlay */}
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[4px]"></div>
+            <div className={`absolute inset-0 ${isPatient && !isDay ? 'bg-black/20' : 'bg-white/60'} backdrop-blur-[4px]`}></div>
 
             <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
                 {/* Avatar Section */}
                 <div className="relative flex-shrink-0">
                     {/* Animation Effects */}
-                    {analyzing ? (
+                    {isAnalyzing ? (
                         <div className="absolute inset-0 rounded-full bg-white/50 animate-ping"></div>
                     ) : (
                         isPatient ? (
@@ -122,16 +132,26 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
                     <img
                         src={avatarUrl}
                         alt="AI Agent"
-                        className={`w-28 h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl transform transition-transform duration-700 ${analyzing ? 'scale-95 grayscale' : 'scale-100 hover:scale-105'}`}
+                        className={`w-28 h-28 md:w-36 md:h-36 object-contain drop-shadow-2xl transform transition-transform duration-700 ${isAnalyzing ? 'scale-95 grayscale' : 'scale-100 hover:scale-105'}`}
                     />
 
-                    {/* Status Indicator */}
-                    <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${analyzing ? 'bg-yellow-400 animate-bounce' : 'bg-green-400'}`}></div>
+                    {/* Status Indicator / Time Icon */}
+                    <div className={`absolute bottom-0 right-0 w-8 h-8 rounded-full border-2 border-white flex items-center justify-center bg-white shadow-sm`}>
+                        {isAnalyzing ? (
+                            <div className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce"></div>
+                        ) : (
+                            isPatient ? (
+                                <TimeIcon size={16} className={isDay ? "text-orange-500" : "text-indigo-800"} />
+                            ) : (
+                                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                            )
+                        )}
+                    </div>
                 </div>
 
                 {/* Content Section */}
                 <div className="flex-1 text-center md:text-left w-full">
-                    {analyzing ? (
+                    {isAnalyzing ? (
                         <div className="space-y-3 animate-pulse">
                             <div className="h-8 w-48 bg-gray-300/50 rounded-lg mx-auto md:mx-0"></div>
                             <div className="h-4 w-full max-w-md bg-gray-300/30 rounded mx-auto md:mx-0"></div>
@@ -167,8 +187,8 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
                                             </p>
                                         </div>
                                         <div className="flex items-start gap-2 mt-2 justify-center md:justify-start">
-                                            <p className="text-gray-600 italic text-sm md:text-base">"{quote}"</p>
-                                            <TTSButton text={`${insight} Frase do dia: ${quote}`} size={18} color={theme.iconColor} />
+                                            {!message && <p className={`italic text-sm md:text-base ${isDay ? 'text-gray-600' : 'text-gray-200'}`}>"{quote}"</p>}
+                                            <TTSButton text={`${insight} ${!message ? `Frase do dia: ${quote}` : ''}`} size={18} color={theme.iconColor} />
                                         </div>
                                     </div>
                                 ) : (

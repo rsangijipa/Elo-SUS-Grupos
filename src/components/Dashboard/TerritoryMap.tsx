@@ -1,0 +1,154 @@
+import React, { useState } from 'react';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { Patient } from '../../types/patient';
+import { AlertTriangle, User, MapPin, Activity, ArrowRight } from 'lucide-react';
+import { OrganizationSettings } from '../../config/settings';
+
+const containerStyle = {
+    width: '100%',
+    height: '500px',
+    borderRadius: '1rem'
+};
+
+const defaultCenter = OrganizationSettings.defaultCoordinates || {
+    lat: -9.9133,
+    lng: -63.0408
+};
+
+const options = {
+    disableDefaultUI: false,
+    zoomControl: true,
+    styles: [
+        {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+        }
+    ]
+};
+
+interface TerritoryMapProps {
+    patients: Patient[];
+}
+
+const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [mapError, setMapError] = useState<boolean>(false);
+
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
+        return (
+            <div className="w-full h-[500px] bg-slate-100 rounded-2xl flex flex-col items-center justify-center text-slate-400 p-8 text-center border-2 border-dashed border-slate-200">
+                <MapPin size={48} className="mb-4 opacity-50" />
+                <h3 className="text-lg font-bold text-slate-600">Mapa Indisponível</h3>
+                <p className="max-w-md mt-2">
+                    A chave de API do Google Maps não foi configurada.
+                    Verifique a variável <code className="bg-slate-200 px-1 py-0.5 rounded text-xs text-slate-700">VITE_GOOGLE_MAPS_API_KEY</code> no seu arquivo .env.
+                </p>
+            </div>
+        );
+    }
+
+    if (mapError) {
+        return (
+            <div className="w-full h-[500px] bg-red-50 rounded-2xl flex flex-col items-center justify-center text-red-400 p-8 text-center border border-red-100">
+                <AlertTriangle size={48} className="mb-4 opacity-50" />
+                <h3 className="text-lg font-bold text-red-600">Erro ao carregar o mapa</h3>
+                <p>Verifique sua conexão ou a validade da chave de API.</p>
+            </div>
+        );
+    }
+
+    const getMarkerIcon = (risk: string | undefined) => {
+        // Normalize risk level to lowercase for consistency
+        const safeRisk = (risk || '').toLowerCase();
+
+        let color = 'green';
+        if (safeRisk === 'high') color = 'red';
+        else if (safeRisk === 'medium' || safeRisk === 'attention') color = 'yellow';
+
+        return `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`;
+    };
+
+    return (
+        <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+            <LoadScript
+                googleMapsApiKey={apiKey}
+                onError={() => setMapError(true)}
+            >
+                <GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={defaultCenter}
+                    zoom={13}
+                    options={options}
+                >
+                    {/* Health Unit Marker */}
+                    <Marker
+                        position={defaultCenter}
+                        icon={{
+                            url: 'http://maps.google.com/mapfiles/kml/pal2/icon2.png', // Distinct icon for Unit
+                            scaledSize: new google.maps.Size(40, 40)
+                        }}
+                        title="Unidade de Saúde"
+                    />
+
+                    {/* Patient Markers */}
+                    {patients.map((patient) => (
+                        patient.coordinates && (
+                            <Marker
+                                key={patient.id}
+                                position={patient.coordinates}
+                                icon={getMarkerIcon(patient.riskLevel)}
+                                onClick={() => setSelectedPatient(patient)}
+                            />
+                        )
+                    ))}
+
+                    {/* Info Window */}
+                    {selectedPatient && selectedPatient.coordinates && (
+                        <InfoWindow
+                            position={selectedPatient.coordinates}
+                            onCloseClick={() => setSelectedPatient(null)}
+                        >
+                            <div className="p-2 min-w-[200px]">
+                                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 mb-2">
+                                    <User size={14} className="text-[#0054A6]" />
+                                    {selectedPatient.name}
+                                </h3>
+
+                                <div className="space-y-2 text-xs text-slate-600">
+                                    <p className="flex items-center gap-1">
+                                        <span className="font-bold">Grupo:</span>
+                                        {selectedPatient.tags?.[0] || 'Geral'}
+                                    </p>
+
+                                    {selectedPatient.riskLevel === 'high' && (
+                                        <div className="bg-red-50 text-red-700 p-2 rounded-lg border border-red-100 mt-1">
+                                            <p className="font-bold flex items-center gap-1">
+                                                <AlertTriangle size={10} />
+                                                Alerta IA
+                                            </p>
+                                            <p className="mt-0.5">{selectedPatient.riskSummary || 'Risco de evasão identificado.'}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="pt-2 border-t border-slate-100 mt-2">
+                                        <a
+                                            href={`/patients/${selectedPatient.id}`}
+                                            className="text-[#0054A6] font-bold hover:underline flex items-center gap-1"
+                                        >
+                                            Ver Prontuário <ArrowRight size={12} />
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </InfoWindow>
+                    )}
+                </GoogleMap>
+            </LoadScript>
+        </div>
+    );
+};
+
+export default TerritoryMap;

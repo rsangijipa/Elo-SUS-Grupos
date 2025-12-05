@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Copy, FileText, CheckCircle } from 'lucide-react';
+import { X, Copy, FileText, CheckCircle, Sparkles, AlertTriangle, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DischargeType, DischargeStatus } from '../types/shared';
 import { getDischargeText } from '../services/ReportTemplates';
+import { AIService } from '../services/vertexAI';
 
 interface DischargeModalProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface DischargeModalProps {
     patientName: string;
     groupName: string;
     originUnit: string;
+    distanceToUnit?: number; // Added for TFD analysis
     onConfirm: (data: DischargeData) => void;
 }
 
@@ -24,13 +26,22 @@ export interface DischargeData {
 }
 
 const DischargeModal: React.FC<DischargeModalProps> = ({
-    isOpen, onClose, patientName, groupName, originUnit, onConfirm
+    isOpen, onClose, patientName, groupName, originUnit, distanceToUnit, onConfirm
 }) => {
     const [dischargeType, setDischargeType] = useState<DischargeType>('IMPROVEMENT');
     const [destinationUnit, setDestinationUnit] = useState('');
     const [generatedText, setGeneratedText] = useState('');
     const [patientAware, setPatientAware] = useState(false);
     const [cidSecondary, setCidSecondary] = useState('');
+
+    // AI State
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [aiSuggestion, setAiSuggestion] = useState<{
+        cid: string;
+        risk: 'LOW' | 'MEDIUM' | 'HIGH';
+        tfd: boolean;
+        reasoning: string;
+    } | null>(null);
 
     // Regenera o texto quando as dependências mudam
     useEffect(() => {
@@ -46,6 +57,36 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
     const handleCopy = () => {
         navigator.clipboard.writeText(generatedText);
         toast.success('Texto copiado para a área de transferência!');
+    };
+
+    const handleAnalyzeCase = async () => {
+        if (!generatedText) return;
+
+        setIsAnalyzing(true);
+        // Toast loading? Default toast handles async promises well usually, but we'll manage manually
+        const toastId = toast.loading('Consultando IA...');
+
+        try {
+            const result = await AIService.analyzeClinicalRisk({
+                name: patientName,
+                clinicalNotes: generatedText,
+                group: groupName
+            }, distanceToUnit || 0);
+
+            setAiSuggestion({
+                cid: result.suggestedCID,
+                risk: result.riskLevel,
+                tfd: result.tfdEligible,
+                reasoning: result.reasoning
+            });
+
+            toast.success('Análise concluída!', { id: toastId });
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao analisar caso.', { id: toastId });
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const handleConfirm = () => {
@@ -153,19 +194,85 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
 
                     {/* Preview do Texto */}
                     <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="block text-sm font-semibold text-slate-700">Texto de Orientação (Contrarreferência)</label>
-                            <button onClick={handleCopy} className="text-xs flex items-center gap-1 text-blue-600 hover:underline font-medium">
-                                <Copy size={14} /> Copiar Texto
-                            </button>
+                        <div className="flex justify-between items-end mb-2">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700">Texto de Orientação (Contrarreferência)</label>
+                                <p className="text-xs text-slate-500">Este texto será enviado à UBS de origem.</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleAnalyzeCase}
+                                    disabled={isAnalyzing}
+                                    className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium border border-purple-200"
+                                >
+                                    {isAnalyzing ? (
+                                        <span className="animate-pulse">Analisando...</span>
+                                    ) : (
+                                        <>
+                                            <Sparkles size={14} className="text-purple-600" />
+                                            Analisar com IA
+                                        </>
+                                    )}
+                                </button>
+                                <button onClick={handleCopy} className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors font-medium border border-slate-200">
+                                    <Copy size={14} /> Copiar
+                                </button>
+                            </div>
                         </div>
                         <textarea
                             value={generatedText}
                             onChange={(e) => setGeneratedText(e.target.value)}
-                            rows={5}
-                            className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm leading-relaxed text-slate-700 shadow-inner bg-slate-50"
+                            rows={8}
+                            className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm leading-relaxed text-slate-700 shadow-inner bg-slate-50 resize-y"
                         />
-                        <p className="text-xs text-slate-400 mt-1">Você pode editar este texto manualmente antes de gerar o PDF.</p>
+
+                        {/* AI Feedback Area */}
+                        {aiSuggestion && (
+                            <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    <span className="text-xs font-semibold text-slate-500 mr-2">Sugestões da IA:</span>
+
+                                    {/* CID Suggestion */}
+                                    <button
+                                        onClick={() => setCidSecondary(aiSuggestion.cid)}
+                                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs hover:bg-indigo-100 transition-colors"
+                                        title={aiSuggestion.reasoning}
+                                    >
+                                        <Sparkles size={12} />
+                                        Sugerido: {aiSuggestion.cid}
+                                    </button>
+
+                                    {/* TFD Alert */}
+                                    {aiSuggestion.tfd && (
+                                        <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs">
+                                            <AlertTriangle size={12} />
+                                            Elegível TFD (+50km)
+                                        </div>
+                                    )}
+
+                                    {/* Risk Level */}
+                                    <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-medium
+                                        ${aiSuggestion.risk === 'HIGH' ? 'bg-red-50 text-red-700 border-red-200' :
+                                            aiSuggestion.risk === 'MEDIUM' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                                'bg-green-50 text-green-700 border-green-200'}`}
+                                    >
+                                        Risco {aiSuggestion.risk === 'HIGH' ? 'Alto' : aiSuggestion.risk === 'MEDIUM' ? 'Médio' : 'Baixo'}
+                                    </div>
+
+                                    {/* Location Info (if used) */}
+                                    {distanceToUnit && distanceToUnit > 0 && (
+                                        <div className="inline-flex items-center gap-1 px-2 text-xs text-slate-400">
+                                            <MapPin size={12} />
+                                            {distanceToUnit.toFixed(1)} km
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1 max-w-xl truncate">
+                                    Motivo: {aiSuggestion.reasoning}
+                                </p>
+                            </div>
+                        )}
+
                     </div>
 
                     {/* CID Secundário (Opcional) */}
@@ -219,3 +326,4 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
 };
 
 export default DischargeModal;
+

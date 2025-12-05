@@ -167,29 +167,12 @@ export default function PatientDashboard() {
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex-1 w-full">
                             {/* AI Welcome Message */}
-                            <div className="bg-gradient-to-r from-[#0054A6] to-[#004080] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <MessageCircle size={100} />
-                                </div>
-                                <div className="relative z-10">
-                                    <h1 className="text-2xl font-bold mb-2">Olá, {user?.name?.split(' ')[0]}! 👋</h1>
-                                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 mt-3">
-                                        {msgLoading ? (
-                                            <div className="flex items-center gap-2 text-sm animate-pulse">
-                                                <Sparkles size={16} />
-                                                <span className="font-medium">O EloSUS está preparando sua mensagem do dia...</span>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-start gap-3">
-                                                <Sparkles className="shrink-0 mt-1 text-yellow-300" size={18} />
-                                                <p className="text-sm md:text-base font-medium leading-relaxed">
-                                                    "{message}"
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                            {/* AI Welcome Message (Restored Visual) */}
+                            <AIAgentWelcome
+                                role="patient"
+                                message={message}
+                                loading={msgLoading}
+                            />
                         </div>
                         <button
                             onClick={() => setIsUserCardOpen(true)}
