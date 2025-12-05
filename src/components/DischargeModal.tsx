@@ -1,0 +1,219 @@
+import React, { useState, useEffect } from 'react';
+import { X, Copy, FileText, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { DischargeType, DischargeStatus } from '../types/shared';
+import { getDischargeText } from '../services/ReportTemplates';
+
+interface DischargeModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    patientName: string;
+    groupName: string;
+    originUnit: string;
+    onConfirm: (data: DischargeData) => void;
+}
+
+export interface DischargeData {
+    status: DischargeStatus;
+    dischargeType: DischargeType;
+    dischargeReason: string; // O texto final gerado
+    destinationUnit?: string;
+    cidCodeSecondary?: string;
+    patientAware: boolean;
+}
+
+const DischargeModal: React.FC<DischargeModalProps> = ({
+    isOpen, onClose, patientName, groupName, originUnit, onConfirm
+}) => {
+    const [dischargeType, setDischargeType] = useState<DischargeType>('IMPROVEMENT');
+    const [destinationUnit, setDestinationUnit] = useState('');
+    const [generatedText, setGeneratedText] = useState('');
+    const [patientAware, setPatientAware] = useState(false);
+    const [cidSecondary, setCidSecondary] = useState('');
+
+    // Regenera o texto quando as dependências mudam
+    useEffect(() => {
+        const text = getDischargeText(dischargeType, {
+            NOME_PACIENTE: patientName,
+            NOME_GRUPO: groupName,
+            UBS_ORIGEM: originUnit,
+            DESTINO_SUGERIDO: destinationUnit
+        });
+        setGeneratedText(text);
+    }, [dischargeType, destinationUnit, patientName, groupName, originUnit]);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(generatedText);
+        toast.success('Texto copiado para a área de transferência!');
+    };
+
+    const handleConfirm = () => {
+        if (dischargeType === 'REFERRAL' && !destinationUnit) {
+            toast.error('Informe o destino sugerido para o encaminhamento.');
+            return;
+        }
+        if (!patientAware && dischargeType !== 'ABANDONMENT') {
+            toast.error('Confirme que o paciente está ciente da alta.');
+            return;
+        }
+
+        // Mapeia DischargeType para Status de Enrollment
+        let status: DischargeStatus = 'DISCHARGED';
+        if (dischargeType === 'ABANDONMENT') status = 'DROPOUT';
+        if (dischargeType === 'REFERRAL') status = 'TRANSFERRED';
+        if (dischargeType === 'SHARED_CARE') status = 'SHARED_CARE';
+
+        onConfirm({
+            status,
+            dischargeType,
+            dischargeReason: generatedText,
+            destinationUnit,
+            cidCodeSecondary: cidSecondary,
+            patientAware
+        });
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <FileText size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800">Finalizar Ciclo / Alta</h2>
+                            <p className="text-sm text-slate-500">Geração de Contrarreferência para UBS</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-6">
+
+                    {/* Tipo de Desfecho */}
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Tipo de Desfecho</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setDischargeType('IMPROVEMENT')}
+                                className={`p-3 rounded-lg border text-left transition-all ${dischargeType === 'IMPROVEMENT' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500' : 'border-slate-200 hover:border-emerald-200'}`}
+                            >
+                                <div className="font-bold text-sm">Alta por Melhora</div>
+                                <div className="text-xs opacity-80">Conclusão do ciclo terapêutico</div>
+                            </button>
+
+                            <button
+                                onClick={() => setDischargeType('SHARED_CARE')}
+                                className={`p-3 rounded-lg border text-left transition-all ${dischargeType === 'SHARED_CARE' ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500' : 'border-slate-200 hover:border-blue-200'}`}
+                            >
+                                <div className="font-bold text-sm">Cuidado Compartilhado</div>
+                                <div className="text-xs opacity-80">Manutenção do vínculo com UBS</div>
+                            </button>
+
+                            <button
+                                onClick={() => setDischargeType('REFERRAL')}
+                                className={`p-3 rounded-lg border text-left transition-all ${dischargeType === 'REFERRAL' ? 'border-amber-500 bg-amber-50 text-amber-700 ring-1 ring-amber-500' : 'border-slate-200 hover:border-amber-200'}`}
+                            >
+                                <div className="font-bold text-sm">Encaminhamento</div>
+                                <div className="text-xs opacity-80">Necessidade de maior complexidade</div>
+                            </button>
+
+                            <button
+                                onClick={() => setDischargeType('ABANDONMENT')}
+                                className={`p-3 rounded-lg border text-left transition-all ${dischargeType === 'ABANDONMENT' ? 'border-red-500 bg-red-50 text-red-700 ring-1 ring-red-500' : 'border-slate-200 hover:border-red-200'}`}
+                            >
+                                <div className="font-bold text-sm">Abandono / Evasão</div>
+                                <div className="text-xs opacity-80">Solicitação de Busca Ativa</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Campos Condicionais */}
+                    {dischargeType === 'REFERRAL' && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                            <label className="block text-sm font-semibold text-slate-700 mb-1">Destino Sugerido *</label>
+                            <input
+                                type="text"
+                                value={destinationUnit}
+                                onChange={(e) => setDestinationUnit(e.target.value)}
+                                placeholder="Ex: CAPS II, Ambulatório de Saúde Mental, Neurologia..."
+                                className="w-full p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                            />
+                        </div>
+                    )}
+
+                    {/* Preview do Texto */}
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-semibold text-slate-700">Texto de Orientação (Contrarreferência)</label>
+                            <button onClick={handleCopy} className="text-xs flex items-center gap-1 text-blue-600 hover:underline font-medium">
+                                <Copy size={14} /> Copiar Texto
+                            </button>
+                        </div>
+                        <textarea
+                            value={generatedText}
+                            onChange={(e) => setGeneratedText(e.target.value)}
+                            rows={5}
+                            className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm leading-relaxed text-slate-700 shadow-inner bg-slate-50"
+                        />
+                        <p className="text-xs text-slate-400 mt-1">Você pode editar este texto manualmente antes de gerar o PDF.</p>
+                    </div>
+
+                    {/* CID Secundário (Opcional) */}
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">CID Secundário (Opcional)</label>
+                        <input
+                            type="text"
+                            value={cidSecondary}
+                            onChange={(e) => setCidSecondary(e.target.value)}
+                            placeholder="Ex: F32.2 (Se diferente do grupo)"
+                            className="w-full p-2.5 rounded-lg border border-slate-200 focus:border-blue-500 outline-none text-sm"
+                        />
+                    </div>
+
+                    {/* Checklist */}
+                    {dischargeType !== 'ABANDONMENT' && (
+                        <div className="bg-blue-50 p-4 rounded-lg flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="aware"
+                                checked={patientAware}
+                                onChange={(e) => setPatientAware(e.target.checked)}
+                                className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                            <label htmlFor="aware" className="text-sm text-slate-700 cursor-pointer select-none">
+                                Declaro que o paciente foi <strong>orientado sobre a alta</strong> e compreende a necessidade de manter vínculo com a UBS de origem ou seguir o fluxo de encaminhamento proposto.
+                            </label>
+                        </div>
+                    )}
+
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+                    <button onClick={onClose} className="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleConfirm}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[#0054A6] text-white font-bold rounded-lg hover:bg-[#004080] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <CheckCircle size={18} />
+                        Confirmar e Gerar PDF
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+export default DischargeModal;

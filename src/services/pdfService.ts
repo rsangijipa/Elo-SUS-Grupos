@@ -12,151 +12,236 @@ interface GeneratePdfOptions {
     title?: string;
 }
 
-export const pdfService = {
-    async generatePdf(payload: any) {
-        const response = await fetch(ANVIL_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + btoa(ANVIL_API_KEY + ':')
-            },
-            body: JSON.stringify(payload)
-        });
+import { jsPDF } from "jspdf";
+import { OrganizationSettings } from "../config/settings";
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to generate PDF: ${response.statusText} - ${errorText}`);
+// ... existing imports
+
+export const pdfService = {
+    async generateIdentityCardPdf(user: any, groupName: string) {
+        const doc = new jsPDF();
+
+        // Simulating a card layout
+        doc.setFillColor(240, 240, 250);
+        doc.rect(20, 20, 170, 100, "F");
+        doc.setDrawColor(0, 0, 0);
+        doc.rect(20, 20, 170, 100, "S");
+
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("CARTEIRA DE IDENTIFICAÇÃO - ELOSUS", 105, 40, { align: "center" });
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Participante: ${user.name}`, 30, 60);
+        doc.text(`CNS: ${user.cns || 'Não informado'}`, 30, 70);
+        doc.text(`Grupo: ${groupName}`, 30, 80);
+        doc.text(`Membro desde: ${new Date().toLocaleDateString()}`, 30, 90);
+
+        doc.setFontSize(10);
+        doc.text("Apresente esta carteirinha nas unidades de saúde.", 105, 110, { align: "center" });
+
+        doc.save(`carteirinha_${user.name.split(' ')[0]}.pdf`);
+    },
+
+    async generateClinicalReportPdf(patient: any, moodHistory: any[], quizResult: any) {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        const margin = 20;
+        let y = 20;
+
+        // Cabeçalho Simplificado
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(OrganizationSettings.municipalityName.toUpperCase(), pageWidth / 2, y, { align: "center" });
+        y += 10;
+        doc.setFontSize(16);
+        doc.text("RELATÓRIO CLÍNICO DE SAÚDE MENTAL", pageWidth / 2, y, { align: "center" });
+        y += 15;
+
+        // Dados do Paciente
+        doc.setFontSize(12);
+        doc.text(`Paciente: ${patient.name}`, margin, y);
+        y += 7;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`CNS: ${patient.cns || 'N/A'}`, margin, y);
+        doc.text(`Data de Nasc.: ${patient.birthDate ? new Date(patient.birthDate).toLocaleDateString() : 'N/A'}`, margin + 100, y);
+        y += 15;
+
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 10;
+
+        // Resultado da Triagem
+        if (quizResult) {
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text("Última Triagem / Avaliação", margin, y);
+            y += 7;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Pontuação: ${quizResult.score}/${quizResult.totalQuestions}`, margin, y);
+            doc.text(`Nível de Risco: ${quizResult.riskLevel === 'high' ? 'ALTO' : quizResult.riskLevel === 'moderate' ? 'MÉDIO' : 'BAIXO'}`, margin + 50, y);
+            doc.text(`Data: ${quizResult.createdAt?.seconds ? new Date(quizResult.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}`, margin + 100, y);
+            y += 15;
         }
 
-        return response.blob();
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 10;
+
+        // Histórico de Humor
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Histórico Recente de Humor (Últimos Registros)", margin, y);
+        y += 10;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+
+        if (moodHistory && moodHistory.length > 0) {
+            moodHistory.slice(0, 10).forEach(log => {
+                const date = log.createdAt?.seconds ? new Date(log.createdAt.seconds * 1000).toLocaleDateString() : 'Hoje';
+                const valueMap = ['😡', '😢', '😐', '🙂', '😁'];
+                const labelMap = ['Muito Mal', 'Mal', 'Normal', 'Bem', 'Muito Bem'];
+                // jsPDF might not support emojis well by default without specific fonts, using text labels
+                const label = labelMap[log.value - 1] || log.value;
+
+                doc.text(`${date} - ${label} (${log.value}/5)`, margin, y);
+                if (log.note) {
+                    y += 5;
+                    doc.setFont("helvetica", "italic");
+                    doc.text(`   "${log.note}"`, margin, y);
+                    doc.setFont("helvetica", "normal");
+                }
+                y += 7;
+            });
+        } else {
+            doc.text("Nenhum registro de humor encontrado.", margin, y);
+            y += 10;
+        }
+
+        // Rodapé
+        y = 280;
+        doc.setFontSize(8);
+        doc.text("Gerado automaticamente pelo sistema EloSUS.", pageWidth / 2, y, { align: "center" });
+
+        doc.save(`relatorio_clinico_${patient.name.split(' ')[0]}.pdf`);
     },
 
-    downloadBlob(blob: Blob, filename: string) {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    },
+    generateCounterReferencePDF(patientData: any, dischargeData: any) {
+        const doc = new jsPDF();
 
-    async generateIdentityCardPdf(user: UserProfile, groupName: string) {
-        const css = `
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-            body { font-family: 'Roboto', sans-serif; margin: 0; padding: 0; }
-            .card {
-                width: 100%;
-                max-width: 500px;
-                height: 300px;
-                background: linear-gradient(135deg, #6C4FFE 0%, #4F46E5 100%);
-                color: white;
-                border-radius: 20px;
-                padding: 30px;
-                position: relative;
-                overflow: hidden;
-            }
-            table { width: 100%; border-collapse: collapse; }
-            td { vertical-align: top; }
-            .logo { font-size: 28px; font-weight: bold; letter-spacing: 1px; }
-            .chip {
-                width: 60px;
-                height: 40px;
-                background: rgba(255,255,255,0.2);
-                border-radius: 8px;
-                border: 1px solid rgba(255,255,255,0.3);
-            }
-            .user-info { margin-top: 40px; }
-            .label { font-size: 12px; opacity: 0.8; text-transform: uppercase; margin-bottom: 4px; }
-            .value { font-size: 20px; font-weight: bold; margin-bottom: 20px; }
-            .cns { font-family: monospace; letter-spacing: 3px; font-size: 22px; }
-            .footer { margin-top: 30px; font-size: 12px; opacity: 0.8; text-align: center; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px; }
-        `;
+        // Configurações visuais
+        const pageWidth = doc.internal.pageSize.width;
+        const margin = 20;
+        const contentWidth = pageWidth - (margin * 2);
+        let y = 20;
 
-        const html = `
-            <div class="card">
-                <table>
-                    <tr>
-                        <td><div class="logo">EloSUS</div></td>
-                        <td align="right"><div class="chip"></div></td>
-                    </tr>
-                </table>
-                
-                <div class="user-info">
-                    <table>
-                        <tr>
-                            <td width="60%">
-                                <div class="label">Paciente</div>
-                                <div class="value">${user.name}</div>
-                            </td>
-                            <td width="40%" align="right">
-                                <div class="label">Grupo</div>
-                                <div class="value">${groupName}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <div class="label">Cartão Nacional de Saúde</div>
-                                <div class="value cns">${user.cns || '000 0000 0000 0000'}</div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+        // 1. Cabeçalho
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(OrganizationSettings.municipalityName.toUpperCase(), pageWidth / 2, y, { align: "center" });
+        y += 7;
 
-                <div class="footer">
-                    Carteira Digital do Paciente - Sistema Único de Saúde
-                </div>
-            </div>
-        `;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(OrganizationSettings.healthUnitType.toUpperCase(), pageWidth / 2, y, { align: "center" });
+        y += 5;
+        doc.text("SISTEMA ÚNICO DE SAÚDE - SUS", pageWidth / 2, y, { align: "center" });
+        y += 15;
 
-        const blob = await this.generatePdf({
-            data: { html, css },
-            title: 'Carteirinha Digital'
+        // Linha divisória
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 10;
+
+        // 2. Título
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("RELATÓRIO DE CONTRARREFERÊNCIA", pageWidth / 2, y, { align: "center" });
+        y += 15;
+
+        // 3. Dados de Identificação
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("IDENTIFICAÇÃO DO USUÁRIO", margin, y);
+        y += 7;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Nome: ${patientData.name}`, margin, y);
+        doc.text(`CNS: ${patientData.cns || 'Não informado'}`, margin + 100, y);
+        y += 6;
+        doc.text(`Nome da Mãe: ${patientData.motherName || 'Não informado'}`, margin, y);
+        y += 6;
+        doc.text(`Unidade de Origem: ${patientData.originUnit || 'Não informada'}`, margin, y);
+        y += 10;
+
+        // Linha divisória
+        doc.setLineWidth(0.1);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 10;
+
+        // 4. Relatório / Conduta
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("RELATÓRIO DE EVOLUÇÃO E CONDUTA", margin, y);
+        y += 10;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+
+        const splitText = doc.splitTextToSize(dischargeData.dischargeReason, contentWidth);
+        doc.text(splitText, margin, y);
+        y += (splitText.length * 5) + 10;
+
+        // 5. Situação / Desfecho (Visual Checkboxes)
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text("SITUAÇÃO ATUAL", margin, y);
+        y += 10;
+
+        const options = [
+            { label: "Alta (Conclusão de Ciclo)", checked: dischargeData.dischargeType === 'IMPROVEMENT' },
+            { label: "Manutenção de Vínculo (Cuidado Compartilhado)", checked: dischargeData.dischargeType === 'SHARED_CARE' },
+            { label: "Encaminhamento", checked: dischargeData.dischargeType === 'REFERRAL' },
+            { label: "Evasão / Abandono", checked: dischargeData.dischargeType === 'ABANDONMENT' }
+        ];
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        options.forEach(opt => {
+            const check = opt.checked ? "[ X ]" : "[   ]";
+            doc.text(`${check} ${opt.label}`, margin + 5, y);
+            y += 7;
         });
 
-        this.downloadBlob(blob, `carteirinha_${user.name.split(' ')[0]}.pdf`);
-    },
+        if (dischargeData.destinationUnit) {
+            y += 2;
+            doc.setFont("helvetica", "bold");
+            doc.text(`Destino Sugerido: ${dischargeData.destinationUnit}`, margin + 5, y);
+        }
 
-    async generateClinicalReportPdf(user: UserProfile, moodHistory: any[], quizResults: any) {
-        const moodRows = moodHistory.map(m =>
-            `| ${new Date(m.timestamp).toLocaleDateString()} | ${m.mood} | ${m.tags.join(", ")} |`
-        ).join('\n');
+        // Espaço para rodapé
+        y = 250; // Joga para o final da página
 
-        const markdown = `
-# Relatório de Evolução - EloSUS
+        // 6. Assinatura
+        doc.line(pageWidth / 2 - 40, y, pageWidth / 2 + 40, y);
+        y += 5;
+        doc.setFontSize(9);
+        doc.text("Profissional Responsável", pageWidth / 2, y, { align: "center" });
+        y += 5;
+        doc.text(new Date().toLocaleDateString(), pageWidth / 2, y, { align: "center" });
 
-**Paciente:** ${user.name}  
-**CNS:** ${user.cns || 'N/A'}  
-**Data do Relatório:** ${new Date().toLocaleDateString()}
+        // 7. Rodapé Legal
+        y = 280;
+        doc.setFontSize(7);
+        doc.setTextColor(100);
+        doc.text("Este documento é parte integrante do prontuário do paciente, conforme Resolução CFP nº 01/2009.", pageWidth / 2, y, { align: "center" });
+        doc.text(`Gerado via EloSUS - ${OrganizationSettings.appVersion}`, pageWidth / 2, y + 4, { align: "center" });
 
----
-
-## Histórico de Humor (Últimas Entradas)
-
-| Data | Humor | Tags |
-|------|-------|------|
-${moodRows}
-
----
-
-## Avaliação de Saúde Mental (Última Triagem)
-
-**Score:** ${quizResults?.score || 'N/A'}  
-**Risco:** ${quizResults?.risk || 'N/A'}
-
----
-
-<br><br><br>
-___________________________________________________
-**Assinatura do Profissional Responsável**
-        `;
-
-        const blob = await this.generatePdf({
-            data: { markdown },
-            title: 'Relatório Clínico'
-        });
-
-        this.downloadBlob(blob, `relatorio_${user.name.split(' ')[0]}.pdf`);
+        // Salvar/Download
+        doc.save(`contrarreferencia_${patientData.name.split(' ')[0]}.pdf`);
     }
 };
+

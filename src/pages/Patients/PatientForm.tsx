@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, PlusCircle, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { patientService } from '../../services/patientService';
 import { healthUnitService } from '../../services/healthUnitService';
@@ -8,7 +8,7 @@ import { groupService } from '../../services/groupService';
 import type { Patient } from '../../types/patient';
 import type { HealthUnit } from '../../types/HealthUnit';
 import type { Group } from '../../types/group';
-import { PlusCircle, Users } from 'lucide-react';
+import { validateCNS, formatCNS } from '../../utils/validators';
 
 const PatientForm: React.FC = () => {
     const { id } = useParams();
@@ -22,6 +22,8 @@ const PatientForm: React.FC = () => {
         sexo: 'M',
         cpf: '',
         cns: '',
+        motherName: '', // New field
+        originUnit: '', // New field
         phone: '',
         whatsappResponsavel: '',
         nomeResponsavel: '',
@@ -78,8 +80,6 @@ const PatientForm: React.FC = () => {
     const loadActiveGroups = async () => {
         try {
             const groups = await groupService.getAll();
-            // Filter active groups. If UBS logic exists, filter by UBS too.
-            // For now, just active groups.
             setActiveGroups(groups.filter(g => g.status === 'active'));
         } catch (error) {
             console.error('Error loading groups:', error);
@@ -91,7 +91,7 @@ const PatientForm: React.FC = () => {
         try {
             await groupService.addParticipant(groupId, id);
             toast.success('Paciente adicionado ao grupo com sucesso!');
-            loadActiveGroups(); // Refresh to update counts if needed
+            loadActiveGroups();
         } catch (error) {
             console.error('Error adding to group:', error);
             toast.error('Erro ao adicionar paciente ao grupo. Verifique se há vagas.');
@@ -120,7 +120,6 @@ const PatientForm: React.FC = () => {
         const { name, value } = e.target;
 
         if (name === 'cpf') {
-            // Apply CPF Mask: 000.000.000-00
             let v = value.replace(/\D/g, '');
             if (v.length > 11) v = v.slice(0, 11);
             v = v.replace(/(\d{3})(\d)/, '$1.$2');
@@ -130,12 +129,17 @@ const PatientForm: React.FC = () => {
             return;
         }
 
+        if (name === 'cns') {
+            const formatted = formatCNS(value);
+            setFormData(prev => ({ ...prev, [name]: formatted }));
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate('/pacientes')}
@@ -153,7 +157,6 @@ const PatientForm: React.FC = () => {
                 </div>
             </div>
 
-            {/* Form Card */}
             <form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-2xl border border-slate-100 p-6 md:p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="col-span-1 md:col-span-2">
@@ -208,14 +211,46 @@ const PatientForm: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">CNS</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">CNS *</label>
                         <input
                             type="text"
                             name="cns"
+                            required
                             value={formData.cns}
                             onChange={handleChange}
+                            className={`block w-full rounded-lg border px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 ${formData.cns && !validateCNS(formData.cns)
+                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                                    : 'border-slate-200 bg-slate-50 focus:border-[#0054A6] focus:ring-[#0054A6]'
+                                }`}
+                            placeholder="000 0000 0000 0000"
+                        />
+                        {formData.cns && !validateCNS(formData.cns) && (
+                            <p className="text-xs text-red-500 mt-1">Número de cartão inválido.</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Nome da Mãe *</label>
+                        <input
+                            type="text"
+                            name="motherName"
+                            required
+                            value={formData.motherName}
+                            onChange={handleChange}
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
-                            placeholder="Cartão Nacional de Saúde"
+                            placeholder="Nome completo da mãe"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Unidade de Origem</label>
+                        <input
+                            type="text"
+                            name="originUnit"
+                            value={formData.originUnit}
+                            onChange={handleChange}
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                            placeholder="UBS ou serviço de encaminhamento"
                         />
                     </div>
 
@@ -235,7 +270,6 @@ const PatientForm: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Address Section */}
                     <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-2">
                         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
                             <MapPin size={18} className="text-blue-600" />
@@ -339,7 +373,6 @@ const PatientForm: React.FC = () => {
                         />
                     </div>
 
-                    {/* Active Groups Section - Only visible in Edit Mode */}
                     {id && (
                         <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-6 mt-2">
                             <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -353,11 +386,11 @@ const PatientForm: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                     {activeGroups.map(group => {
                                         const participantCount = group.participants?.length || 0;
-                                        const maxParticipants = group.maxParticipants || 10; // Default to 10 if not set
+                                        const maxParticipants = group.maxParticipants || 10;
                                         const isFull = participantCount >= maxParticipants;
                                         const isParticipating = group.participants?.includes(id);
 
-                                        if (isParticipating) return null; // Don't show if already in group (or maybe show as "Participando")
+                                        if (isParticipating) return null;
 
                                         return (
                                             <div key={group.id} className="border border-slate-200 rounded-xl p-4 flex justify-between items-center hover:border-blue-200 transition-colors bg-slate-50">

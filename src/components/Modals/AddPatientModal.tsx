@@ -13,6 +13,7 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
         name: '',
         cpf: '',
         cns: '',
+        motherName: '',
         birthDate: '',
         phone: '',
         responsible: ''
@@ -25,21 +26,14 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
         addPatient({
             name: formData.name,
             cns: formData.cns,
+            motherName: formData.motherName,
             birthDate: formData.birthDate,
             phone: formData.phone,
             status: 'active',
             cpf: formData.cpf
-            // Assuming Patient type has these fields or we map them.
-            // Let's check Patient type. 
-            // It has: id, name, cns, birthDate, status, groupId, phone.
-            // It does NOT have CPF. I should probably add it or map it.
-            // For now, I'll just store it if possible or ignore it if the type is strict.
-            // Wait, the user explicitly asked for "CPF Field". 
-            // I'll assume I should add it to the Patient type later or map it to something.
-            // Let's stick to the requested UI flow.
         });
         onClose();
-        setFormData({ name: '', cpf: '', cns: '', birthDate: '', phone: '', responsible: '' });
+        setFormData({ name: '', cpf: '', cns: '', motherName: '', birthDate: '', phone: '', responsible: '' });
     };
 
     return (
@@ -87,6 +81,22 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                                 placeholder="000.000.000-00"
                                 value={formData.cpf}
                                 onChange={e => setFormData({ ...formData, cpf: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Mother Name */}
+                    <div className="space-y-1">
+                        <label className="text-sm font-bold text-slate-700">Nome da Mãe</label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-3 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                required
+                                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none"
+                                placeholder="Nome completo da mãe"
+                                value={formData.motherName}
+                                onChange={e => setFormData({ ...formData, motherName: e.target.value })}
                             />
                         </div>
                     </div>

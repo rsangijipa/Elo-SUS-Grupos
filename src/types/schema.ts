@@ -17,6 +17,8 @@ export interface UserProfile {
 
     // Patient specific
     cns?: string;
+    motherName?: string;
+    originUnit?: string;
     emergencyContact?: string;
     address?: string;
     neighborhood?: string;

@@ -152,7 +152,7 @@ export const groupService = {
         }
     },
 
-    removeParticipant: async (groupId: string, participantId: string) => {
+    removeParticipant: async (groupId: string, participantId: string, dischargeData?: any) => {
         try {
             await runTransaction(db, async (transaction) => {
                 const groupRef = doc(db, COLLECTION_NAME, groupId);
@@ -173,11 +173,26 @@ export const groupService = {
                     });
 
                     // Only clear groupId if it matches the current group
-                    if (patientDoc.exists() && patientDoc.data().groupId === groupId) {
-                        transaction.update(patientRef, {
-                            groupId: null, // or deleteField()
+                    if (patientDoc.exists()) {
+                        const updates: any = {
                             updatedAt: serverTimestamp()
-                        });
+                        };
+
+                        if (patientDoc.data().groupId === groupId) {
+                            updates.groupId = null;
+                        }
+
+                        if (dischargeData) {
+                            updates.status = dischargeData.status === 'SHARED_CARE' ? 'active' : (dischargeData.status.toLowerCase() || 'inactive');
+                            updates.lastDischarge = {
+                                ...dischargeData,
+                                groupId,
+                                groupName: groupData.name,
+                                date: new Date().toISOString()
+                            };
+                        }
+
+                        transaction.update(patientRef, updates);
                     }
                 }
             });

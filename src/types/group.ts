@@ -11,6 +11,7 @@ export interface Group {
     room: string;
     protocol: GroupProtocol;
     status: GroupStatus;
+    cidCode?: string; // CID-10 Principal do Grupo
     participants?: string[]; // List of patient IDs
     metrics?: Record<string, any>; // For protocol-specific aggregated data
     protocolConfig?: {

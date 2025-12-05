@@ -27,6 +27,8 @@ import { groupService } from '../../services/groupService';
 import { attendanceService } from '../../services/attendanceService';
 import type { Patient } from '../../types/patient';
 import AddParticipantModal from '../../components/Modals/AddParticipantModal';
+import DischargeModal, { DischargeData } from '../../components/DischargeModal';
+import { pdfService } from '../../services/pdfService';
 
 interface Participant extends Omit<Patient, 'status'> {
     attendanceRate?: number; // Calculated dynamically
@@ -44,6 +46,10 @@ const GroupManagement: React.FC = () => {
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    // Modal States for Discharge
+    const [isDischargeModalOpen, setIsDischargeModalOpen] = useState(false);
+    const [participantToDischarge, setParticipantToDischarge] = useState<Participant | null>(null);
 
     // Messaging
     const [message, setMessage] = useState('');
@@ -113,6 +119,8 @@ const GroupManagement: React.FC = () => {
         }
     };
 
+    // Old removal function, kept for reference or fallback if needed, but replaced by handleRemoveClick
+    /*
     const handleRemoveParticipant = async (participantId: string) => {
         if (!id) return;
         if (window.confirm('Tem certeza que deseja remover este participante do grupo?')) {
@@ -132,6 +140,50 @@ const GroupManagement: React.FC = () => {
                     message: 'Falha ao remover participante.'
                 });
             }
+        }
+    };
+    */
+
+    const handleRemoveClick = (participant: Participant) => {
+        setParticipantToDischarge(participant);
+        setIsDischargeModalOpen(true);
+    };
+
+    const handleConfirmDischarge = async (data: DischargeData) => {
+        if (!id || !participantToDischarge) return;
+
+        try {
+            // 1. Atualizar backend (Remover do grupo + Salvar histórico de alta)
+            await groupService.removeParticipant(id, participantToDischarge.id!, data);
+
+            // 2. Gerar PDF
+            pdfService.generateCounterReferencePDF(
+                {
+                    name: participantToDischarge.name,
+                    cns: participantToDischarge.cns,
+                    motherName: participantToDischarge.motherName,
+                    originUnit: participantToDischarge.originUnit
+                },
+                data
+            );
+
+            // 3. Atualizar UI
+            setParticipants(prev => prev.filter(p => p.id !== participantToDischarge.id));
+            addNotification({
+                type: 'success',
+                title: 'Contrarreferência Gerada',
+                message: 'Participante removido e documento gerado com sucesso.'
+            });
+            setIsDischargeModalOpen(false);
+            setParticipantToDischarge(null);
+
+        } catch (error) {
+            console.error("Error processing discharge:", error);
+            addNotification({
+                type: 'alert',
+                title: 'Erro',
+                message: 'Falha ao processar a alta/remoção.'
+            });
         }
     };
 
@@ -486,9 +538,9 @@ const GroupManagement: React.FC = () => {
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button
-                                                            onClick={() => handleRemoveParticipant(participant.id!)}
+                                                            onClick={() => handleRemoveClick(participant)}
                                                             className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="Remover do Grupo"
+                                                            title="Finalizar Ciclo / Alta"
                                                         >
                                                             <Trash2 size={18} />
                                                         </button>
@@ -698,6 +750,17 @@ const GroupManagement: React.FC = () => {
                 onAdd={handleAddParticipant}
                 currentParticipantIds={participants.map(p => p.id!)}
             />
+
+            {participantToDischarge && (
+                <DischargeModal
+                    isOpen={isDischargeModalOpen}
+                    onClose={() => setIsDischargeModalOpen(false)}
+                    onConfirm={handleConfirmDischarge}
+                    patientName={participantToDischarge.name}
+                    groupName={group?.name || 'Grupo'}
+                    originUnit={participantToDischarge.originUnit || 'Não Informada'}
+                />
+            )}
         </div >
     );
 };

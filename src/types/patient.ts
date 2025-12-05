@@ -4,7 +4,9 @@ export interface Patient {
     birthDate: string; // ISO String or YYYY-MM-DD
     sexo?: 'M' | 'F' | 'Outro';
     cpf?: string;
-    cns?: string;
+    cns: string; // Cartão Nacional de Saúde (Required now per new flow)
+    motherName: string; // Required for homonym distinction
+    originUnit?: string; // UBS de Origem
     email?: string; // Added for user sync
     phone: string;
     status: 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout';
