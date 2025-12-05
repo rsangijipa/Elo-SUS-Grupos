@@ -111,12 +111,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 {/* Active Indicator Strip */}
                                 {active && (
                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl ${item.path === '/dashboard' ? 'bg-blue-500' :
-                                            item.path === '/patients' ? 'bg-green-500' :
-                                                item.path === '/groups' ? 'bg-purple-500' :
-                                                    item.path === '/materials' ? 'bg-orange-500' :
-                                                        item.path === '/reports' ? 'bg-pink-500' :
-                                                            item.path === '/admin' ? 'bg-red-500' :
-                                                                'bg-brand-professional'
+                                        item.path === '/patients' ? 'bg-green-500' :
+                                            item.path === '/groups' ? 'bg-purple-500' :
+                                                item.path === '/materials' ? 'bg-orange-500' :
+                                                    item.path === '/reports' ? 'bg-pink-500' :
+                                                        item.path === '/admin' ? 'bg-red-500' :
+                                                            'bg-brand-professional'
                                         }`}></div>
                                 )}
 
@@ -152,36 +152,34 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* User Footer */}
                 <div className="p-4 border-t border-slate-100 bg-brand-patient-surface">
-                    {/* Profile Simulator (Test Mode) */}
-                    <div className="mb-4 bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">Simulador de Perfil</p>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    switchDevRole('executor'); // Sets as professional
-                                    navigate('/dashboard');
-                                }}
-                                className={`flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'professional' || user?.role === 'admin'
-                                    ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
-                                    : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
-                            >
-                                <Briefcase size={16} />
-                                <span className="text-[10px] font-bold">Profissional</span>
-                            </button>
-                            <button
-                                onClick={() => {
-                                    switchDevRole('patient');
-                                    navigate('/dashboard');
-                                }}
-                                className={`flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all ${user?.role === 'patient'
-                                    ? 'bg-pink-50 border-pink-200 text-pink-700 shadow-sm'
-                                    : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
-                            >
-                                <User size={16} />
-                                <span className="text-[10px] font-bold">Paciente</span>
-                            </button>
+                    {/* Profile Simulator (Test Mode) - ADMIN ONLY */}
+                    {user?.role === 'admin' && (
+                        <div className="mb-4 bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">Simulador de Perfil</p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        switchDevRole('executor'); // Sets as professional
+                                        navigate('/dashboard');
+                                    }}
+                                    className="flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                                >
+                                    <Briefcase size={16} />
+                                    <span className="text-[10px] font-bold">Profissional</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        switchDevRole('patient');
+                                        navigate('/dashboard');
+                                    }}
+                                    className="flex-1 flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
+                                >
+                                    <User size={16} />
+                                    <span className="text-[10px] font-bold">Paciente</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <Link to="/profile" className="block" onClick={() => window.innerWidth < 768 && onClose()}>
                         <div className="bg-white rounded-2xl p-3 flex items-center gap-3 mb-3 cursor-pointer hover:shadow-md transition-all border border-slate-100 group">

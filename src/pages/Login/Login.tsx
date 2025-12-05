@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import TermsModal from '../../components/Auth/TermsModal';
@@ -99,12 +101,22 @@ export default function Login() {
         try {
             if (isLogin) {
                 await login(formData.email, formData.password);
+
+                // RBAC Redirection Logic
+                const userDoc = await getDoc(doc(db, 'users', auth.currentUser!.uid));
+                const userData = userDoc.data();
+
                 addNotification({
                     type: 'success',
                     title: 'Bem-vindo de volta!',
                     message: 'Login realizado com sucesso.'
                 });
-                navigate('/dashboard');
+
+                if (userData?.role === 'admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 await register({
                     name: formData.name,
@@ -227,12 +239,22 @@ export default function Login() {
                                     try {
                                         setIsLoading(true);
                                         await authService.signInWithGoogle();
+
+                                        // RBAC Redirection Logic for Google Login
+                                        const userDoc = await getDoc(doc(db, 'users', auth.currentUser!.uid));
+                                        const userData = userDoc.data();
+
                                         addNotification({
                                             type: 'success',
                                             title: 'Login realizado!',
                                             message: 'Bem-vindo ao EloSUS.'
                                         });
-                                        navigate('/dashboard');
+
+                                        if (userData?.role === 'admin') {
+                                            navigate('/admin');
+                                        } else {
+                                            navigate('/dashboard');
+                                        }
                                     } catch (error: any) {
                                         addNotification({
                                             type: 'alert',
