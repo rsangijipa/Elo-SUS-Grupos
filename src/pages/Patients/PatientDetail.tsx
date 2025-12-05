@@ -7,6 +7,7 @@ import { quizService } from '../../services/quizService';
 import type { QuizResult } from '../../types/quiz';
 import type { Patient } from '../../types/patient';
 import { toast } from 'react-hot-toast';
+import { pdfService } from '../../services/pdfService';
 
 const PatientDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -74,6 +75,20 @@ const PatientDetail: React.FC = () => {
         }
     };
 
+    const handleExportReport = async () => {
+        if (!patient) return;
+
+        try {
+            toast.loading('Gerando relatório...', { id: 'pdf-gen' });
+            // Casting patient to any to avoid strict type mismatch if types differ slightly
+            await pdfService.generateClinicalReportPdf(patient as any, moodHistory, quizResult);
+            toast.success('Relatório gerado com sucesso!', { id: 'pdf-gen' });
+        } catch (error) {
+            console.error('Error generating report:', error);
+            toast.error('Erro ao gerar relatório.', { id: 'pdf-gen' });
+        }
+    };
+
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'emotional'>('overview');
 
@@ -92,7 +107,16 @@ const PatientDetail: React.FC = () => {
                             <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {new Date(patient.birthDate).toLocaleDateString('pt-BR')}</p>
                         </div>
                     </div>
-                    {getRiskBadge()}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleExportReport}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
+                        >
+                            <FileText size={16} className="text-[#0054A6]" />
+                            Exportar Relatório
+                        </button>
+                        {getRiskBadge()}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-50">

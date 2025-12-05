@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/authService';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import TermsModal from '../../components/Auth/TermsModal';
@@ -208,6 +209,46 @@ export default function Login() {
                                 onSubmit={handleSubmit}
                                 onForgotPassword={() => setActiveModal('help')}
                             />
+
+                            {/* Google Login Divider */}
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-slate-200"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-white text-slate-500">ou continue com</span>
+                                </div>
+                            </div>
+
+                            {/* Google Login Button */}
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        setIsLoading(true);
+                                        await authService.signInWithGoogle();
+                                        addNotification({
+                                            type: 'success',
+                                            title: 'Login realizado!',
+                                            message: 'Bem-vindo ao EloSUS.'
+                                        });
+                                        navigate('/dashboard');
+                                    } catch (error: any) {
+                                        addNotification({
+                                            type: 'alert',
+                                            title: 'Erro no login',
+                                            message: error.message || 'Não foi possível entrar com Google.'
+                                        });
+                                    } finally {
+                                        setIsLoading(false);
+                                    }
+                                }}
+                                disabled={isLoading}
+                                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                            >
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                                Entrar com Google
+                            </button>
                         </div>
 
                         {/* Footer Actions */}
