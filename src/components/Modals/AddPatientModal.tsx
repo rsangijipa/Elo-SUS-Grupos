@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, User, Calendar, Phone, FileText, Hash, Save } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useLoadScript } from '@react-google-maps/api';
+import { AddressAutocomplete } from '../Shared/AddressAutocomplete';
+
+const LIBRARIES: ("places")[] = ["places"];
 
 interface AddPatientModalProps {
     isOpen: boolean;
@@ -9,7 +13,6 @@ interface AddPatientModalProps {
 }
 
 export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProps) {
-    const { addPatient } = useData();
     const { addPatient } = useData();
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
@@ -71,10 +74,11 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
     };
 
     const handleUnitSelect = (address: string) => {
-        // Here 'address' is the name/description selected
-        const unitName = address.split(',')[0]; // Simple heuristic: take first part as name
+        const unitName = address.split(',')[0];
         setFormData(prev => ({ ...prev, originUnit: unitName }));
     };
+
+    if (!isLoaded) return null; // Or a spinner
 
     return createPortal(
         <div className="fixed inset-0 flex items-start justify-center z-[9999] animate-fade-in p-4 pt-20 bg-black/50 backdrop-blur-sm" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -192,16 +196,13 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
 
                     {/* Address & Neighborhood */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-bold text-slate-700">Endereço</label>
-                            <input
-                                type="text"
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none"
-                                placeholder="Rua, Número"
-                                value={formData.address}
-                                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                            />
-                        </div>
+                        <AddressAutocomplete
+                            label="Endereço"
+                            type="address"
+                            onSelect={handleAddressSelect}
+                            defaultValue={formData.address}
+                        />
+
                         <div className="space-y-1">
                             <label className="text-sm font-bold text-slate-700">Bairro</label>
                             <input
@@ -215,19 +216,13 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                     </div>
 
                     {/* Origin Unit */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-bold text-slate-700">Unidade de Origem (UBS)</label>
-                        <div className="relative">
-                            <FileText className="absolute left-3 top-3 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none"
-                                placeholder="UBS de referência"
-                                value={formData.originUnit}
-                                onChange={e => setFormData({ ...formData, originUnit: e.target.value })}
-                            />
-                        </div>
-                    </div>
+                    <AddressAutocomplete
+                        label="Unidade de Origem (UBS)"
+                        type="establishment"
+                        placeholder="Pesquisar UBS..."
+                        onSelect={(addr) => handleUnitSelect(addr)} // establishment type returns name/address
+                        defaultValue={formData.originUnit}
+                    />
 
                     {/* Responsible (Optional) */}
                     <div className="space-y-1">
