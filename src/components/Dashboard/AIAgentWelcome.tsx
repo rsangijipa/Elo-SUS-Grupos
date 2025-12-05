@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { motivationalQuotes } from '../../data/motivationalQuotes';
 import TTSButton from '../Common/TTSButton';
 import { patientService } from '../../services/patientService';
+import { getCleanName } from '../../utils/stringUtils';
 import { AlertTriangle, Calendar, Activity, CheckCircle2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,12 +20,7 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role }) => {
 
     // Sanitização de Nome (cleanName logic)
     const cleanName = useMemo(() => {
-        if (!user?.name) return 'Usuário';
-        // Remove email pattern if present (e.g. "name@email.com")
-        const namePart = user.name.split('@')[0];
-        // Get first name, capitalizing first letter
-        const firstName = namePart.split(' ')[0];
-        return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        return getCleanName(user?.name);
     }, [user?.name]);
 
     const lastName = useMemo(() => {

@@ -3,9 +3,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { motivationalQuotes } from '../../data/motivationalQuotes';
 import TTSButton from '../Common/TTSButton';
 
+import { getCleanName } from '../../utils/stringUtils';
+
 const DailyWelcome: React.FC = () => {
     const { user, isLoading } = useAuth();
-    const firstName = user?.name?.split(' ')[0];
+    const firstName = getCleanName(user?.name);
 
     // Lógica de Seleção Aleatória por Sessão
     const { quote, avatarUrl } = useMemo(() => {

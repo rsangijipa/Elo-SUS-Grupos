@@ -1,7 +1,11 @@
 import { User } from '../types/user';
 
-const ANVIL_API_KEY = 'acTY02yb4IUkmYwueBsliWDLQVAIokK1';
+const ANVIL_API_KEY = import.meta.env.VITE_ANVIL_API_KEY;
 const ANVIL_URL = 'https://app.useanvil.com/api/v1/generate-pdf';
+
+if (!ANVIL_API_KEY) {
+    console.error("Anvil API Key missing! Check your .env file.");
+}
 
 interface GeneratePdfOptions {
     data: any;

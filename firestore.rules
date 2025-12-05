@@ -2,46 +2,74 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Função auxiliar para verificar se é admin
+    // --- FUNÇÕES AUXILIARES ---
+    
+    // Verifica se o usuário é o dono do documento (pelo ID do Auth)
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Verifica se é Admin (lê o campo role do banco de dados)
     function isAdmin() {
       return request.auth != null && 
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // --- REGRAS DE USUÁRIOS (SECURE) ---
-    match /users/{userId} {
-      // Qualquer logado pode ler perfis (necessário para grupos, mural, etc)
-      allow read: if request.auth != null;
-      
-      // O usuário só pode criar/editar SE o ID do documento for igual ao UID dele
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Permite atualizar dados, mas BLOQUEIA mudar o campo 'role' (a menos que seja Admin)
-      allow update: if (request.auth != null && request.auth.uid == userId && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))) 
-                    || isAdmin();
-                    
-      // Admin pode fazer tudo
-      allow write: if isAdmin();
+    // Verifica se é Profissional
+    function isProfessional() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'professional';
     }
 
-    // --- REGRAS DE GRUPOS E CHAT ---
-    match /grupos/{groupId} {
-      allow read, write: if request.auth != null;
+    // --- REGRAS DA COLEÇÃO DE USUÁRIOS ---
+    match /users/{userId} {
+      // Leitura: Todos logados podem ler perfis básicos (essencial para renderizar nomes em grupos/chat)
+      allow read: if request.auth != null;
       
-      match /messages/{messageId} {
-        allow read, write: if request.auth != null;
+      // Criação: Só o próprio usuário pode criar seu perfil no primeiro login
+      allow create: if isOwner(userId);
+      
+      // Atualização: O dono pode editar seus dados, MAS...
+      // A regra abaixo impede que ele mude o campo 'role' ou 'isAdmin' para tentar virar admin
+      allow update: if isOwner(userId) 
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isAdmin']));
+
+      // --- SUBCOLEÇÕES DO USUÁRIO (Mood Tracker, Quiz, Conquistas, Notificações) ---
+      // A sintaxe {document=**} libera qualquer subcoleção aninhada dentro do usuário
+      match /{document=**} {
+        allow read, write: if isOwner(userId);
       }
     }
 
-    // --- OUTRAS COLEÇÕES (Permissivas para Dev) ---
-    // Adicione aqui outras coleções conforme necessário
-    match /daily_logs/{document=**} { allow read, write: if request.auth != null; }
-    match /mood_logs/{document=**} { allow read, write: if request.auth != null; }
-    match /appointments/{document=**} { allow read, write: if request.auth != null; }
-    match /referrals/{document=**} { allow read, write: if request.auth != null; }
-    match /tobacco_anamnesis/{document=**} { allow read, write: if request.auth != null; }
-    match /gamification/{document=**} { allow read, write: if request.auth != null; }
-    match /feedback/{document=**} { allow read, write: if request.auth != null; }
-    
+    // --- REGRAS PARA GRUPOS E MATERIAIS ---
+    match /groups/{groupId} {
+      // Todos os usuários logados podem ver os grupos (para listar na Dashboard)
+      allow read: if request.auth != null;
+      
+      // Apenas Profissionais e Admins podem criar ou editar grupos
+      allow create, update, delete: if isAdmin() || isProfessional();
+      
+      // Subcoleções de grupos (ex: chat, posts)
+      match /{document=**} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null; // Refinar depois para membros do grupo
+      }
+    }
+
+    match /materials/{materialId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    // --- REGRAS PARA DIAGNÓSTICO DE SAÚDE (System Health) ---
+    match /_health_check/{docId} {
+      // Permite leitura e escrita para testes de latência e socket
+      allow read, write: if request.auth != null;
+    }
+
+    // Regra padrão de negação (segurança por padrão)
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

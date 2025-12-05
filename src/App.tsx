@@ -29,6 +29,7 @@ const AnamnesisPage = lazy(() => import('./pages/Anamnesis/AnamnesisPage'));
 const GroupManagement = lazy(() => import('./pages/Groups/GroupManagement'));
 const DeveloperTools = lazy(() => import('./pages/Developer/DeveloperTools'));
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const SystemHealth = lazy(() => import('./pages/Admin/SystemHealth'));
 const MyGroup = lazy(() => import('./pages/MyGroup/MyGroup'));
 
 import RoleGuard from './components/Auth/RoleGuard';
@@ -137,6 +138,11 @@ function App() {
                       <Route path="developer" element={
                         <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
                           <DeveloperTools />
+                        </RoleGuard>
+                      } />
+                      <Route path="admin/health" element={
+                        <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                          <SystemHealth />
                         </RoleGuard>
                       } />
                     </Route>

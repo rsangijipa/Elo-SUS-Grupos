@@ -4,6 +4,8 @@ import { Printer } from 'lucide-react';
 import { pdfService } from '../../services/pdfService';
 import { User } from '../../types/user';
 
+import { getCleanName } from '../../utils/stringUtils';
+
 interface GroupIdentityCardProps {
     patientName: string;
     groupName: string;
@@ -33,9 +35,7 @@ const GroupIdentityCard: React.FC<GroupIdentityCardProps> = ({
         }
     };
 
-    const cleanName = patientName
-        ? patientName.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '').trim()
-        : 'Nome do Paciente';
+    const cleanName = getCleanName(patientName);
 
     return (
         <div className="relative w-full max-w-md h-56 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#7A5CFF] via-[#6c4df0] to-[#4E8FFF] backdrop-blur-md border border-white/20 transition-transform hover:scale-[1.02] duration-300 text-white mx-auto">
