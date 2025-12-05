@@ -5,16 +5,16 @@
   - generic:
     - generic:
       - generic:
-        - generic:
-          - img "Conexão em grupo!"
-        - generic:
-          - heading "Conexão em grupo!" [level=2]
-          - paragraph: Grupos terapêuticos ativos. Não caminhe sozinho.
-      - generic:
-        - img "Inteligência Emocional" [ref=e11]
+        - img "Conexão em grupo!" [ref=e11]
         - generic [ref=e12]:
-          - heading "Inteligência Emocional" [level=2] [ref=e13]
-          - paragraph [ref=e14]: Monitore seu humor e receba insights vitais.
+          - heading "Conexão em grupo!" [level=2] [ref=e13]
+          - paragraph [ref=e14]: Grupos terapêuticos ativos. Não caminhe sozinho.
+      - generic:
+        - generic:
+          - img "Inteligência Emocional"
+        - generic:
+          - heading "Inteligência Emocional" [level=2]
+          - paragraph: Monitore seu humor e receba insights vitais.
       - generic:
         - generic:
           - img "Sua Jornada Valorizada"
