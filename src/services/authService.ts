@@ -40,12 +40,12 @@ export const authService = {
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
-                // Create new user document
+                // Create new user document using setDoc with specific UID (Security Rule Requirement)
                 await setDoc(userDocRef, {
                     uid: user.uid,
                     email: user.email,
                     name: user.displayName || 'Usuário Google',
-                    avatar: user.photoURL || null,
+                    avatar: user.photoURL || null, // Using 'avatar' to match User type
                     role: 'patient', // Default role
                     createdAt: new Date().toISOString()
                 });

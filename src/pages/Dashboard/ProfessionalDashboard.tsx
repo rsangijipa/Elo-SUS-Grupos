@@ -10,6 +10,7 @@ import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
 import HealthRadar from '../../components/Dashboard/HealthRadar';
 import HeatmapWidget from '../../components/Dashboard/HeatmapWidget';
 import { moodService, MoodLog } from '../../services/moodService';
+import AIAgentWelcome from '../../components/Dashboard/AIAgentWelcome';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -174,6 +175,7 @@ const ProfessionalDashboard: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-fade-in">
+            <AIAgentWelcome role="professional" />
             {/* Header with Tabs */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex bg-slate-100 p-1 rounded-xl w-fit">

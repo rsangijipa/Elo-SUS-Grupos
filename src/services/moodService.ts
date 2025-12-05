@@ -17,6 +17,7 @@ export interface MoodLog {
     value: 1 | 2 | 3 | 4 | 5; // 1: Angry, 2: Sad, 3: Neutral, 4: Happy, 5: Very Happy
     tags: string[];
     note?: string;
+    aiAnalysis?: any; // Stores the JSON result from Gemini
     relatedGroupId?: string;
     createdAt: any;
 }

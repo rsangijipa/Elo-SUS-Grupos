@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
 import { tobaccoService } from '../../services/tobaccoService';
 import { toast } from 'react-hot-toast';
-import DailyWelcome from '../../components/Dashboard/DailyWelcome';
+import AIAgentWelcome from '../../components/Dashboard/AIAgentWelcome';
 import DailyChallenge from '../../components/Dashboard/DailyChallenge';
 import MoodTracker from '../../components/Widgets/MoodTracker';
 
@@ -165,7 +165,7 @@ export default function PatientDashboard() {
                 <section className="space-y-6">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex-1 w-full">
-                            <DailyWelcome />
+                            <AIAgentWelcome role="patient" />
                         </div>
                         <button
                             onClick={() => setIsUserCardOpen(true)}
