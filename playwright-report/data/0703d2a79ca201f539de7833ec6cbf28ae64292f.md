@@ -66,9 +66,9 @@
                 - generic [ref=e95]:
                   - paragraph [ref=e97]:
                     - img [ref=e98]
-                    - text: Vi que sua energia está ótima hoje, Maria!
+                    - text: Que tal ouvir um áudio relaxante hoje?
                   - generic [ref=e100]:
-                    - paragraph [ref=e101]: "\"Uma frase pra reforçar sua força: buscar serviços de saúde é coragem, não fraqueza.\""
+                    - paragraph [ref=e101]: "\"Preparei um lembrete importante: é ok não estar ok.\""
                     - button "Ouvir texto" [ref=e102]:
                       - img [ref=e103]
             - button "Acesso Premium Carteirinha Digital EloSUS" [ref=e107]:
