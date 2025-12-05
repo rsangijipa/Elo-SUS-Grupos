@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e8]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img "Conexão em grupo!"
+        - generic:
+          - heading "Conexão em grupo!" [level=2]
+          - paragraph: Grupos terapêuticos ativos. Não caminhe sozinho.
+      - generic:
+        - img "Inteligência Emocional" [ref=e11]
+        - generic [ref=e12]:
+          - heading "Inteligência Emocional" [level=2] [ref=e13]
+          - paragraph [ref=e14]: Monitore seu humor e receba insights vitais.
+      - generic:
+        - generic:
+          - img "Sua Jornada Valorizada"
+        - generic:
+          - heading "Sua Jornada Valorizada" [level=2]
+          - paragraph: Gamificação e conquistas para celebrar cada passo.
+      - generic [ref=e15]:
+        - button "Go to slide 1" [ref=e16]
+        - button "Go to slide 2" [ref=e17]
+        - button "Go to slide 3" [ref=e18]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - img "EloSUS Logo" [ref=e23]
+        - heading "EloSUS Grupos" [level=1] [ref=e24]
+      - heading "Entre no seu espaço" [level=2] [ref=e25]
+      - paragraph [ref=e26]: Escolha seu perfil para continuar.
+    - generic [ref=e27]:
+      - button "Paciente" [ref=e28]:
+        - img [ref=e29]
+        - text: Paciente
+      - button "Profissional" [ref=e32]:
+        - img [ref=e33]
+        - text: Profissional
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: E-mail
+          - generic [ref=e39]:
+            - img [ref=e40]
+            - textbox "seu.email@exemplo.com" [ref=e43]: joao.silva@email.com
+        - generic [ref=e44]:
+          - generic [ref=e45]: Senha
+          - generic [ref=e46]:
+            - img [ref=e47]
+            - textbox "••••••••" [ref=e50]: password123
+            - button [ref=e51]:
+              - img [ref=e52]
+        - button "Esqueceu a senha?" [ref=e56]
+        - button "Acessar Sistema" [ref=e57]:
+          - text: Acessar Sistema
+          - img [ref=e58]
+      - generic [ref=e64]: ou continue com
+      - button "Google Entrar com Google" [ref=e65]:
+        - img "Google" [ref=e66]
+        - text: Entrar com Google
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - text: Ainda não tem cadastro?
+        - button "Cadastre-se" [ref=e69]
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - button "Termos de Uso" [ref=e72]
+          - button "Privacidade" [ref=e73]
+          - button "Ajuda" [ref=e74]
+        - paragraph [ref=e75]: © 2025 EloSUS Grupos - Todos os direitos reservados
+```

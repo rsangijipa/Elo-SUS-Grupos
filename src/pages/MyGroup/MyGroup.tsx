@@ -17,8 +17,39 @@ const MyGroup: React.FC = () => {
         { id: 5, date: '30/12', title: 'Prevenção de Recaída', status: 'future' },
     ];
 
+    const handleJoinDebugGroup = async () => {
+        try {
+            const groups = await import('../../services/groupService').then(m => m.groupService.getAll());
+            if (groups.length > 0) {
+                const group = groups[0];
+                if (user?.id) {
+                    await import('../../services/groupService').then(m => m.groupService.addParticipant(group.id, user.id));
+                    window.location.reload(); // Force reload to update context
+                }
+            } else {
+                alert('Nenhum grupo encontrado para entrar.');
+            }
+        } catch (error) {
+            console.error('Erro ao entrar no grupo:', error);
+            alert('Erro ao entrar no grupo.');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#F8F9FC] pb-20 md:pb-8">
+            {/* DEBUG: Join Group Button if no group */}
+            {(!user?.groupId && !user?.currentGroupId) && (
+                <div className="bg-yellow-100 p-4 text-center">
+                    <p className="text-yellow-800 mb-2">Você não está em nenhum grupo.</p>
+                    <button
+                        onClick={handleJoinDebugGroup}
+                        className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-yellow-600"
+                    >
+                        Entrar no Grupo de Teste (Debug)
+                    </button>
+                </div>
+            )}
+
             {/* 1. HERO SECTION */}
             <div className="bg-gradient-to-r from-[#7A5CFF] to-[#4E8FFF] text-white pt-8 pb-16 px-6 md:px-12 rounded-b-[3rem] shadow-lg relative overflow-hidden">
                 {/* Background Patterns */}

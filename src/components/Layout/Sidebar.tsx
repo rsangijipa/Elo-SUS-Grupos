@@ -38,7 +38,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     const patientMenuItems = [
         { path: '/dashboard', label: 'Meu Espaço', icon: LayoutDashboard },
-        { path: '/groups', label: 'Meu Grupo', icon: Heart }, // Mapping /my-group to /groups for now
+        { path: '/my-group', label: 'Meu Grupo', icon: Heart },
         { path: '/materials', label: 'Materiais', icon: FileText },
         { path: '/reports', label: 'Minha Jornada', icon: Activity } // Mapping /progress to /reports
     ];
@@ -61,6 +61,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             case '/dashboard': return 'text-blue-600';
             case '/patients': return 'text-green-600';
             case '/groups': return 'text-purple-600';
+            case '/my-group': return 'text-purple-600';
             case '/materials': return 'text-orange-600';
             case '/reports': return 'text-pink-600';
             case '/admin': return 'text-red-600';
