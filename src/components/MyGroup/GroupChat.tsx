@@ -1,47 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MoreVertical, Flag, Smile, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { chatService, ChatMessage } from '../../services/chatService';
 
-interface Message {
-    id: string;
-    userId: string;
-    userName: string;
-    userAvatar?: string;
-    text: string;
-    createdAt: Date;
-    isMe: boolean;
+interface GroupChatProps {
+    groupId?: string;
 }
 
-const MOCK_MESSAGES: Message[] = [
-    {
-        id: '1',
-        userId: 'other1',
-        userName: 'Maria Silva',
-        text: 'Bom dia pessoal! Alguém conseguiu fazer o exercício de respiração ontem?',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        isMe: false
-    },
-    {
-        id: '2',
-        userId: 'other2',
-        userName: 'João Santos',
-        text: 'Eu tentei, mas tive um pouco de dificuldade no começo. Depois melhorou.',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1.8),
-        isMe: false
-    },
-    {
-        id: '3',
-        userId: 'me',
-        userName: 'Você',
-        text: 'Pra mim funcionou super bem antes de dormir!',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1.5),
-        isMe: true
-    }
-];
-
-const GroupChat: React.FC = () => {
+const GroupChat: React.FC<GroupChatProps> = ({ groupId }) => {
     const { user } = useAuth();
-    const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -53,28 +21,50 @@ const GroupChat: React.FC = () => {
         scrollToBottom();
     }, [messages]);
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    useEffect(() => {
+        if (!groupId) return;
+
+        const unsubscribe = chatService.subscribeToMessages(groupId, (newMessages) => {
+            setMessages(newMessages);
+        });
+
+        return () => unsubscribe();
+    }, [groupId]);
+
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim()) return;
+        if (!newMessage.trim() || !groupId || !user) return;
 
-        const msg: Message = {
-            id: Date.now().toString(),
-            userId: user?.id || 'me',
-            userName: user?.name || 'Você',
-            userAvatar: user?.avatar,
-            text: newMessage,
-            createdAt: new Date(),
-            isMe: true
-        };
-
-        setMessages([...messages, msg]);
-        setNewMessage('');
+        try {
+            await chatService.sendMessage(groupId, {
+                userId: user.id,
+                userName: user.name,
+                userAvatar: user.avatar,
+                text: newMessage,
+            });
+            setNewMessage('');
+        } catch (error) {
+            console.error("Error sending message:", error);
+            // Optionally add error handling UI here
+        }
     };
 
     const handleReport = (msgId: string) => {
         // In a real app, this would send a report to Firestore
         alert(`Mensagem ${msgId} denunciada para a administração.`);
     };
+
+    if (!groupId) {
+        return (
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col h-[600px] items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                    <User className="text-slate-400" size={32} />
+                </div>
+                <h3 className="text-slate-800 font-bold mb-2">Você não está em um grupo</h3>
+                <p className="text-slate-500 text-sm">Aguarde ser adicionado a um grupo para participar do chat.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col h-[600px] overflow-hidden">
@@ -100,47 +90,50 @@ const GroupChat: React.FC = () => {
                     </span>
                 </div>
 
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`flex gap-3 ${msg.isMe ? 'flex-row-reverse' : 'flex-row'}`}
-                    >
-                        {/* Avatar */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${msg.isMe ? 'bg-brand-patient text-white' : 'bg-white border border-slate-200 text-slate-600'
-                            }`}>
-                            {msg.userAvatar || <User size={14} />}
-                        </div>
-
-                        {/* Message Bubble */}
-                        <div className={`group relative max-w-[80%] ${msg.isMe
-                            ? 'bg-brand-patient text-white rounded-2xl rounded-tr-none'
-                            : 'bg-white border border-slate-100 text-slate-700 rounded-2xl rounded-tl-none shadow-sm'
-                            } p-3`}>
-
-                            {!msg.isMe && (
-                                <p className="text-[10px] font-bold text-brand-patient mb-1">{msg.userName}</p>
-                            )}
-
-                            <p className="text-sm leading-relaxed">{msg.text}</p>
-
-                            <span className={`text-[10px] block text-right mt-1 ${msg.isMe ? 'text-white/70' : 'text-slate-400'
+                {messages.map((msg) => {
+                    const isMe = msg.userId === user?.id;
+                    return (
+                        <div
+                            key={msg.id}
+                            className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+                        >
+                            {/* Avatar */}
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isMe ? 'bg-brand-patient text-white' : 'bg-white border border-slate-200 text-slate-600'
                                 }`}>
-                                {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                                {msg.userAvatar || <User size={14} />}
+                            </div>
 
-                            {/* Report Action (Only for others) */}
-                            {!msg.isMe && (
-                                <button
-                                    onClick={() => handleReport(msg.id)}
-                                    className="absolute -right-8 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500"
-                                    title="Denunciar mensagem"
-                                >
-                                    <Flag size={14} />
-                                </button>
-                            )}
+                            {/* Message Bubble */}
+                            <div className={`group relative max-w-[80%] ${isMe
+                                ? 'bg-brand-patient text-white rounded-2xl rounded-tr-none'
+                                : 'bg-white border border-slate-100 text-slate-700 rounded-2xl rounded-tl-none shadow-sm'
+                                } p-3`}>
+
+                                {!isMe && (
+                                    <p className="text-[10px] font-bold text-brand-patient mb-1">{msg.userName}</p>
+                                )}
+
+                                <p className="text-sm leading-relaxed">{msg.text}</p>
+
+                                <span className={`text-[10px] block text-right mt-1 ${isMe ? 'text-white/70' : 'text-slate-400'
+                                    }`}>
+                                    {msg.createdAt?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+
+                                {/* Report Action (Only for others) */}
+                                {!isMe && (
+                                    <button
+                                        onClick={() => handleReport(msg.id!)}
+                                        className="absolute -right-8 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500"
+                                        title="Denunciar mensagem"
+                                    >
+                                        <Flag size={14} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
                 <div ref={messagesEndRef} />
             </div>
 

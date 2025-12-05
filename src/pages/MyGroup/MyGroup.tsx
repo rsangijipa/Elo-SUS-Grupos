@@ -78,8 +78,8 @@ const MyGroup: React.FC = () => {
                                         <div key={session.id} className="relative pl-12 group">
                                             {/* Status Dot */}
                                             <div className={`absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm z-10 ${session.status === 'completed' ? 'bg-green-100 text-green-600' :
-                                                    session.status === 'next' ? 'bg-[#7A5CFF] text-white ring-4 ring-[#7A5CFF]/20' :
-                                                        'bg-slate-100 text-slate-400'
+                                                session.status === 'next' ? 'bg-[#7A5CFF] text-white ring-4 ring-[#7A5CFF]/20' :
+                                                    'bg-slate-100 text-slate-400'
                                                 }`}>
                                                 {session.status === 'completed' ? <CheckCircle2 size={18} /> :
                                                     session.status === 'next' ? <Clock size={18} className="animate-pulse" /> :
@@ -88,8 +88,8 @@ const MyGroup: React.FC = () => {
 
                                             {/* Content Card */}
                                             <div className={`p-4 rounded-2xl transition-all ${session.status === 'next'
-                                                    ? 'bg-gradient-to-r from-[#7A5CFF]/5 to-purple-50 border border-[#7A5CFF]/20 shadow-md'
-                                                    : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'
+                                                ? 'bg-gradient-to-r from-[#7A5CFF]/5 to-purple-50 border border-[#7A5CFF]/20 shadow-md'
+                                                : 'hover:bg-slate-50 border border-transparent hover:border-slate-100'
                                                 }`}>
                                                 <div className="flex justify-between items-start mb-1">
                                                     <span className={`text-xs font-bold ${session.status === 'next' ? 'text-[#7A5CFF]' : 'text-slate-400'
@@ -103,8 +103,8 @@ const MyGroup: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <h3 className={`font-bold ${session.status === 'completed' ? 'text-slate-600 line-through decoration-slate-300' :
-                                                        session.status === 'next' ? 'text-[#7A5CFF] text-lg' :
-                                                            'text-slate-500'
+                                                    session.status === 'next' ? 'text-[#7A5CFF] text-lg' :
+                                                        'text-slate-500'
                                                     }`}>
                                                     {session.title}
                                                 </h3>
@@ -171,7 +171,7 @@ const MyGroup: React.FC = () => {
                         </div>
 
                         {/* CHAT MODULE */}
-                        <GroupChat />
+                        <GroupChat groupId={user?.currentGroupId || user?.groupId} />
                     </div>
                 </div>
 

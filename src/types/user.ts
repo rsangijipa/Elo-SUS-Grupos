@@ -35,6 +35,8 @@ export interface User {
     nomeResponsavel?: string;
     status?: 'active' | 'waiting' | 'inactive' | 'discharged' | 'dropout';
     active?: boolean; // For system access control
+    groupId?: string;
+    currentGroupId?: string;
 
     // Gamification
     stats?: {
