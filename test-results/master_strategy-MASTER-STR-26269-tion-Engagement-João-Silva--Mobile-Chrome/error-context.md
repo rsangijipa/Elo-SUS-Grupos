@@ -8,38 +8,38 @@
       - status [ref=e14]: "Login realizado: Bem-vindo de volta!"
     - generic [ref=e15]:
       - complementary [ref=e16]:
-        - link "EloSUS EloSUS Grupos" [ref=e18]:
+        - link "EloSUS EloSUS Grupos" [ref=e18] [cursor=pointer]:
           - /url: /dashboard
           - img "EloSUS" [ref=e19]
           - generic [ref=e20]:
             - generic [ref=e21]: EloSUS
             - generic [ref=e22]: Grupos
         - navigation [ref=e23]:
-          - link "Meu Espaço" [ref=e24]:
+          - link "Meu Espaço" [ref=e24] [cursor=pointer]:
             - /url: /dashboard
             - img [ref=e26]
             - generic [ref=e31]: Meu Espaço
-          - link "Meu Grupo" [ref=e32]:
+          - link "Meu Grupo" [ref=e32] [cursor=pointer]:
             - /url: /my-group
             - img [ref=e33]
             - generic [ref=e35]: Meu Grupo
-          - link "Materiais" [ref=e36]:
+          - link "Materiais" [ref=e36] [cursor=pointer]:
             - /url: /materials
             - img [ref=e37]
             - generic [ref=e40]: Materiais
-          - link "Minha Jornada" [ref=e41]:
+          - link "Minha Jornada" [ref=e41] [cursor=pointer]:
             - /url: /reports
             - img [ref=e42]
             - generic [ref=e44]: Minha Jornada
-          - link "Central de Ajuda" [ref=e46]:
+          - link "Central de Ajuda" [ref=e46] [cursor=pointer]:
             - /url: /support
             - img [ref=e47]
             - text: Central de Ajuda
         - generic [ref=e54]:
           - text: // ... (inside return)
-          - link "JS João Silva Paciente" [ref=e55]:
+          - link "JS João Silva Paciente" [ref=e55] [cursor=pointer]:
             - /url: /profile
-            - generic [ref=e56] [cursor=pointer]:
+            - generic [ref=e56]:
               - generic [ref=e57]: JS
               - generic [ref=e58]:
                 - paragraph [ref=e59]: João Silva
@@ -99,8 +99,8 @@
                       - paragraph [ref=e149]: Pequenas vitórias diárias
                     - generic [ref=e150]: +50 XP
                   - generic [ref=e151]:
-                    - heading "Hidratação Consciente" [level=4] [ref=e152]
-                    - paragraph [ref=e153]: Beba um copo de água prestando atenção em cada gole, na temperatura e na sensação.
+                    - heading "Alongamento Rápido" [level=4] [ref=e152]
+                    - paragraph [ref=e153]: Faça um alongamento simples de 2 minutos para soltar os ombros e pescoço.
                   - button "Completei o Desafio!" [ref=e154]:
                     - img [ref=e155]
                     - text: Completei o Desafio!

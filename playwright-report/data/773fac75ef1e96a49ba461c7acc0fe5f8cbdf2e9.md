@@ -66,9 +66,9 @@
                 - generic [ref=e99]:
                   - paragraph [ref=e101]:
                     - img [ref=e102]
-                    - text: Sua jornada tem sido inspiradora. Continue assim!
+                    - text: Que tal ouvir um áudio relaxante hoje?
                   - generic [ref=e104]:
-                    - paragraph [ref=e105]: "\"Uma frase pra reforçar sua força: buscar serviços de saúde é coragem, não fraqueza.\""
+                    - paragraph [ref=e105]: "\"Mantra do dia: eu dou conta do meu hoje.\""
                     - button "Ouvir texto" [ref=e106]:
                       - img [ref=e107]
             - button "Acesso Premium Carteirinha Digital EloSUS" [ref=e111]:

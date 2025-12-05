@@ -71,7 +71,7 @@
                       - img [ref=e100]
                       - text: Que tal ouvir um áudio relaxante hoje?
                     - generic [ref=e102]:
-                      - paragraph [ref=e103]: "\"Guarde essa frase motivacional com carinho: desafios revelam sua força, não sua fraqueza.\""
+                      - paragraph [ref=e103]: "\"Mantra de cura: eu permito que a cura aconteça no meu tempo.\""
                       - button "Ouvir texto" [ref=e104]:
                         - img [ref=e105]
               - button "Acesso Premium Carteirinha Digital EloSUS" [ref=e109]:

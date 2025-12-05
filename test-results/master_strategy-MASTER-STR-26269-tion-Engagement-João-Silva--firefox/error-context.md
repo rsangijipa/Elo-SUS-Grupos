@@ -1,0 +1,181 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic:
+    - status [ref=e8]: "Bem-vindo de volta!: Login realizado com sucesso."
+    - status [ref=e14]: "Login realizado: Bem-vindo de volta!"
+  - generic [ref=e15]:
+    - complementary [ref=e16]:
+      - link "EloSUS EloSUS Grupos" [ref=e18] [cursor=pointer]:
+        - /url: /dashboard
+        - img "EloSUS" [ref=e19]
+        - generic [ref=e20]:
+          - generic [ref=e21]: EloSUS
+          - generic [ref=e22]: Grupos
+      - navigation [ref=e23]:
+        - link "Meu Espaço" [ref=e24] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e26]
+          - generic [ref=e31]: Meu Espaço
+        - link "Meu Grupo" [ref=e32] [cursor=pointer]:
+          - /url: /my-group
+          - img [ref=e33]
+          - generic [ref=e35]: Meu Grupo
+        - link "Materiais" [ref=e36] [cursor=pointer]:
+          - /url: /materials
+          - img [ref=e37]
+          - generic [ref=e43]: Materiais
+        - link "Minha Jornada" [ref=e44] [cursor=pointer]:
+          - /url: /reports
+          - img [ref=e45]
+          - generic [ref=e47]: Minha Jornada
+        - link "Central de Ajuda" [ref=e49] [cursor=pointer]:
+          - /url: /support
+          - img [ref=e50]
+          - text: Central de Ajuda
+      - generic [ref=e57]:
+        - text: // ... (inside return)
+        - link "JS João Silva Paciente" [ref=e58] [cursor=pointer]:
+          - /url: /profile
+          - generic [ref=e59]:
+            - generic [ref=e60]: JS
+            - generic [ref=e61]:
+              - paragraph [ref=e62]: João Silva
+              - paragraph [ref=e63]: Paciente
+            - img [ref=e64]
+        - button "Sair do Sistema" [ref=e67]:
+          - img [ref=e68]
+          - text: Sair do Sistema
+    - generic [ref=e72]:
+      - banner [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - img [ref=e76]
+            - textbox "Buscar..." [ref=e79]
+          - button [ref=e82]:
+            - img [ref=e83]
+          - button "AA" [ref=e87]
+      - main [ref=e88]:
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - img "AI Agent" [ref=e99]
+              - button "Acesso Premium Carteirinha Digital EloSUS" [ref=e106]:
+                - generic [ref=e108]:
+                  - img [ref=e110]
+                  - generic [ref=e113]:
+                    - generic [ref=e114]: Acesso Premium
+                    - generic [ref=e115]:
+                      - text: Carteirinha Digital
+                      - text: EloSUS
+            - generic [ref=e116]:
+              - img [ref=e118]
+              - heading "Nenhum grupo ativo" [level=3] [ref=e123]
+              - paragraph [ref=e124]: Aguarde o convite do seu profissional.
+          - generic [ref=e125]:
+            - heading "Sua Rotina Hoje" [level=2] [ref=e126]:
+              - img [ref=e127]
+              - text: Sua Rotina Hoje
+            - generic [ref=e130]:
+              - generic [ref=e132]:
+                - heading "Como você está se sentindo hoje?" [level=3] [ref=e134]
+                - generic [ref=e135]:
+                  - button "😡" [ref=e136]
+                  - button "😢" [ref=e137]
+                  - button "😐" [ref=e138]
+                  - button "🙂" [ref=e139]
+                  - button "😁" [ref=e140]
+              - generic [ref=e142]:
+                - img [ref=e144]
+                - generic [ref=e151]:
+                  - generic [ref=e152]:
+                    - heading "Desafio do Dia" [level=3] [ref=e153]:
+                      - img [ref=e154]
+                      - text: Desafio do Dia
+                    - paragraph [ref=e159]: Pequenas vitórias diárias
+                  - generic [ref=e160]: +50 XP
+                - generic [ref=e161]:
+                  - heading "Alongamento Rápido" [level=4] [ref=e162]
+                  - paragraph [ref=e163]: Faça um alongamento simples de 2 minutos para soltar os ombros e pescoço.
+                - button "Completei o Desafio!" [ref=e164]:
+                  - img [ref=e165]
+                  - text: Completei o Desafio!
+          - generic [ref=e172]:
+            - heading "Sua Jornada" [level=2] [ref=e173]:
+              - img [ref=e174]
+              - text: Sua Jornada
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - heading "Como você está se sentindo hoje?" [level=3] [ref=e181]
+                - paragraph [ref=e182]: Faça uma breve autoavaliação de ansiedade e depressão. É rápido, seguro e ajuda a cuidar de você.
+              - generic [ref=e183]:
+                - button "Fazer Check-in Emocional" [ref=e184]
+                - button "Sou Gestante/Mãe Recente" [ref=e185]
+                - button "Sou Pai/Mãe Atípico" [ref=e186]
+            - generic [ref=e187]:
+              - heading "Jornada de Autoconhecimento" [level=2] [ref=e190]:
+                - img [ref=e191]
+                - text: Jornada de Autoconhecimento
+              - generic [ref=e200]:
+                - generic [ref=e201]:
+                  - generic [ref=e202]:
+                    - heading "Avaliação Geral de Saúde Mental" [level=3] [ref=e203]
+                    - paragraph [ref=e204]: 13 perguntas rápidas • ~2 min
+                  - button "Começar" [ref=e205]
+                - generic [ref=e206]:
+                  - generic [ref=e207]:
+                    - heading "Termômetro do Autocuidado" [level=3] [ref=e208]
+                    - paragraph [ref=e209]: 10 perguntas de reflexão • ~3 min
+                  - button "Começar" [ref=e210]
+            - generic [ref=e211]:
+              - heading "Minhas Conquistas" [level=3] [ref=e212]
+              - generic [ref=e213]:
+                - generic [ref=e215] [cursor=pointer]:
+                  - img [ref=e218]
+                  - generic [ref=e221]:
+                    - generic [ref=e222]: 🏅
+                    - generic [ref=e223]:
+                      - heading "Primeiros Passos" [level=3] [ref=e224]
+                      - paragraph [ref=e225]: Bem-vindo à sua jornada de saúde!
+                  - button "Ouvir texto" [ref=e227]:
+                    - img [ref=e228]
+                - generic [ref=e233] [cursor=pointer]:
+                  - img [ref=e236]
+                  - generic [ref=e239]:
+                    - generic [ref=e240]: 🔥
+                    - generic [ref=e241]:
+                      - heading "Chama Acesa" [level=3] [ref=e242]
+                      - paragraph [ref=e243]: Acesse o app por 3 dias seguidos.
+                    - generic [ref=e244]: 0/3 dias
+                  - button "Ouvir texto" [ref=e246]:
+                    - img [ref=e247]
+                - generic [ref=e252] [cursor=pointer]:
+                  - img [ref=e255]
+                  - generic [ref=e258]:
+                    - generic [ref=e259]: 🗣️
+                    - generic [ref=e260]:
+                      - heading "Voz Ativa" [level=3] [ref=e261]
+                      - paragraph [ref=e262]: Participe de 5 sessões de grupo.
+                    - generic [ref=e263]: 0/5 sessões
+                  - button "Ouvir texto" [ref=e265]:
+                    - img [ref=e266]
+                - generic [ref=e271] [cursor=pointer]:
+                  - img [ref=e274]
+                  - generic [ref=e277]:
+                    - generic [ref=e278]: 🧠
+                    - generic [ref=e279]:
+                      - heading "Explorador da Mente" [level=3] [ref=e280]
+                      - paragraph [ref=e281]: Complete a Avaliação de Saúde Mental.
+                  - button "Ouvir texto" [ref=e283]:
+                    - img [ref=e284]
+                - generic [ref=e289] [cursor=pointer]:
+                  - img [ref=e292]
+                  - generic [ref=e295]:
+                    - generic [ref=e296]: 🛡️
+                    - generic [ref=e297]:
+                      - heading "Guardião de Si" [level=3] [ref=e298]
+                      - paragraph [ref=e299]: Complete o Termômetro do Autocuidado.
+                  - button "Ouvir texto" [ref=e301]:
+                    - img [ref=e302]
+```
