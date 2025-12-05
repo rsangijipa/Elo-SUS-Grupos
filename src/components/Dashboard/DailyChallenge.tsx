@@ -8,7 +8,7 @@ import { WEEKLY_CHALLENGES } from '../../data/weeklyChallenges';
 import { toast } from 'react-hot-toast';
 
 const DailyChallenge: React.FC = () => {
-    const { user } = useAuth();
+    const { user, refreshUserData } = useAuth();
     const [challenge, setChallenge] = useState(WEEKLY_CHALLENGES[0]);
     const [isCompletedToday, setIsCompletedToday] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -60,6 +60,9 @@ const DailyChallenge: React.FC = () => {
                 });
                 toast.success('🏆 Conquista Desbloqueada: Superador!', { duration: 5000 });
             }
+
+            // Refresh local user state to reflect XP/Stats changes immediately
+            await refreshUserData();
 
             setIsCompletedToday(true);
             toast.success(`+${challenge.xpReward} XP! Desafio concluído.`);

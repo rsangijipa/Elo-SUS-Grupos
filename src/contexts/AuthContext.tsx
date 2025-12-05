@@ -38,6 +38,7 @@ interface AuthContextType {
     register: (data: any) => Promise<void>;
     logout: () => Promise<void>;
     updateProfile: (data: Partial<User>) => Promise<void>;
+    refreshUserData: () => Promise<void>;
     // Deprecated/Mock methods kept for compatibility but might need removal or refactor
     toggleRole: () => void;
     switchDevRole: (type: 'referrer' | 'executor' | 'patient') => void;
@@ -303,6 +304,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
+    const refreshUserData = async () => {
+        if (!user) return;
+        try {
+            const userDocRef = doc(db, 'users', user.id);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                setUser(prev => prev ? { ...prev, ...userData } as User : null);
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -312,6 +327,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             register,
             logout,
             updateProfile,
+            refreshUserData,
             toggleRole,
             switchDevRole
         }}>

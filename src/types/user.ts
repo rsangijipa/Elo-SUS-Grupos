@@ -47,4 +47,21 @@ export interface User {
         lastChallengeDate?: any; // Firestore Timestamp or Date
     };
     achievements?: string[]; // Array of unlocked achievement IDs
+
+    // Health Screening (PHQ-2 + Anxiety)
+    healthScreening?: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        date: any; // Firestore Timestamp
+        depressionAlert: boolean;
+        anxietyAlert: boolean;
+        score: number;
+    };
+
+    // Pregnant/Postpartum Screening
+    pregnantScreening?: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        date: any; // Firestore Timestamp
+        riskLevel: 'none' | 'baby_blues' | 'depression' | 'emergency';
+        score: number;
+    };
 }

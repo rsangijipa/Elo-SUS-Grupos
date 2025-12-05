@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
+import TTSButton from '../Common/TTSButton';
 
 interface AchievementBadgeProps {
     title: string;
@@ -50,6 +51,15 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({ title, description,
             {isUnlocked && (
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             )}
+
+            {/* TTS Button */}
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                <TTSButton
+                    text={`${title}. ${description}`}
+                    size={16}
+                    color={isUnlocked ? "text-slate-600 hover:text-purple-600" : "text-slate-400"}
+                />
+            </div>
         </div>
     );
 };

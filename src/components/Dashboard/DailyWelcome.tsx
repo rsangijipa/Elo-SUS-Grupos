@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motivationalQuotes } from '../../data/motivationalQuotes';
+import TTSButton from '../Common/TTSButton';
 
 const DailyWelcome: React.FC = () => {
     const { user, isLoading } = useAuth();
@@ -48,10 +49,15 @@ const DailyWelcome: React.FC = () => {
                             <span className="text-indigo-600">{firstName}!</span>
                         )}
                     </h2>
-                    <div className="relative">
-                        <p className="text-gray-700 text-lg font-medium leading-relaxed italic">
+                    <div className="relative flex items-start gap-2">
+                        <p className="text-gray-700 text-lg font-medium leading-relaxed italic flex-1">
                             "{quote}"
                         </p>
+                        <TTSButton
+                            text={`Frase do dia: ${quote}`}
+                            size={20}
+                            color="text-indigo-400 hover:text-indigo-600"
+                        />
                     </div>
                 </div>
             </div>

@@ -505,6 +505,39 @@ const GroupManagement: React.FC = () => {
 
                 {/* Right Column: Management Panel */}
                 <div className="space-y-6">
+                    {/* Feedback Widget (NPS) */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-yellow-100 to-transparent rounded-bl-full opacity-50"></div>
+                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 relative z-10">
+                            <span className="text-2xl">📊</span>
+                            Termômetro da Sessão
+                        </h3>
+
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="flex-1 bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+                                <div className="text-2xl mb-1">🤩</div>
+                                <div className="text-xl font-bold text-slate-800">85%</div>
+                                <div className="text-[10px] text-slate-500 uppercase font-bold">Aprovação</div>
+                            </div>
+                            <div className="flex-1 bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+                                <div className="text-2xl mb-1">💬</div>
+                                <div className="text-xl font-bold text-slate-800">12</div>
+                                <div className="text-[10px] text-slate-500 uppercase font-bold">Feedbacks</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs font-bold text-slate-500 uppercase mb-3">Principais Percepções</p>
+                            <div className="flex flex-wrap gap-2">
+                                {['Acolhedor (8)', 'Motivador (5)', 'Claro (4)', 'Conteúdo denso (2)'].map((tag, i) => (
+                                    <span key={i} className={`px-2 py-1 rounded-md text-xs font-bold border ${i === 3 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                        }`}>
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                     {/* Batch Communication */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                         <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
