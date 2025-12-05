@@ -8,18 +8,14 @@ interface AvatarSelectorProps {
     onSelect: (avatar: string) => void;
 }
 
-const PRESET_AVATARS = [
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Bailey',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Bella',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Midnight',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=Coco',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Robot1',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Robot2',
-];
+const PRESET_AVATARS = Array.from({ length: 8 }, (_, i) => `avatar_perfil${i + 1}`);
+
+const getAvatarSrc = (avatar: string | null) => {
+    if (!avatar) return PRESET_AVATARS[0]; // Fallback to first avatar
+    if (avatar.startsWith('avatar_perfil')) return `/${avatar}.png`;
+    // If it's a data URL (upload) or external URL, return as is
+    return avatar;
+};
 
 const AvatarSelector: React.FC<AvatarSelectorProps> = ({ isOpen, onClose, currentAvatar, onSelect }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,21 +48,21 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({ isOpen, onClose, curren
                     {/* Current Avatar */}
                     <div className="flex justify-center">
                         <div className="w-24 h-24 rounded-full border-4 border-purple-100 overflow-hidden shadow-sm">
-                            <img src={currentAvatar || PRESET_AVATARS[0]} alt="Current" className="w-full h-full object-cover" />
+                            <img src={getAvatarSrc(currentAvatar)} alt="Current" className="w-full h-full object-cover" />
                         </div>
                     </div>
 
                     {/* Presets */}
                     <div>
                         <label className="block text-sm font-bold text-slate-500 mb-3 uppercase tracking-wider">Sugestões</label>
-                        <div className="grid grid-cols-5 gap-3">
+                        <div className="grid grid-cols-4 gap-3">
                             {PRESET_AVATARS.map((avatar, index) => (
                                 <button
                                     key={index}
                                     onClick={() => { onSelect(avatar); onClose(); }}
-                                    className={`w-14 h-14 rounded-full border-2 overflow-hidden transition-all hover:scale-110 ${currentAvatar === avatar ? 'border-purple-500 ring-2 ring-purple-200' : 'border-slate-100 hover:border-purple-300'}`}
+                                    className={`w-16 h-16 rounded-full border-2 overflow-hidden transition-all hover:scale-110 ${currentAvatar === avatar ? 'border-purple-500 ring-2 ring-purple-200' : 'border-slate-100 hover:border-purple-300'}`}
                                 >
-                                    <img src={avatar} alt={`Preset ${index}`} className="w-full h-full object-cover" />
+                                    <img src={`/${avatar}.png`} alt={`Preset ${index}`} className="w-full h-full object-cover" />
                                 </button>
                             ))}
                         </div>

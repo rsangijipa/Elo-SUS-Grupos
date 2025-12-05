@@ -191,17 +191,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     <div className="bg-white rounded-2xl p-1 flex items-center gap-2 mb-3 border border-slate-100 group relative">
                         <button
-                            onClick={() => {
-                                const newInitials = prompt('Digite as novas iniciais para o avatar (Max 2 letras):', user?.avatar || '');
-                                if (newInitials !== null) {
-                                    updateProfile({ avatar: newInitials.substring(0, 2).toUpperCase() });
-                                }
-                            }}
+                            onClick={() => navigate('/profile')}
                             className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm ml-2 hover:brightness-90 transition-all relative overflow-hidden ${user?.role === 'patient' ? 'bg-brand-patient text-white' : 'bg-brand-professional text-white'
                                 }`}
                             title="Alterar Avatar"
                         >
-                            {user?.avatar || 'US'}
+                            {user?.avatar && user.avatar.startsWith('avatar_perfil') ? (
+                                <img
+                                    src={`/${user.avatar}.png`}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span>{user?.avatar || 'US'}</span>
+                            )}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                                 <Settings size={12} className="text-white" />
                             </div>

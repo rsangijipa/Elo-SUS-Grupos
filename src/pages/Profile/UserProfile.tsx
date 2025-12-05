@@ -120,7 +120,8 @@ const UserProfile: React.FC = () => {
 
     // Avatar Popover State
     const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-    const avatars = ['avatar1', 'avatar2', 'avatar3', 'avatar4']; // Assuming these map to assets or initials logic
+    // Updated avatar list based on files in public folder
+    const avatars = Array.from({ length: 8 }, (_, i) => `avatar_perfil${i + 1}`);
 
     return (
         <div className="animate-fade-in max-w-6xl mx-auto space-y-8">
@@ -134,16 +135,15 @@ const UserProfile: React.FC = () => {
 
                         <div className="relative mb-4 group">
                             <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl font-bold text-blue-600 border-4 border-white shadow-md overflow-hidden">
-                                {user?.avatar && user.avatar.length > 2 ? (
-                                    // If avatar is a URL or asset path (mock logic)
-                                    <img src={`/assets/avatars/${user.avatar}.png`} alt="Avatar" className="w-full h-full object-cover" onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                    }} />
+                                {user?.avatar && user.avatar.startsWith('avatar_perfil') ? (
+                                    <img
+                                        src={`/${user.avatar}.png`}
+                                        alt="Avatar"
+                                        className="w-full h-full object-cover"
+                                    />
                                 ) : (
                                     <span>{user?.name?.substring(0, 2).toUpperCase()}</span>
                                 )}
-                                <span className="hidden text-2xl">{user?.name?.substring(0, 2).toUpperCase()}</span>
                             </div>
                             <button
                                 onClick={() => setShowAvatarSelector(!showAvatarSelector)}
@@ -155,7 +155,7 @@ const UserProfile: React.FC = () => {
 
                             {/* Avatar Selector Popover */}
                             {showAvatarSelector && (
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 p-3 z-10 w-48 animate-fade-in">
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 p-3 z-10 w-64 animate-fade-in">
                                     <p className="text-xs font-bold text-slate-500 mb-2">Escolher Avatar</p>
                                     <div className="grid grid-cols-4 gap-2">
                                         {avatars.map(av => (
@@ -165,10 +165,9 @@ const UserProfile: React.FC = () => {
                                                     handleAvatarChange(av);
                                                     setShowAvatarSelector(false);
                                                 }}
-                                                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-blue-100 hover:ring-2 ring-blue-500 transition-all"
+                                                className={`w-12 h-12 rounded-full border-2 transition-all overflow-hidden ${user?.avatar === av ? 'border-blue-600 ring-2 ring-blue-100' : 'border-transparent hover:border-blue-300'}`}
                                             >
-                                                {/* Placeholder for avatar preview */}
-                                                <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 to-purple-400"></div>
+                                                <img src={`/${av}.png`} alt={av} className="w-full h-full object-cover" />
                                             </button>
                                         ))}
                                     </div>

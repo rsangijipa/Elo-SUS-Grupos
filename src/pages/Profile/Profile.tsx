@@ -107,7 +107,11 @@ const Profile: React.FC = () => {
                             <div className="relative inline-block group">
                                 <div className="w-32 h-32 rounded-full border-4 border-white bg-slate-100 shadow-xl overflow-hidden cursor-pointer transition-transform hover:scale-105" onClick={() => setIsAvatarModalOpen(true)}>
                                     {formData.avatar ? (
-                                        <img src={formData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                        <img
+                                            src={formData.avatar.startsWith('avatar_perfil') ? `/${formData.avatar}.png` : formData.avatar}
+                                            alt="Profile"
+                                            className="w-full h-full object-cover"
+                                        />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
                                             <User size={48} />

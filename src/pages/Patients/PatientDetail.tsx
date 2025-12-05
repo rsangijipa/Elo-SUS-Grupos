@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight, Flame, Snowflake, Trophy, Heart } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Activity, Calendar, FileText, Clock, CheckCircle, XCircle, Plus, ArrowRight, Flame, Snowflake, Trophy, Heart, Brain, Lightbulb } from 'lucide-react';
 import { patientService } from '../../services/patientService';
 import { moodService, MoodLog } from '../../services/moodService';
 import { quizService } from '../../services/quizService';
+import { AIService } from '../../services/vertexAI';
 import type { QuizResult } from '../../types/quiz';
 import type { Patient } from '../../types/patient';
 import { toast } from 'react-hot-toast';
@@ -17,6 +18,10 @@ const PatientDetail: React.FC = () => {
     const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
     const [selfCareResult, setSelfCareResult] = useState<QuizResult | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // AI State
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [aiAnalysis, setAiAnalysis] = useState<{ riskScore: number; suggestedCID: string; tfdAlert: boolean; reasoning: string; } | null>(null);
 
     useEffect(() => {
         if (id) {
@@ -40,6 +45,26 @@ const PatientDetail: React.FC = () => {
             console.error('Error loading patient:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAnalyzeRisk = async () => {
+        if (!patient) return;
+        setIsAnalyzing(true);
+        try {
+            const result = await AIService.analyzeRiskAndCoding({
+                patientData: patient,
+                attendanceRecords: [], // Mock attendance for now
+                distanceKm: 12.5, // Mock distance, ideally comes from patient.coordinates
+                notes: "Paciente relata desânimo constante e dificuldade de sono." // Mock or last clinical note
+            });
+            setAiAnalysis(result);
+            toast.success("Análise de Risco Concluída!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao analisar dados.");
+        } finally {
+            setIsAnalyzing(false);
         }
     };
 
@@ -109,6 +134,18 @@ const PatientDetail: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                         <button
+                            onClick={handleAnalyzeRisk}
+                            disabled={isAnalyzing}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg font-bold text-sm hover:bg-purple-100 transition-colors shadow-sm"
+                        >
+                            {isAnalyzing ? (
+                                <Activity size={16} className="animate-spin" />
+                            ) : (
+                                <Brain size={16} />
+                            )}
+                            {isAnalyzing ? 'Analisando...' : 'Analisar Risco (IA)'}
+                        </button>
+                        <button
                             onClick={handleExportReport}
                             className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-bold text-sm hover:bg-slate-50 transition-colors shadow-sm"
                         >
@@ -118,6 +155,42 @@ const PatientDetail: React.FC = () => {
                         {getRiskBadge()}
                     </div>
                 </div>
+
+                {/* AI Analysis Result Panel */}
+                {aiAnalysis && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 animate-slide-down">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                                <Lightbulb size={20} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                    Análise do Agente Sentinela
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${aiAnalysis.riskScore > 50 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                        Risco: {aiAnalysis.riskScore}%
+                                    </span>
+                                </h3>
+                                <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                                    {aiAnalysis.reasoning}
+                                </p>
+                                <div className="flex gap-4 mt-3">
+                                    <div className="text-xs font-bold text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                                        Sugestão CID: {aiAnalysis.suggestedCID}
+                                    </div>
+                                    {aiAnalysis.tfdAlert && (
+                                        <div className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200 flex items-center gap-1">
+                                            <AlertTriangle size={12} />
+                                            Requer TFD (Tratamento Fora de Domicílio)
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <button onClick={() => setAiAnalysis(null)} className="text-slate-400 hover:text-slate-600">
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-50">
                     <div>

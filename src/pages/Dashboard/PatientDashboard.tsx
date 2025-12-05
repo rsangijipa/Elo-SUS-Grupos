@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, CheckCircle2, Mail, AlertCircle, Sparkles, MessageCircle, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { referralService, Referral } from '../../services/referralService';
 import { tobaccoService } from '../../services/tobaccoService';
@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import AIAgentWelcome from '../../components/Dashboard/AIAgentWelcome';
 import DailyChallenge from '../../components/Dashboard/DailyChallenge';
 import MoodTracker from '../../components/Widgets/MoodTracker';
+import { useDailyMessage } from '../../hooks/useDailyMessage';
 
 import confetti from 'canvas-confetti';
 import { gamificationService, ACHIEVEMENTS } from '../../services/gamificationService';
@@ -23,11 +24,11 @@ import PregnantModal from '../../components/Modals/PregnantModal';
 import AutismParentsModal from '../../components/Modals/AutismParentsModal';
 import UserCard from '../../components/Dashboard/UserCard';
 import { feedbackService } from '../../services/feedbackService';
-import { CreditCard } from 'lucide-react';
 
 export default function PatientDashboard() {
     const { user, isLoading } = useAuth();
     const { groups } = useData();
+    const { message, loading: msgLoading } = useDailyMessage();
     const navigate = useNavigate();
     const [invites, setInvites] = useState<Referral[]>([]);
     const [checkingAnamnesis, setCheckingAnamnesis] = useState(false);
@@ -165,7 +166,30 @@ export default function PatientDashboard() {
                 <section className="space-y-6">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex-1 w-full">
-                            <AIAgentWelcome role="patient" />
+                            {/* AI Welcome Message */}
+                            <div className="bg-gradient-to-r from-[#0054A6] to-[#004080] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10">
+                                    <MessageCircle size={100} />
+                                </div>
+                                <div className="relative z-10">
+                                    <h1 className="text-2xl font-bold mb-2">Olá, {user?.name?.split(' ')[0]}! 👋</h1>
+                                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 mt-3">
+                                        {msgLoading ? (
+                                            <div className="flex items-center gap-2 text-sm animate-pulse">
+                                                <Sparkles size={16} />
+                                                <span className="font-medium">O EloSUS está preparando sua mensagem do dia...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-start gap-3">
+                                                <Sparkles className="shrink-0 mt-1 text-yellow-300" size={18} />
+                                                <p className="text-sm md:text-base font-medium leading-relaxed">
+                                                    "{message}"
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <button
                             onClick={() => setIsUserCardOpen(true)}
