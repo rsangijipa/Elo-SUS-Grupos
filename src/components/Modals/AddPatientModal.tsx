@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, User, Calendar, Phone, FileText, Hash, Save } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 
@@ -16,7 +17,10 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
         motherName: '',
         birthDate: '',
         phone: '',
-        responsible: ''
+        responsible: '',
+        address: '',
+        neighborhood: '',
+        originUnit: ''
     });
 
     if (!isOpen) return null;
@@ -30,15 +34,22 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
             birthDate: formData.birthDate,
             phone: formData.phone,
             status: 'active',
-            cpf: formData.cpf
+            cpf: formData.cpf,
+            address: formData.address,
+            neighborhood: formData.neighborhood,
+            originUnit: formData.originUnit,
+            nomeResponsavel: formData.responsible
         });
         onClose();
-        setFormData({ name: '', cpf: '', cns: '', motherName: '', birthDate: '', phone: '', responsible: '' });
+        setFormData({
+            name: '', cpf: '', cns: '', motherName: '', birthDate: '', phone: '', responsible: '',
+            address: '', neighborhood: '', originUnit: ''
+        });
     };
 
-    return (
-        <div className="fixed inset-0 flex items-start justify-center z-50 animate-fade-in p-4 pt-20">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100">
+    return createPortal(
+        <div className="fixed inset-0 flex items-start justify-center z-[9999] animate-fade-in p-4 pt-20 bg-black/50 backdrop-blur-sm" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 relative z-[10000]">
                 {/* Header */}
                 <div className="bg-[#0054A6] p-6 flex justify-between items-center text-white">
                     <h2 className="text-xl font-bold flex items-center gap-2">
@@ -150,6 +161,45 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                         </div>
                     </div>
 
+                    {/* Address & Neighborhood */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-sm font-bold text-slate-700">Endereço</label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none"
+                                placeholder="Rua, Número"
+                                value={formData.address}
+                                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-bold text-slate-700">Bairro</label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none"
+                                placeholder="Bairro"
+                                value={formData.neighborhood}
+                                onChange={e => setFormData({ ...formData, neighborhood: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Origin Unit */}
+                    <div className="space-y-1">
+                        <label className="text-sm font-bold text-slate-700">Unidade de Origem (UBS)</label>
+                        <div className="relative">
+                            <FileText className="absolute left-3 top-3 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none"
+                                placeholder="UBS de referência"
+                                value={formData.originUnit}
+                                onChange={e => setFormData({ ...formData, originUnit: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
                     {/* Responsible (Optional) */}
                     <div className="space-y-1">
                         <label className="text-sm font-bold text-slate-700">Responsável (Opcional)</label>
@@ -184,6 +234,7 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

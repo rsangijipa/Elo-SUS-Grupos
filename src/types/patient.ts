@@ -26,4 +26,11 @@ export interface Patient {
         totalSessions?: number;
     };
     achievements?: string[]; // Array of achievement IDs
+
+    // Territorial Intelligence
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
+    territorialTags?: string[];
 }

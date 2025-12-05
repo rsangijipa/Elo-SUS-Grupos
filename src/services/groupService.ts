@@ -119,17 +119,45 @@ export const groupService = {
                 const participants = groupData.participants || [];
 
                 if (!participants.includes(patientId)) {
-                    transaction.update(groupRef, {
-                        participants: [...participants, patientId],
-                        updatedAt: serverTimestamp()
-                    });
-                    transaction.update(patientRef, {
+                    // Territorial Logic
+                    let updates: any = {
                         groupId: groupId,
                         currentGroupId: groupId,
                         status: 'active',
                         joinedAt: new Date().toISOString(),
                         updatedAt: serverTimestamp()
+                    };
+
+                    const patientData = patientDoc.data();
+                    // Assuming group has an address or is tied to a unit with an address.
+                    // For now, using a hypothetical unit address or the group's location.
+                    // If group doesn't have address, we try unit.
+                    const unitAddress = "Rua da UBS Central, 123"; // Placeholder or fetch from UnitService
+
+                    if (patientData.address && unitAddress) {
+                        const { MapService } = await import('./MapService');
+                        const distance = await MapService.calculateDistance(
+                            `${patientData.address}, ${patientData.neighborhood || ''}`,
+                            unitAddress
+                        );
+
+                        if (distance !== null) {
+                            const risk = MapService.analyzeTerritorialRisk(distance);
+                            if (risk.level !== 'normal') {
+                                // Add alerts to patient tags
+                                const currentTags = patientData.territorialTags || [];
+                                const newTags = [...new Set([...currentTags, ...risk.tags])];
+                                updates.territorialTags = newTags;
+                                updates.hasAlert = true; // Flag for UI
+                            }
+                        }
+                    }
+
+                    transaction.update(groupRef, {
+                        participants: [...participants, patientId],
+                        updatedAt: serverTimestamp()
                     });
+                    transaction.update(patientRef, updates);
                 }
             });
 

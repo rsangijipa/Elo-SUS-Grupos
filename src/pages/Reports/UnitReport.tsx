@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Filter, Download, AlertTriangle, Activity, Eye, Search } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { moodService, MoodLog } from '../../services/moodService';
+import { pdfService } from '../../services/pdfService';
+import toast from 'react-hot-toast';
 import HealthRadar from '../../components/Dashboard/HealthRadar';
 
 const UnitReport: React.FC = () => {
@@ -86,7 +88,18 @@ const UnitReport: React.FC = () => {
                         Baixe o relatório completo em PDF ou CSV para análise externa ou apresentação.
                     </p>
                     <div className="space-y-3">
-                        <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors border border-white/20">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    toast.loading('Gerando PDF...', { id: 'pdf-unit' });
+                                    await pdfService.generateUnitReportPdf(filteredPatients, moodMap);
+                                    toast.success('Relatório baixado!', { id: 'pdf-unit' });
+                                } catch (error) {
+                                    console.error(error);
+                                    toast.error('Erro ao gerar PDF', { id: 'pdf-unit' });
+                                }
+                            }}
+                            className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors border border-white/20">
                             Baixar PDF
                         </button>
                         <button className="w-full py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition-colors">
@@ -153,9 +166,9 @@ const UnitReport: React.FC = () => {
                                         <td className="px-6 py-4">
                                             {mood ? (
                                                 <span className={`px-2 py-1 rounded-lg font-bold text-xs ${mood.value >= 4 ? 'bg-green-100 text-green-700' :
-                                                        mood.value >= 3 ? 'bg-blue-100 text-blue-700' :
-                                                            mood.value >= 2 ? 'bg-yellow-100 text-yellow-700' :
-                                                                'bg-red-100 text-red-700'
+                                                    mood.value >= 3 ? 'bg-blue-100 text-blue-700' :
+                                                        mood.value >= 2 ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-red-100 text-red-700'
                                                     }`}>
                                                     {mood.value}/5
                                                 </span>

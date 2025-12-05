@@ -26,7 +26,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout, switchDevRole } = useAuth();
+    const { user, logout, switchDevRole, updateProfile } = useAuth();
     const { isInstallable, triggerInstall } = useInstallPrompt();
 
     // Menu Configurations
@@ -187,15 +187,32 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
 
 
-                    // ... (inside return)
 
-                    <Link to="/profile" className="block" onClick={() => window.innerWidth < 768 && onClose()}>
-                        <div className="bg-white rounded-2xl p-3 flex items-center gap-3 mb-3 cursor-pointer hover:shadow-md transition-all border border-slate-100 group">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm ${user?.role === 'patient' ? 'bg-brand-patient text-white' : 'bg-brand-professional text-white'
-                                }`}>
-                                {user?.avatar || 'US'}
+
+                    <div className="bg-white rounded-2xl p-1 flex items-center gap-2 mb-3 border border-slate-100 group relative">
+                        <button
+                            onClick={() => {
+                                const newInitials = prompt('Digite as novas iniciais para o avatar (Max 2 letras):', user?.avatar || '');
+                                if (newInitials !== null) {
+                                    updateProfile({ avatar: newInitials.substring(0, 2).toUpperCase() });
+                                }
+                            }}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm ml-2 hover:brightness-90 transition-all relative overflow-hidden ${user?.role === 'patient' ? 'bg-brand-patient text-white' : 'bg-brand-professional text-white'
+                                }`}
+                            title="Alterar Avatar"
+                        >
+                            {user?.avatar || 'US'}
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <Settings size={12} className="text-white" />
                             </div>
-                            <div className="overflow-hidden flex-1">
+                        </button>
+
+                        <Link
+                            to="/profile"
+                            className="flex-1 flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl transition-colors"
+                            onClick={() => window.innerWidth < 768 && onClose()}
+                        >
+                            <div className="overflow-hidden">
                                 <p className="text-sm font-bold text-slate-700 truncate group-hover:text-brand-professional transition-colors">{user?.name || 'Usuário'}</p>
                                 <p className="text-[10px] text-slate-500 truncate font-medium">
                                     {user?.role === 'professional' || user?.role === 'admin'
@@ -205,8 +222,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 </p>
                             </div>
                             <Settings size={16} className="text-slate-300 group-hover:text-brand-professional transition-colors" />
-                        </div>
-                    </Link>
+                        </Link>
+                    </div>
 
                     {isInstallable && (
                         <button

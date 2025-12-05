@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Copy, FileText, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DischargeType, DischargeStatus } from '../types/shared';
@@ -75,9 +76,9 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 backdrop-blur-md p-4 pt-10 sm:pt-20 animate-in fade-in duration-200" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto transform transition-all scale-100 relative z-[10000]">
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-100">
@@ -212,7 +213,8 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
                 </div>
 
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

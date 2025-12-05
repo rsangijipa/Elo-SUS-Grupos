@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import UserSearch from '../UserSearch';
 import type { Patient } from '../../types/patient';
@@ -19,9 +20,9 @@ export default function AddParticipantModal({ isOpen, onClose, onAdd, currentPar
         // }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 animate-fade-in">
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-20 animate-fade-in bg-black/50 backdrop-blur-sm" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative z-[10000]">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
                     <h3 className="font-bold text-lg text-slate-800">Adicionar Participante</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -50,6 +51,7 @@ export default function AddParticipantModal({ isOpen, onClose, onAdd, currentPar
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -13,6 +13,7 @@ const USERS = [
         crp: '12345/SP',
         specialty: 'Psicologia Clínica',
         avatar: 'DR',
+        phone: '(11) 99999-1000',
         unidadeSaudeId: 'all'
     },
     {
@@ -24,6 +25,7 @@ const USERS = [
         age: 35,
         condition: 'Ansiedade',
         avatar: 'JS',
+        phone: '(11) 98888-2000',
         healthScreening: {
             anxietyAlert: true,
             depressionAlert: false,
@@ -42,6 +44,7 @@ const USERS = [
         gestationWeeks: 30,
         condition: 'Gestante',
         avatar: 'MO',
+        phone: '(21) 97777-3000',
         pregnantScreening: {
             riskLevel: 'none',
             score: 2,
@@ -58,6 +61,7 @@ const USERS = [
         age: 40,
         condition: 'Pai Atípico',
         avatar: 'CS',
+        phone: '(31) 96666-4000',
         isParentOfTEA: true,
         unidadeSaudeId: 'ubs-centro'
     }
@@ -85,7 +89,7 @@ export const seedDatabase = async () => {
             } catch (error: any) {
                 if (error.code === 'auth/email-already-in-use') {
                     console.log(`⚠️ User already exists: ${user.email}. Signing in to update...`);
-                    // Sign in to get UID
+                    // Sign in to get Auth UID
                     try {
                         const userCredential = await signInWithEmailAndPassword(auth, user.email, user.password);
                         uid = userCredential.user.uid;

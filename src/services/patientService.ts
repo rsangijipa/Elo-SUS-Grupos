@@ -25,8 +25,15 @@ const COLLECTION_NAME = 'users';
 export const patientService = {
     create: async (patient: Omit<Patient, 'id'>) => {
         try {
+            let coordinates = null;
+            if (patient.address) {
+                const { MapService } = await import('./MapService'); // Dynamic import to avoid cycles or load issues
+                coordinates = await MapService.getCoordinates(`${patient.address}, ${patient.neighborhood || ''}`);
+            }
+
             const docRef = await addDoc(collection(db, COLLECTION_NAME), {
                 ...patient,
+                coordinates: coordinates || undefined,
                 role: 'patient',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -40,9 +47,17 @@ export const patientService = {
 
     createWithId: async (id: string, patient: Omit<Patient, 'id'>) => {
         try {
+            // Geocoding logic if address is present
+            let coordinates = null;
+            if (patient.address) {
+                const { MapService } = await import('./MapService');
+                coordinates = await MapService.getCoordinates(`${patient.address}, ${patient.neighborhood || ''}`);
+            }
+
             const docRef = doc(db, COLLECTION_NAME, id);
             await setDoc(docRef, {
                 ...patient,
+                coordinates: coordinates || undefined,
                 role: 'patient',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
@@ -55,9 +70,20 @@ export const patientService = {
 
     update: async (id: string, patient: Partial<Patient>) => {
         try {
+            let updates: any = { ...patient };
+
+            // Re-geocode if address changes
+            if (patient.address) {
+                const { MapService } = await import('./MapService');
+                const coordinates = await MapService.getCoordinates(`${patient.address}, ${patient.neighborhood || ''}`);
+                if (coordinates) {
+                    updates.coordinates = coordinates;
+                }
+            }
+
             const docRef = doc(db, COLLECTION_NAME, id);
             await updateDoc(docRef, {
-                ...patient,
+                ...updates,
                 updatedAt: serverTimestamp(),
             });
         } catch (error) {

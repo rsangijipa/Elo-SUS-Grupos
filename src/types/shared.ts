@@ -28,4 +28,5 @@ export interface Enrollment {
     dischargeReason?: string;
     cidCodeSecondary?: string; // Override group CID if patient has specific comorbidity
     destinationUnit?: string; // If referral
+    distanceToUnit?: number; // Distance in km from home to unit
 }

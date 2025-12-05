@@ -129,8 +129,19 @@ const PatientDetail: React.FC = () => {
                         <span className="text-slate-700 font-medium">F32.2 - Episódio depressivo grave</span>
                     </div>
                     <div>
-                        <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Unidade de Referência</span>
-                        <span className="text-slate-700 font-medium">UBS Santa Cecília</span>
+                        <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Unidade de Origem</span>
+                        <span className="text-slate-700 font-medium">{patient.originUnit || 'Não informada'}</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-50 mt-4">
+                    <div>
+                        <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Endereço</span>
+                        <span className="text-slate-700 font-medium">{patient.address || 'Não informado'}</span>
+                    </div>
+                    <div>
+                        <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Bairro</span>
+                        <span className="text-slate-700 font-medium">{patient.neighborhood || 'Não informado'}</span>
                     </div>
                 </div>
             </div>
