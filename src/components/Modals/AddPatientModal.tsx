@@ -10,6 +10,12 @@ interface AddPatientModalProps {
 
 export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProps) {
     const { addPatient } = useData();
+    const { addPatient } = useData();
+    const { isLoaded } = useLoadScript({
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+        libraries: LIBRARIES
+    });
+
     const [formData, setFormData] = useState({
         name: '',
         cpf: '',
@@ -20,7 +26,8 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
         responsible: '',
         address: '',
         neighborhood: '',
-        originUnit: ''
+        originUnit: '',
+        coordinates: null as { lat: number; lng: number } | null
     });
 
     if (!isOpen) return null;
@@ -38,13 +45,35 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
             address: formData.address,
             neighborhood: formData.neighborhood,
             originUnit: formData.originUnit,
-            nomeResponsavel: formData.responsible
+            nomeResponsavel: formData.responsible,
+            coordinates: formData.coordinates || undefined
         });
         onClose();
         setFormData({
             name: '', cpf: '', cns: '', motherName: '', birthDate: '', phone: '', responsible: '',
-            address: '', neighborhood: '', originUnit: ''
+            address: '', neighborhood: '', originUnit: '', coordinates: null
         });
+    };
+
+    const handleAddressSelect = (address: string, lat: number, lng: number, components?: any[]) => {
+        let neighborhood = '';
+        if (components) {
+            const sublocality = components.find(c => c.types.includes('sublocality') || c.types.includes('sublocality_level_1'));
+            if (sublocality) neighborhood = sublocality.long_name;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            address,
+            neighborhood: neighborhood || prev.neighborhood,
+            coordinates: { lat, lng }
+        }));
+    };
+
+    const handleUnitSelect = (address: string) => {
+        // Here 'address' is the name/description selected
+        const unitName = address.split(',')[0]; // Simple heuristic: take first part as name
+        setFormData(prev => ({ ...prev, originUnit: unitName }));
     };
 
     return createPortal(
