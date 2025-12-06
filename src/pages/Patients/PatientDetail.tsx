@@ -106,8 +106,8 @@ const PatientDetail = () => {
         window.open(url, '_blank');
     };
 
-    // Mock Risk Data
-    const riskLevel = 'attention' as 'high' | 'attention' | 'standard';
+    // Derived Risk Data
+    const riskLevel = (patient?.riskLevel?.toLowerCase() || 'standard') as 'high' | 'attention' | 'standard';
 
     const getRiskBadge = () => {
         switch (riskLevel) {

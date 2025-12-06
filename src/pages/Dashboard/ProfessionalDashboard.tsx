@@ -2,9 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Filter, Search, ChevronRight, X } from 'lucide-react';
-import { useData } from '../../contexts/DataContext';
+// import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { patientService } from '../../services/patientService';
+import { groupService } from '../../services/groupService';
+import { appointmentService } from '../../services/appointmentService';
 import { referralService, Referral } from '../../services/referralService';
+import { Group } from '../../types/group';
+import { Patient } from '../../types/patient';
+import { Appointment } from '../../types/appointment';
 import TobaccoInsightsWidget from '../../components/Widgets/TobaccoInsightsWidget';
 import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
 import HealthRadar from '../../components/Dashboard/HealthRadar';
@@ -15,7 +21,14 @@ import TerritoryMap from '../../components/Dashboard/TerritoryMap';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
-    const { groups, patients, appointments } = useData();
+    // const { groups, patients, appointments } = useData(); // CLEANUP: Removed implicit binding
+    // const navigate = useNavigate(); // Removed duplicate
+
+    // Local State for "Hard-Binding" (Protocol 1)
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [patients, setPatients] = useState<Patient[]>([]);
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [statsLoading, setStatsLoading] = useState(true);
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'visao-geral' | 'triagem'>('visao-geral');
     const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -60,16 +73,28 @@ const ProfessionalDashboard: React.FC = () => {
         const init = async () => {
             setIsLoadingData(true);
             try {
-                await loadReferrals();
-            } catch (error) {
-                console.error("Failed to load referrals:", error);
-                toast.error("Erro ao carregar encaminhamentos.");
-            } finally {
-                setIsLoadingData(false);
-            }
-        };
-        init();
-    }, []);
+                try {
+                    const [refData, patData, grpData, aptData] = await Promise.all([
+                        referralService.getAll(),
+                        patientService.getAll(),
+                        groupService.getAll(),
+                        appointmentService.getAll()
+                    ]);
+
+                    setReferrals(refData);
+                    setPatients(patData);
+                    setGroups(grpData);
+                    setAppointments(aptData);
+                } catch (error) {
+                    console.error("Failed to load dashboard data:", error);
+                    toast.error("Erro ao carregar dados do dashboard.");
+                } finally {
+                    setIsLoadingData(false);
+                    setStatsLoading(false);
+                }
+            };
+            init();
+        }, []);
 
     // Load Mood Data for Health Radar
     useEffect(() => {

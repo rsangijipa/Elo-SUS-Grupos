@@ -23,28 +23,10 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    // Mock initial fetch
+    // Initial fetch
     useEffect(() => {
-        // Simulate fetching notifications
-        const mockNotifications: Notification[] = [
-            {
-                id: '1',
-                type: 'info',
-                title: 'Bem-vindo ao EloSUS',
-                message: 'Seu cadastro foi realizado com sucesso. Complete seu perfil.',
-                read: false,
-                timestamp: new Date()
-            },
-            {
-                id: '2',
-                type: 'alert',
-                title: 'Lembrete de Sessão',
-                message: 'Você tem um grupo de Tabagismo agendado para amanhã às 09:00.',
-                read: false,
-                timestamp: new Date(Date.now() - 86400000) // Yesterday
-            }
-        ];
-        setNotifications(mockNotifications);
+        // TODO: Integrate with backend notification service
+        setNotifications([]);
     }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;

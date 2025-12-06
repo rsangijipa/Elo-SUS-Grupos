@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Building2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Building2, UserX } from 'lucide-react';
+import EmptyState from '../../components/Common/EmptyState';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
 import ReferralModal from '../../components/Modals/ReferralModal';
@@ -146,8 +147,14 @@ const PatientList: React.FC = () => {
                                 </tr>
                             ) : localPatients.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                                        Nenhum paciente encontrado.
+                                    <td colSpan={5} className="py-12">
+                                        <EmptyState
+                                            title="Nenhum paciente encontrado"
+                                            description={searchTerm ? `Não encontramos ninguém com o nome "${searchTerm}".` : "Sua lista de pacientes está vazia."}
+                                            icon={UserX}
+                                            actionLabel={searchTerm ? "Limpar busca" : "Cadastrar novo paciente"}
+                                            onAction={searchTerm ? () => setSearchTerm('') : () => setIsModalOpen(true)}
+                                        />
                                     </td>
                                 </tr>
                             ) : (

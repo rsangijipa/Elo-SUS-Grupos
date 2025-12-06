@@ -90,7 +90,7 @@ export default function AdminDashboard() {
         e.preventDefault();
         if (!inviteEmail) return;
 
-        // Mock invite
+        // TODO: Implement email service integration
         toast.success(`Convite enviado para ${inviteEmail}`);
         setInviteEmail('');
         setShowInviteModal(false);

@@ -134,17 +134,17 @@ const Profile: React.FC = () => {
                                 {isProfessional ? 'Profissional' : 'Paciente'}
                             </div>
 
-                            {/* Gamification Stats (Mocked for now, can be connected to user.stats) */}
+                            {/* Gamification Stats */}
                             {!isProfessional && (
                                 <div className="mt-6 pt-6 border-t border-slate-100">
                                     <div className="flex justify-between text-sm mb-2">
-                                        <span className="font-bold text-slate-600">Nível 3</span>
-                                        <span className="text-purple-600 font-bold">350 XP</span>
+                                        <span className="font-bold text-slate-600">Nível {Math.floor(((user as any).stats?.totalSessions || 0) / 5) + 1}</span>
+                                        <span className="text-purple-600 font-bold">{(user as any).stats?.totalSessions || 0} Sessões</span>
                                     </div>
                                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                        <div className="h-full bg-gradient-to-r from-[#7A5CFF] to-[#4E8FFF] w-[70%]"></div>
+                                        <div className="h-full bg-gradient-to-r from-[#7A5CFF] to-[#4E8FFF]" style={{ width: `${(((user as any).stats?.totalSessions || 0) % 5) * 20}%` }}></div>
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-2">Faltam 150 XP para o próximo nível</p>
+                                    <p className="text-xs text-slate-400 mt-2">Continue participando para subir de nível!</p>
                                 </div>
                             )}
                         </div>

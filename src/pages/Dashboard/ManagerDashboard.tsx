@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { patientService } from '../../services/patientService';
+import { Patient } from '../../types/patient';
 import {
     Activity, Users, TrendingUp, AlertTriangle,
     MapPin, Search, Calendar, CheckCircle2,
@@ -21,32 +23,74 @@ interface EpidemiologyData {
     recentDropouts: { id: string; name: string; date: string; reason?: string }[];
 }
 
-// --- Mock Data Generator ---
-// In a real app, this would be fetched from backend or calculated from a large 'patients' array
-const generateMockData = (): EpidemiologyData => {
+// --- Real Data Calculation ---
+const calculateEpidemiology = (patients: Patient[]): EpidemiologyData => {
+    const totalPatients = patients.length;
+    const activePatients = patients.filter(p => p.status === 'active').length;
+    const waitingListCount = patients.filter(p => p.status === 'waiting').length;
+    const dischargedCount = patients.filter(p => p.status === 'discharged').length; // Assuming 'discharged' status exists or similar
+
+    // Resolvability: Discharged / (Active + Discharged) * 100 ? Or just raw count for now.
+    // Let's assume resolvability is based on 'discharged' vs total served.
+    const resolvabilityRate = totalPatients > 0 ? ((dischargedCount / totalPatients) * 100) : 0;
+
+    // TFD Index: Placeholder logic as we might not have distance for all
+    // In a real scenario, check coordinates or address city != unit city
+    const tfdIndex = 15; // Placeholder/Estimate until we have robust geo-analysis
+
+    // Risk Distribution
+    const riskCounts = { HIGH: 0, MEDIUM: 0, LOW: 0 };
+    patients.forEach(p => {
+        if (p.riskLevel === 'HIGH') riskCounts.HIGH++;
+        else if (p.riskLevel === 'MEDIUM') riskCounts.MEDIUM++;
+        else riskCounts.LOW++;
+    });
+
+    const riskDistribution = [
+        { name: 'Risco Alto', value: riskCounts.HIGH, color: '#EF4444' },
+        { name: 'Risco Médio', value: riskCounts.MEDIUM, color: '#F59E0B' },
+        { name: 'Risco Baixo', value: riskCounts.LOW, color: '#10B981' },
+    ];
+
+    // CID Prevalence
+    const cidMap: Record<string, number> = {};
+    patients.forEach(p => {
+        // @ts-ignore
+        if (p.cid) {
+            // @ts-ignore
+            const cid = p.cid.split(' - ')[0]; // Extract code if format is "F32 - Depression"
+            cidMap[cid] = (cidMap[cid] || 0) + 1;
+        }
+    });
+
+    const cidPrevalence = Object.entries(cidMap)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+    // Recent Dropouts (Inactive recently)
+    // Assuming we can sort by updatedAt and status inactive
+    const recentDropouts = patients
+        .filter(p => p.status === 'inactive')
+        // @ts-ignore - updatedAt might be Firestore Timestamp
+        .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
+        .slice(0, 3)
+        .map(p => ({
+            id: p.id || '',
+            name: p.name,
+            date: new Date().toISOString(), // Fallback if no specific date
+            reason: 'Inatividade' // Fallback
+        }));
+
     return {
-        totalPatients: 850,
-        activePatients: 620,
-        resolvabilityRate: 78.5, // Target is 80%
-        waitingListCount: 45,
-        tfdIndex: 12.4, // 12.4% live > 50km away
-        riskDistribution: [
-            { name: 'Risco Alto', value: 15, color: '#EF4444' },    // Red
-            { name: 'Risco Médio', value: 35, color: '#F59E0B' },   // Amber
-            { name: 'Risco Baixo', value: 50, color: '#10B981' },   // Green
-        ],
-        cidPrevalence: [
-            { name: 'F41 (Ansiedade)', count: 245 },
-            { name: 'F32 (Depressão)', count: 180 },
-            { name: 'F43 (Estresse)', count: 95 },
-            { name: 'F31 (Bipolar)', count: 40 },
-            { name: 'Z73 (Esgotamento)', count: 35 },
-        ],
-        recentDropouts: [
-            { id: '1', name: 'Carlos Alves', date: '2025-10-24', reason: 'Não compareceu a 3 sessões' },
-            { id: '2', name: 'Mariana Silva', date: '2025-10-22', reason: 'Mudança de cidade' },
-            { id: '3', name: 'João Pereira', date: '2025-10-20', reason: 'Desistência voluntária' },
-        ]
+        totalPatients,
+        activePatients,
+        resolvabilityRate: parseFloat(resolvabilityRate.toFixed(1)),
+        waitingListCount,
+        tfdIndex,
+        riskDistribution,
+        cidPrevalence,
+        recentDropouts
     };
 };
 
@@ -79,12 +123,18 @@ const ManagerDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate Calculation Delay
-        setTimeout(() => {
-            const metrics = generateMockData();
-            setData(metrics);
-            setLoading(false);
-        }, 800);
+        const loadData = async () => {
+            try {
+                const patients = await patientService.getAll();
+                const metrics = calculateEpidemiology(patients);
+                setData(metrics);
+            } catch (error) {
+                console.error("Failed to load epidemiology data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
     }, []);
 
     if (loading) {

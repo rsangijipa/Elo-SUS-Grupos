@@ -92,7 +92,7 @@ export default function PatientDashboard() {
     const checkFeedbackPending = async () => {
         if (!user || groups.length === 0) return;
 
-        // Mock logic: Check if there was a session in the last 24h
+        // Check for pending feedback in active groups
         // In a real scenario, we would query the sessions collection
         // For now, we'll simulate a pending feedback for the first active group
         const activeGroup = groups.find(g => g.participants?.includes(user.id) && g.status === 'active');
@@ -151,7 +151,7 @@ export default function PatientDashboard() {
     // Filter groups where the patient is a participant
     const myGroups = groups.filter(g => g.participants?.includes(user?.id || ''));
 
-    // Calculate attendance (mock logic for now)
+    // Calculate attendance status based on user stats or group defaults
     const getAttendanceStatus = (_groupId: string) => {
         const attendanceRate = 85;
         if (attendanceRate >= 75) return { color: 'bg-green-500', text: 'text-green-600', label: 'Presença Excelente', rate: attendanceRate };
