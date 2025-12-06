@@ -55,7 +55,7 @@ export const AIService = {
                     responseSchema: {
                         type: SchemaType.OBJECT,
                         properties: {
-                            riskLevel: { type: SchemaType.STRING, enum: ["LOW", "MEDIUM", "HIGH"] },
+                            riskLevel: { type: SchemaType.STRING },
                             tfdEligible: { type: SchemaType.BOOLEAN },
                             suggestedCID: { type: SchemaType.STRING },
                             reasoning: { type: SchemaType.STRING },

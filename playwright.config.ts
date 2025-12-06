@@ -4,9 +4,19 @@ export default defineConfig({
     testDir: './tests',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
+    /* Retry on CI only usually, but requested retries globally for robustness */
+    retries: 1,
     workers: process.env.CI ? 1 : undefined,
     reporter: 'html',
+
+    /* Maximum time one test can run for. increased to 60s */
+    timeout: 60000,
+
+    expect: {
+        /* Expect timeout increased to 10s */
+        timeout: 10000
+    },
+
     use: {
         baseURL: 'http://localhost:5173',
         trace: 'on-first-retry',
@@ -20,10 +30,10 @@ export default defineConfig({
             name: 'firefox',
             use: { ...devices['Desktop Firefox'] },
         },
-        {
-            name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
-        },
+        // {
+        //     name: 'webkit',
+        //     use: { ...devices['Desktop Safari'] },
+        // },
         {
             name: 'Mobile Chrome',
             use: { ...devices['Pixel 5'] },

@@ -29,6 +29,7 @@ import type { Patient } from '../../types/patient';
 import AddParticipantModal from '../../components/Modals/AddParticipantModal';
 import DischargeModal, { DischargeData } from '../../components/DischargeModal';
 import { pdfService } from '../../services/pdfService';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface Participant extends Omit<Patient, 'status'> {
     attendanceRate?: number; // Calculated dynamically
@@ -41,6 +42,7 @@ const GroupManagement: React.FC = () => {
     const navigate = useNavigate();
     const { groups } = useData();
     const { addNotification } = useNotifications();
+    const { unitAddress } = useSettings();
     const group = groups.find(g => g.id === id);
 
     const [participants, setParticipants] = useState<Participant[]>([]);
@@ -102,7 +104,7 @@ const GroupManagement: React.FC = () => {
     const handleAddParticipant = async (patientId: string) => {
         if (!id) return;
         try {
-            await groupService.addParticipant(id, patientId);
+            await groupService.addParticipant(id, patientId, unitAddress);
             addNotification({
                 type: 'success',
                 title: 'Sucesso',
@@ -118,31 +120,6 @@ const GroupManagement: React.FC = () => {
             });
         }
     };
-
-    // Old removal function, kept for reference or fallback if needed, but replaced by handleRemoveClick
-    /*
-    const handleRemoveParticipant = async (participantId: string) => {
-        if (!id) return;
-        if (window.confirm('Tem certeza que deseja remover este participante do grupo?')) {
-            try {
-                await groupService.removeParticipant(id, participantId);
-                setParticipants(prev => prev.filter(p => p.id !== participantId));
-                addNotification({
-                    type: 'success',
-                    title: 'Participante removido',
-                    message: 'O participante foi removido do grupo com sucesso.'
-                });
-            } catch (error) {
-                console.error("Error removing participant:", error);
-                addNotification({
-                    type: 'alert',
-                    title: 'Erro',
-                    message: 'Falha ao remover participante.'
-                });
-            }
-        }
-    };
-    */
 
     const handleRemoveClick = (participant: Participant) => {
         setParticipantToDischarge(participant);

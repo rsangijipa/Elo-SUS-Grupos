@@ -17,8 +17,8 @@ export interface Patient {
     address?: string;
     neighborhood?: string;
     observacoes?: string;
-    createdAt?: any;
-    updatedAt?: any;
+    createdAt?: Date | { toDate: () => Date } | any;
+    updatedAt?: Date | { toDate: () => Date } | any;
     hasAlert?: boolean; // Flag for emotional risk alert
     stats?: {
         loginStreak: number;

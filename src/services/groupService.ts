@@ -103,7 +103,7 @@ export const groupService = {
         }
     },
 
-    addParticipant: async (groupId: string, patientId: string) => {
+    addParticipant: async (groupId: string, patientId: string, unitAddress: string) => {
         try {
             await runTransaction(db, async (transaction) => {
                 const groupRef = doc(db, COLLECTION_NAME, groupId);
@@ -129,10 +129,7 @@ export const groupService = {
                     };
 
                     const patientData = patientDoc.data();
-                    // Assuming group has an address or is tied to a unit with an address.
-                    // For now, using a hypothetical unit address or the group's location.
-                    // If group doesn't have address, we try unit.
-                    const unitAddress = "Rua da UBS Central, 123"; // Placeholder or fetch from UnitService
+                    // Unit address is now passed as argument
 
                     if (patientData.address && unitAddress) {
                         const { MapService } = await import('./MapService');

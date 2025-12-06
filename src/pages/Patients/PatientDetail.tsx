@@ -13,6 +13,7 @@ import { pdfService } from '../../services/pdfService';
 import { AIService } from '../../services/vertexAI';
 import { Patient } from '../../types/patient';
 import HumanizedText from '../../components/Common/HumanizedText';
+import { formatDate } from '../../utils/dateUtils';
 import { OrganizationSettings } from '../../config/settings';
 
 const PatientDetail = () => {
@@ -148,7 +149,7 @@ const PatientDetail = () => {
                         </button>
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900">{patient.name}</h1>
-                            <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {new Date(patient.birthDate).toLocaleDateString('pt-BR')}</p>
+                            <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {formatDate(patient.birthDate)}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -291,6 +292,7 @@ const PatientDetail = () => {
                                 </h2>
                                 <button
                                     onClick={() => setShowSimplified(!showSimplified)}
+                                    data-testid="toggle-simplify-report"
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${showSimplified
                                         ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
                                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -309,7 +311,7 @@ const PatientDetail = () => {
                                     <h3 className="text-lg font-bold text-slate-800 mb-2">Avaliação Psicológica Inicial</h3>
                                     <HumanizedText
                                         text="Paciente relata quadro de anedonia persistente e insônia terminal. Apresenta embotamento afetivo moderado. Nega ideação suicida estruturada, mas refere desesperança. Encaminhado para Terapia Cognitivo-Comportamental."
-                                        showSimplified={showSimplified}
+                                        isEnabled={showSimplified}
                                     />
                                     <div className="flex items-center gap-3 mt-4">
                                         <div className="flex -space-x-2">
@@ -326,7 +328,7 @@ const PatientDetail = () => {
                                     <h3 className="text-lg font-bold text-slate-700 mb-2">Triagem Inicial CAS</h3>
                                     <HumanizedText
                                         text="Paciente comparece à unidade com queixas somáticas difusas (taquicardia, dispneia) sem causa orgânica aparente. Relata estressores familiares recentes. Hipótese diagnóstica: Transtorno de Ansiedade Generalizada (F41.1)."
-                                        showSimplified={showSimplified}
+                                        isEnabled={showSimplified}
                                     />
                                     <div className="flex items-center gap-3 mt-4">
                                         <div className="flex -space-x-2">
@@ -619,7 +621,7 @@ const PatientDetail = () => {
                                         </div>
                                         {log.note && <p className="text-sm text-slate-600 mt-1">"{log.note}"</p>}
                                         <div className="flex flex-wrap gap-2 mt-2">
-                                            {log.tags.map(tag => (
+                                            {log.tags.map((tag: string) => (
                                                 <span key={tag} className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                                                     #{tag}
                                                 </span>

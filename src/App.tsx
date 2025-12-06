@@ -50,6 +50,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
 };
 
 import { AccessibilityProvider } from './contexts/AccessibilityContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 function App() {
   return (
@@ -57,102 +58,104 @@ function App() {
       <AccessibilityProvider>
         <NotificationProvider>
           <AuthProvider>
-            <ThemeProvider>
-              <DataProvider>
-                <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <Layout />
-                      </ProtectedRoute>
-                    }>
-                      <Route index element={<Navigate to="/dashboard" replace />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="schedule" element={<Schedule />} />
-                      <Route path="reports" element={<Reports />} />
-                      <Route path="reports/unit" element={<UnitReport />} />
-                      <Route path="profile" element={<Profile />} />
-                      <Route path="session/:id" element={<SessionMode />} />
-                      <Route path="support" element={<Support />} />
+            <SettingsProvider>
+              <ThemeProvider>
+                <DataProvider>
+                  <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <Layout />
+                        </ProtectedRoute>
+                      }>
+                        <Route index element={<Navigate to="/dashboard" replace />} />
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="schedule" element={<Schedule />} />
+                        <Route path="reports" element={<Reports />} />
+                        <Route path="reports/unit" element={<UnitReport />} />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="session/:id" element={<SessionMode />} />
+                        <Route path="support" element={<Support />} />
 
-                      {/* Clinical Routes - Admin & Professional */}
-                      <Route path="network" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <NetworkManager />
-                        </RoleGuard>
-                      } />
-                      <Route path="protocols" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <GroupProtocols />
-                        </RoleGuard>
-                      } />
-                      <Route path="resources" element={<Resources />} />
-                      <Route path="materials" element={<Materials />} />
-                      <Route path="wellbeing" element={<WellbeingCenter />} />
+                        {/* Clinical Routes - Admin & Professional */}
+                        <Route path="network" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <NetworkManager />
+                          </RoleGuard>
+                        } />
+                        <Route path="protocols" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <GroupProtocols />
+                          </RoleGuard>
+                        } />
+                        <Route path="resources" element={<Resources />} />
+                        <Route path="materials" element={<Materials />} />
+                        <Route path="wellbeing" element={<WellbeingCenter />} />
 
-                      <Route path="patients/:id" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <PatientDetail />
-                        </RoleGuard>
-                      } />
-                      <Route path="groups" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <GroupList />
-                        </RoleGuard>
-                      } />
-                      <Route path="my-group" element={
-                        <RoleGuard allowed={['patient']} fallback={<Navigate to="/dashboard" replace />}>
-                          <MyGroup />
-                        </RoleGuard>
-                      } />
-                      <Route path="groups/:id/manage" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <GroupManagement />
-                        </RoleGuard>
-                      } />
-                      <Route path="patients" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <PatientList />
-                        </RoleGuard>
-                      } />
-                      <Route path="patients/new" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <PatientForm />
-                        </RoleGuard>
-                      } />
-                      <Route path="patients/edit/:id" element={
-                        <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
-                          <PatientForm />
-                        </RoleGuard>
-                      } />
-                      <Route path="anamnese" element={<AnamnesisPage />} />
+                        <Route path="patients/:id" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <PatientDetail />
+                          </RoleGuard>
+                        } />
+                        <Route path="groups" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <GroupList />
+                          </RoleGuard>
+                        } />
+                        <Route path="my-group" element={
+                          <RoleGuard allowed={['patient']} fallback={<Navigate to="/dashboard" replace />}>
+                            <MyGroup />
+                          </RoleGuard>
+                        } />
+                        <Route path="groups/:id/manage" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <GroupManagement />
+                          </RoleGuard>
+                        } />
+                        <Route path="patients" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <PatientList />
+                          </RoleGuard>
+                        } />
+                        <Route path="patients/new" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <PatientForm />
+                          </RoleGuard>
+                        } />
+                        <Route path="patients/edit/:id" element={
+                          <RoleGuard allowed={['admin', 'professional']} fallback={<Navigate to="/dashboard" replace />}>
+                            <PatientForm />
+                          </RoleGuard>
+                        } />
+                        <Route path="anamnese" element={<AnamnesisPage />} />
 
-                      {/* Admin Only */}
-                      <Route path="admin" element={
-                        <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
-                          <AdminDashboard />
-                        </RoleGuard>
-                      } />
-                      <Route path="developer" element={
-                        <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
-                          <DeveloperTools />
-                        </RoleGuard>
-                      } />
-                      <Route path="admin/health" element={
-                        <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
-                          <SystemHealth />
-                        </RoleGuard>
-                      } />
-                    </Route>
+                        {/* Admin Only */}
+                        <Route path="admin" element={
+                          <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                            <AdminDashboard />
+                          </RoleGuard>
+                        } />
+                        <Route path="developer" element={
+                          <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                            <DeveloperTools />
+                          </RoleGuard>
+                        } />
+                        <Route path="admin/health" element={
+                          <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                            <SystemHealth />
+                          </RoleGuard>
+                        } />
+                      </Route>
 
-                    {/* Catch all */}
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                  </Routes>
-                </Suspense>
-              </DataProvider>
-            </ThemeProvider>
+                      {/* Catch all */}
+                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    </Routes>
+                  </Suspense>
+                </DataProvider>
+              </ThemeProvider>
+            </SettingsProvider>
           </AuthProvider>
         </NotificationProvider>
       </AccessibilityProvider>

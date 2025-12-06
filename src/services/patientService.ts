@@ -141,20 +141,25 @@ export const patientService = {
         if (!searchTerm || searchTerm.length < 2) return [];
 
         try {
-            // Fetch all patients to perform client-side case-insensitive filtering
-            // Note: For large datasets, this should be replaced by a dedicated search service (e.g., Algolia) or a normalized 'name_lower' field in Firestore.
-            const q = query(collection(db, COLLECTION_NAME), where('role', '==', 'patient'));
+            // Scalable Firestore Search (Prefix Search)
+            // Note: This is case-sensitive. For case-insensitive, we strictly need a 'name_lower' field in DB.
+            // As a fallback for this phase, we assume the user types matching case or we'd rely on 'name_lower' field implementation later.
+            // However, the request asked for this specifically:
+            const q = query(
+                collection(db, COLLECTION_NAME),
+                where('role', '==', 'patient'),
+                orderBy('name'),
+                startAt(searchTerm),
+                endAt(searchTerm + '\uf8ff'),
+                limit(20)
+            );
+
             const snapshot = await getDocs(q);
 
-            const lowerTerm = searchTerm.toLowerCase();
-            const allPatients = snapshot.docs.map(doc => ({
+            return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as Patient));
-
-            return allPatients
-                .filter(p => p.name.toLowerCase().includes(lowerTerm))
-                .slice(0, 5);
         } catch (error) {
             console.error("Error searching patients:", error);
             throw error;

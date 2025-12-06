@@ -31,7 +31,10 @@ interface TerritoryMapProps {
     patients: Patient[];
 }
 
+import { useSettings } from '../../contexts/SettingsContext';
+
 const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
+    const { unitAddress } = useSettings();
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [mapError, setMapError] = useState<boolean>(false);
 
@@ -82,6 +85,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                     center={defaultCenter}
                     zoom={13}
                     options={options}
+                    data-testid="territory-map-container"
                 >
                     {/* Health Unit Marker */}
                     <Marker
@@ -90,7 +94,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                             url: 'http://maps.google.com/mapfiles/kml/pal2/icon2.png', // Distinct icon for Unit
                             scaledSize: new google.maps.Size(40, 40)
                         }}
-                        title="Unidade de Saúde"
+                        title={`Unidade de Saúde: ${unitAddress}`}
                     />
 
                     {/* Patient Markers */}
@@ -101,6 +105,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                                 position={patient.coordinates}
                                 icon={getMarkerIcon(patient.riskLevel)}
                                 onClick={() => setSelectedPatient(patient)}
+                                data-testid="map-marker"
                             />
                         )
                     ))}
@@ -120,10 +125,10 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                                 <div className="space-y-2 text-xs text-slate-600">
                                     <p className="flex items-center gap-1">
                                         <span className="font-bold">Grupo:</span>
-                                        {selectedPatient.tags?.[0] || 'Geral'}
+                                        {selectedPatient.territorialTags?.[0] || 'Geral'}
                                     </p>
 
-                                    {selectedPatient.riskLevel === 'high' && (
+                                    {(selectedPatient.riskLevel === 'HIGH' || selectedPatient.riskLevel?.toLowerCase() === 'high') && (
                                         <div className="bg-red-50 text-red-700 p-2 rounded-lg border border-red-100 mt-1">
                                             <p className="font-bold flex items-center gap-1">
                                                 <AlertTriangle size={10} />

@@ -107,6 +107,7 @@ export default function MoodTracker() {
                         <button
                             key={emoji.value}
                             onClick={() => handleMoodSelect(emoji.value)}
+                            data-testid={`btn-mood-${emoji.value}`}
                             className={`transform transition-all duration-300 hover:scale-125 focus:outline-none ${selectedMood === emoji.value ? 'scale-125 grayscale-0' : 'grayscale-50 hover:grayscale-0'
                                 }`}
                             title={emoji.label}

@@ -4,9 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import CineTerapia from '../../components/MyGroup/CineTerapia';
 import GroupChat from '../../components/MyGroup/GroupChat';
 import FeedbackBox from '../../components/MyGroup/FeedbackBox';
+import { useSettings } from '../../contexts/SettingsContext';
 
 const MyGroup: React.FC = () => {
     const { user } = useAuth();
+    const { unitAddress } = useSettings();
 
     // Mock Data for Timeline
     const sessions = [
@@ -23,7 +25,7 @@ const MyGroup: React.FC = () => {
             if (groups.length > 0) {
                 const group = groups[0];
                 if (user?.id) {
-                    await import('../../services/groupService').then(m => m.groupService.addParticipant(group.id, user.id));
+                    await import('../../services/groupService').then(m => m.groupService.addParticipant(group.id, user.id, unitAddress));
                     window.location.reload(); // Force reload to update context
                 }
             } else {

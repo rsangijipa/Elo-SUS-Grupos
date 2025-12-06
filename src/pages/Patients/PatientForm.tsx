@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, MapPin, PlusCircle, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSettings } from '../../contexts/SettingsContext';
 import { patientService } from '../../services/patientService';
 import { healthUnitService } from '../../services/healthUnitService';
 import { groupService } from '../../services/groupService';
@@ -13,6 +14,7 @@ import { validateCNS, formatCNS } from '../../utils/validators';
 const PatientForm: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { unitAddress } = useSettings();
     const [loading, setLoading] = useState(false);
     const [healthUnits, setHealthUnits] = useState<HealthUnit[]>([]);
     const [activeGroups, setActiveGroups] = useState<Group[]>([]);
@@ -89,7 +91,7 @@ const PatientForm: React.FC = () => {
     const handleAddToGroup = async (groupId: string) => {
         if (!id) return;
         try {
-            await groupService.addParticipant(groupId, id);
+            await groupService.addParticipant(groupId, id, unitAddress);
             toast.success('Paciente adicionado ao grupo com sucesso!');
             loadActiveGroups();
         } catch (error) {
@@ -167,6 +169,7 @@ const PatientForm: React.FC = () => {
                             required
                             value={formData.name}
                             onChange={handleChange}
+                            data-testid="input-patient-name"
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
                             placeholder="Nome completo do paciente"
                         />
@@ -183,6 +186,33 @@ const PatientForm: React.FC = () => {
                             className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors"
                         />
                     </div>
+
+                    {/* ... (Start of Address Section) ... */}
+
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">Endereço Completo</label>
+                        <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                            data-testid="input-patient-address"
+                            className="block w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[#0054A6] focus:ring-1 focus:ring-[#0054A6] outline-none transition-colors placeholder:text-slate-400"
+                            placeholder="Rua, Número, Complemento"
+                        />
+                    </div>
+
+                    {/* ... (End of Form) ... */}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        data-testid="btn-save-patient"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 md:py-2.5 text-sm font-bold text-white bg-[#0054A6] hover:bg-[#004080] rounded-lg shadow-sm transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Save size={18} />
+                        {loading ? 'Salvando...' : 'Salvar'}
+                    </button>
 
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Sexo *</label>
@@ -219,8 +249,8 @@ const PatientForm: React.FC = () => {
                             value={formData.cns}
                             onChange={handleChange}
                             className={`block w-full rounded-lg border px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 ${formData.cns && !validateCNS(formData.cns)
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
-                                    : 'border-slate-200 bg-slate-50 focus:border-[#0054A6] focus:ring-[#0054A6]'
+                                ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                                : 'border-slate-200 bg-slate-50 focus:border-[#0054A6] focus:ring-[#0054A6]'
                                 }`}
                             placeholder="000 0000 0000 0000"
                         />

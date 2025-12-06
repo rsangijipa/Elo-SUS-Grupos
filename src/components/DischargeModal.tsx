@@ -25,9 +25,16 @@ export interface DischargeData {
     patientAware: boolean;
 }
 
+import { useSettings } from '../contexts/SettingsContext';
+
+// ... interface ...
+
 const DischargeModal: React.FC<DischargeModalProps> = ({
-    isOpen, onClose, patientName, groupName, originUnit, distanceToUnit, onConfirm
+    isOpen, onClose, patientName, groupName, originUnit: propOriginUnit, distanceToUnit, onConfirm
 }) => {
+    const { unitAddress, unitName } = useSettings();
+    const originUnit = propOriginUnit || unitName; // Use prop or fallback to settings
+
     const [dischargeType, setDischargeType] = useState<DischargeType>('IMPROVEMENT');
     const [destinationUnit, setDestinationUnit] = useState('');
     const [generatedText, setGeneratedText] = useState('');
@@ -203,6 +210,7 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
                                 <button
                                     onClick={handleAnalyzeCase}
                                     disabled={isAnalyzing}
+                                    data-testid="btn-ai-analysis"
                                     className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium border border-purple-200"
                                 >
                                     {isAnalyzing ? (
