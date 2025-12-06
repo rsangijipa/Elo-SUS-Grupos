@@ -141,8 +141,8 @@ export const referralService = {
 
             const docRef = await addDoc(collection(db, COLLECTION_NAME), newReferralData);
 
-            // Update patient status to 'encaminhado'
-            if (referralData.patientId) {
+            // Update patient status to 'encaminhado' only if it's an existing patient
+            if (referralData.patientId && referralData.patientId !== 'new') {
                 const userRef = doc(db, 'users', referralData.patientId);
                 await updateDoc(userRef, {
                     status: 'encaminhado',

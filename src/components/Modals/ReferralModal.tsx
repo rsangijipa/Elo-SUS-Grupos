@@ -118,7 +118,7 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
 
                 {/* Form Content */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50">
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                    <form id="referral-form" onSubmit={handleSubmit} className="space-y-8">
                         {/* Section: Patient Data */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -129,6 +129,7 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
                                     <label className="block text-sm font-bold text-slate-700 mb-2">Nome do Paciente</label>
                                     <PatientSearch
                                         onSelect={handlePatientSelect}
+                                        onSearchChange={(term) => setFormData(prev => ({ ...prev, patientName: term, patientId: 'new' }))}
                                         placeholder="Digite para buscar..."
                                     />
                                 </div>
@@ -305,32 +306,33 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Footer Actions */}
-                        <div className="flex justify-end gap-4 pt-4 border-t border-slate-200">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-6 py-3 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="px-8 py-3 bg-gradient-to-r from-[#0054A6] to-[#004080] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-900/20 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {loading ? (
-                                    <>Enviando...</>
-                                ) : (
-                                    <>
-                                        <CheckCircle2 size={20} />
-                                        Confirmar Encaminhamento
-                                    </>
-                                )}
-                            </button>
-                        </div>
                     </form>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="flex justify-end gap-4 p-6 border-t border-slate-200 bg-white">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-6 py-3 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        form="referral-form"
+                        disabled={loading}
+                        className="px-8 py-3 bg-gradient-to-r from-[#0054A6] to-[#004080] text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-900/20 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {loading ? (
+                            <>Enviando...</>
+                        ) : (
+                            <>
+                                <CheckCircle2 size={20} />
+                                Confirmar Encaminhamento
+                            </>
+                        )}
+                    </button>
                 </div>
             </div>
         </div>

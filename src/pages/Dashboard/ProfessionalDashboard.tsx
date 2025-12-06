@@ -11,6 +11,7 @@ import HealthRadar from '../../components/Dashboard/HealthRadar';
 import HeatmapWidget from '../../components/Dashboard/HeatmapWidget';
 import { moodService, MoodLog } from '../../services/moodService';
 import AIAgentWelcome from '../../components/Dashboard/AIAgentWelcome';
+import TerritoryMap from '../../components/Dashboard/TerritoryMap';
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -256,6 +257,11 @@ const ProfessionalDashboard: React.FC = () => {
                     {/* Health Radar (Cross-Data Intelligence) */}
                     <div className="w-full">
                         <HealthRadar patients={myPatients} moodMap={moodMap} />
+                    </div>
+
+                    {/* Territoy Map (New) */}
+                    <div className="w-full">
+                        <TerritoryMap patients={myPatients} />
                     </div>
 
                     {/* Insights Widget */}

@@ -7,9 +7,10 @@ interface PatientSearchProps {
     onSelect: (patient: Patient) => void;
     placeholder?: string;
     excludeIds?: string[];
+    onSearchChange?: (term: string) => void;
 }
 
-export default function PatientSearch({ onSelect, placeholder = "Buscar paciente por nome...", excludeIds = [] }: PatientSearchProps) {
+export default function PatientSearch({ onSelect, onSearchChange, placeholder = "Buscar paciente por nome...", excludeIds = [] }: PatientSearchProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(false);
@@ -64,7 +65,11 @@ export default function PatientSearch({ onSelect, placeholder = "Buscar paciente
                 <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchTerm(value);
+                        if (onSearchChange) onSearchChange(value);
+                    }}
                     placeholder={placeholder}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0054A6] focus:border-transparent outline-none transition-all"
                 />

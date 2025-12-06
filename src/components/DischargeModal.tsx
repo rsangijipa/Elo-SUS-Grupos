@@ -321,6 +321,7 @@ const DischargeModal: React.FC<DischargeModalProps> = ({
                     <button
                         onClick={handleConfirm}
                         className="flex items-center gap-2 px-6 py-2.5 bg-[#0054A6] text-white font-bold rounded-lg hover:bg-[#004080] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        data-testid="btn-generate-pdf"
                     >
                         <CheckCircle size={18} />
                         Confirmar e Gerar PDF
