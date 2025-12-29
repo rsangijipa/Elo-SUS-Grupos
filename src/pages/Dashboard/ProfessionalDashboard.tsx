@@ -73,28 +73,27 @@ const ProfessionalDashboard: React.FC = () => {
         const init = async () => {
             setIsLoadingData(true);
             try {
-                try {
-                    const [refData, patData, grpData, aptData] = await Promise.all([
-                        referralService.getAll(),
-                        patientService.getAll(),
-                        groupService.getAll(),
-                        appointmentService.getAll()
-                    ]);
+                const [refData, patData, grpData, aptData] = await Promise.all([
+                    referralService.getAll(),
+                    patientService.getAll(),
+                    groupService.getAll(),
+                    appointmentService.getAll()
+                ]);
 
-                    setReferrals(refData);
-                    setPatients(patData);
-                    setGroups(grpData);
-                    setAppointments(aptData);
-                } catch (error) {
-                    console.error("Failed to load dashboard data:", error);
-                    toast.error("Erro ao carregar dados do dashboard.");
-                } finally {
-                    setIsLoadingData(false);
-                    setStatsLoading(false);
-                }
-            };
-            init();
-        }, []);
+                setReferrals(refData);
+                setPatients(patData);
+                setGroups(grpData);
+                setAppointments(aptData);
+            } catch (error) {
+                console.error("Failed to load dashboard data:", error);
+                toast.error("Erro ao carregar dados do dashboard.");
+            } finally {
+                setIsLoadingData(false);
+                setStatsLoading(false);
+            }
+        };
+        init();
+    }, []);
 
     // Load Mood Data for Health Radar
     useEffect(() => {

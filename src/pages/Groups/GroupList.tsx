@@ -8,12 +8,16 @@ import { Group } from '../../types/group';
 import { toast } from 'react-hot-toast';
 
 const GroupList: React.FC = () => {
-    const { groups, loading, refreshData } = useData();
+    const { groups, loading, refreshData, fetchGroups } = useData();
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activePopover, setActivePopover] = useState<string | null>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchGroups();
+    }, []);
 
     const handleDeleteGroup = async (groupId: string) => {
         if (window.confirm('Tem certeza que deseja excluir este grupo? Esta ação não pode ser desfeita.')) {

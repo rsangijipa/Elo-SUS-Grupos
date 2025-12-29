@@ -20,7 +20,7 @@ import {
 import { db } from './firebase';
 import type { Patient } from '../types/patient';
 
-const COLLECTION_NAME = 'users';
+const COLLECTION_NAME = 'patients';
 
 export const patientService = {
     create: async (patient: Omit<Patient, 'id'>) => {
@@ -70,7 +70,7 @@ export const patientService = {
 
     update: async (id: string, patient: Partial<Patient>) => {
         try {
-            let updates: any = { ...patient };
+            const updates: Record<string, unknown> = { ...patient };
 
             // Re-geocode if address changes
             if (patient.address) {
@@ -189,7 +189,7 @@ export const patientService = {
         }
     },
 
-    getPatientsPaginated: async (lastDoc?: any, limitCount: number = 20) => {
+    getPatientsPaginated: async (lastDoc?: unknown, limitCount: number = 20) => {
         try {
             let q = query(
                 collection(db, COLLECTION_NAME),

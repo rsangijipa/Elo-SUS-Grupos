@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, User, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import AddAppointmentModal from '../../components/Modals/AddAppointmentModal';
 import { toast } from 'react-hot-toast';
 
 const Schedule: React.FC = () => {
-    const { appointments, groups, loading } = useData();
+    const { appointments, groups, loading, fetchAppointments, fetchGroups } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
+    useEffect(() => {
+        fetchAppointments();
+        fetchGroups();
+    }, []);
 
     if (loading) {
         return (

@@ -15,7 +15,7 @@ export interface HealthLog {
     timestamp: string;
     message: string;
     status: 'ok' | 'error' | 'warning' | 'info';
-    details?: any;
+    details?: Record<string, unknown>;
 }
 
 export const healthService = {

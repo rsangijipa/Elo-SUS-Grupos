@@ -13,6 +13,9 @@ interface DataContextType {
     patients: Patient[];
     appointments: Appointment[];
     loading: boolean;
+    fetchGroups: () => Promise<void>;
+    fetchPatients: () => Promise<void>;
+    fetchAppointments: () => Promise<void>;
     addGroup: (group: Omit<Group, 'id'>) => Promise<void>;
     addPatient: (patient: Omit<Patient, 'id'>) => Promise<void>;
     updatePatient: (id: string, data: Partial<Patient>) => Promise<void>;
@@ -29,46 +32,55 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [groups, setGroups] = useState<Group[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (user) {
-            loadData();
-        } else {
-            setGroups([]);
-            setPatients([]);
-            setAppointments([]);
-            setLoading(false);
-        }
-    }, [user]);
-
-    const loadData = async () => {
+    const fetchGroups = async () => {
         setLoading(true);
         try {
-            const [fetchedGroups, fetchedPatients, fetchedAppointments] = await Promise.all([
-                groupService.getAll(),
-                patientService.getAll(),
-                appointmentService.getAll()
-            ]);
-            setGroups(fetchedGroups);
-            setPatients(fetchedPatients);
-            setAppointments(fetchedAppointments);
+            const data = await groupService.getAll();
+            setGroups(data);
         } catch (error) {
-            console.error('Error loading data:', error);
-            addNotification({
-                type: 'alert',
-                title: 'Erro ao carregar dados',
-                message: 'Não foi possível sincronizar com o servidor.'
-            });
+            console.error('Error loading groups:', error);
+            addNotification({ type: 'alert', title: 'Erro', message: 'Falha ao carregar grupos.' });
         } finally {
             setLoading(false);
         }
     };
 
+    const fetchPatients = async () => {
+        setLoading(true);
+        try {
+            const data = await patientService.getAll();
+            setPatients(data);
+        } catch (error) {
+            console.error('Error loading patients:', error);
+            addNotification({ type: 'alert', title: 'Erro', message: 'Falha ao carregar pacientes.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAppointments = async () => {
+        setLoading(true);
+        try {
+            const data = await appointmentService.getAll();
+            setAppointments(data);
+        } catch (error) {
+            console.error('Error loading appointments:', error);
+            addNotification({ type: 'alert', title: 'Erro', message: 'Falha ao carregar agendamentos.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const refreshData = async () => {
+        await Promise.all([fetchGroups(), fetchPatients(), fetchAppointments()]);
+    };
+
     const addGroup = async (groupData: Omit<Group, 'id'>) => {
         try {
             await groupService.create(groupData);
-            await loadData(); // Refresh to get the new ID and server timestamp
+            await fetchGroups();
             addNotification({
                 type: 'success',
                 title: 'Grupo criado',
@@ -83,7 +95,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const addPatient = async (patientData: Omit<Patient, 'id'>) => {
         try {
             await patientService.create(patientData);
-            await loadData();
+            await fetchPatients();
             addNotification({
                 type: 'success',
                 title: 'Paciente cadastrado',
@@ -98,7 +110,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatePatient = async (id: string, data: Partial<Patient>) => {
         try {
             await patientService.update(id, data);
-            await loadData();
+            await fetchPatients();
             addNotification({
                 type: 'success',
                 title: 'Paciente atualizado',
@@ -113,7 +125,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const deletePatient = async (id: string) => {
         try {
             await patientService.delete(id);
-            await loadData();
+            await fetchPatients();
             addNotification({
                 type: 'success',
                 title: 'Paciente removido',
@@ -128,7 +140,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
         try {
             await appointmentService.create(appointmentData);
-            await loadData();
+            await fetchAppointments();
             addNotification({
                 type: 'success',
                 title: 'Agendamento criado',
@@ -140,16 +152,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const refreshData = async () => {
-        await loadData();
-    };
-
     return (
         <DataContext.Provider value={{
             groups,
             patients,
             appointments,
             loading,
+            fetchGroups,
+            fetchPatients,
+            fetchAppointments,
             addGroup,
             addPatient,
             updatePatient,

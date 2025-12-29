@@ -34,7 +34,7 @@ export const appointmentService = {
                     date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date
                 } as Appointment;
             });
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error fetching appointments:', error);
             return [];
         }
@@ -53,7 +53,7 @@ export const appointmentService = {
                 } as Appointment;
             }
             return null;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error fetching appointment:', error);
             return null;
         }
@@ -77,7 +77,7 @@ export const appointmentService = {
                 updatedAt: serverTimestamp()
             });
             return docRef.id;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error creating appointment:', error);
             throw error;
         }
@@ -86,7 +86,7 @@ export const appointmentService = {
     update: async (id: string, data: Partial<Appointment>): Promise<void> => {
         try {
             const docRef = doc(db, COLLECTION_NAME, id);
-            const updateData = {
+            const updateData: Record<string, any> = {
                 ...data,
                 updatedAt: serverTimestamp()
             };
@@ -96,7 +96,7 @@ export const appointmentService = {
             }
 
             await updateDoc(docRef, updateData);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error updating appointment:', error);
             throw error;
         }
@@ -106,7 +106,7 @@ export const appointmentService = {
         try {
             const docRef = doc(db, COLLECTION_NAME, id);
             await deleteDoc(docRef);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting appointment:', error);
             throw error;
         }

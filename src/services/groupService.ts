@@ -120,7 +120,7 @@ export const groupService = {
 
                 if (!participants.includes(patientId)) {
                     // Territorial Logic
-                    let updates: any = {
+                    const updates: Record<string, any> = {
                         groupId: groupId,
                         currentGroupId: groupId,
                         status: 'active',

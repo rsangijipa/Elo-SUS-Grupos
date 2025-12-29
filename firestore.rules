@@ -40,6 +40,12 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
     }
+    
+    // --- REGRAS DA COLEÇÃO DE PACIENTES ---
+    match /patients/{patientId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if isAdmin() || isProfessional();
+    }
 
     // --- REGRAS PARA GRUPOS E MATERIAIS ---
     match /groups/{groupId} {

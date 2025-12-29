@@ -11,7 +11,7 @@ export const authService = {
         const credential = EmailAuthProvider.credential(user.email, password);
         try {
             await reauthenticateWithCredential(user, credential);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error reauthenticating:", error);
             throw new Error('Senha atual incorreta.');
         }
@@ -22,9 +22,9 @@ export const authService = {
 
         try {
             await updatePassword(user, newPassword);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error updating password:", error);
-            if (error.code === 'auth/requires-recent-login') {
+            if (error instanceof Error && (error as any).code === 'auth/requires-recent-login') {
                 throw new Error('REQ_LOGIN');
             }
             throw error;
@@ -63,9 +63,9 @@ export const authService = {
             } else {
                 return userDoc.data() as UserProfile;
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error signing in with Google:", error);
-            if (error.code === 'auth/popup-closed-by-user') {
+            if (error instanceof Error && (error as any).code === 'auth/popup-closed-by-user') {
                 throw new Error('Login cancelado pelo usuário.');
             }
             throw error;

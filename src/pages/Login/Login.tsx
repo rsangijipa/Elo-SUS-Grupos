@@ -12,7 +12,7 @@ import HelpModal from '../../components/Auth/HelpModal';
 import RoleSwitcher from './components/RoleSwitcher';
 import LoginForm from './components/LoginForm';
 import AuroraCarousel from './components/AuroraCarousel';
-import { seedDatabase } from '../../utils/seedDatabase';
+// import { seedDatabase } from '../../utils/seedDatabase';
 import { toast } from 'react-hot-toast';
 import { capitalizeName } from '../../utils/stringUtils';
 
@@ -53,21 +53,6 @@ export default function Login() {
     // Set default role to patient on mount
     useEffect(() => {
         setTheme('patient');
-
-        // Check for seed param
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('seed') === 'true') {
-            const runSeed = async () => {
-                toast.loading('Populando banco de dados...', { id: 'seed-toast' });
-                const success = await seedDatabase();
-                if (success) {
-                    toast.success('Banco populado com sucesso!', { id: 'seed-toast' });
-                } else {
-                    toast.error('Erro ao popular banco.', { id: 'seed-toast' });
-                }
-            };
-            runSeed();
-        }
     }, []);
 
     const handleRoleChange = (newRole: 'patient' | 'professional') => {
@@ -158,7 +143,7 @@ export default function Login() {
             addNotification({
                 type: 'alert',
                 title: 'Erro na autenticação',
-                message: error instanceof Error ? error.message : 'Verifique suas credenciais e tente novamente.'
+                message: (error instanceof Error && error.message) ? error.message : 'Verifique suas credenciais e tente novamente.'
             });
         } finally {
             setIsLoading(false);

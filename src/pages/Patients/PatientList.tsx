@@ -6,10 +6,11 @@ import { useData } from '../../contexts/DataContext';
 import ReferralModal from '../../components/Modals/ReferralModal';
 import { patientService } from '../../services/patientService';
 import { getAge, formatDate } from '../../utils/dateUtils';
+import type { Patient } from '../../types/patient';
 
 const PatientList: React.FC = () => {
     const { deletePatient: deletePatientContext } = useData();
-    const [localPatients, setLocalPatients] = useState<any[]>([]);
+    const [localPatients, setLocalPatients] = useState<Patient[]>([]);
     const [lastDoc, setLastDoc] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);

@@ -1,18 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 
-// 🚨 PASTE YOUR FIREBASE KEYS HERE 🚨
-// const firebaseConfig = {
-//   apiKey: "AIzaSy...",
-//   authDomain: "elosus-grupos.firebaseapp.com",
-//   projectId: "elosus-grupos",
-//   storageBucket: "elosus-grupos.appspot.com",
-//   messagingSenderId: "...",
-//   appId: "..."
-// };
-
-// Use environment variables if available, otherwise fall back to placeholders (or empty)
 // Use environment variables if available, otherwise fall back to placeholders (or empty)
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -38,8 +27,6 @@ if (app && auth) {
             console.error("Firebase Persistence Error:", error);
         });
 }
-
-import { enableIndexedDbPersistence } from 'firebase/firestore';
 
 if (db) {
     enableIndexedDbPersistence(db).catch((err) => {
