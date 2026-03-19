@@ -45,8 +45,8 @@ export const youtubeService = {
             const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
                 params: {
                     part: 'snippet',
-                    q: 'saude mental motivação bem estar',
-                    order: 'date', // Get fresh content
+                    q: 'saude mental meditacao guiada bem estar sus',
+                    order: 'relevance',
                     type: 'video',
                     maxResults: 1,
                     key: API_KEY,

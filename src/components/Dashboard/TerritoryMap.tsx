@@ -83,7 +83,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
         if (safeRisk === 'high') color = 'red';
         else if (safeRisk === 'medium' || safeRisk === 'attention') color = 'yellow';
 
-        return `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`;
+        return `https://maps.google.com/mapfiles/ms/icons/${color}-dot.png`;
     };
 
     return (
@@ -100,7 +100,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                     <Marker
                         position={defaultCenter}
                         icon={{
-                            url: 'http://maps.google.com/mapfiles/kml/pal2/icon2.png', // Distinct icon for Unit
+                            url: 'https://maps.google.com/mapfiles/kml/pal2/icon2.png',
                             scaledSize: new google.maps.Size(40, 40)
                         }}
                         title={`Unidade de Saúde: ${unitAddress}`}

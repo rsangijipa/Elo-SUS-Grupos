@@ -81,6 +81,19 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin() || isProfessional();
     }
 
+    match /referrals/{referralId} {
+      allow read: if isAdmin() || isProfessional() ||
+                   (request.auth != null && request.auth.uid == resource.data.patientId);
+      allow create, update, delete: if isAdmin() || isProfessional();
+    }
+
+    match /tobacco_anamnesis/{anamnesisId} {
+      allow read: if isAdmin() || isProfessional() ||
+                   (request.auth != null && request.auth.uid == resource.data.patientId);
+      allow create, update, delete: if isAdmin() || isProfessional() ||
+                                     (request.auth != null && request.auth.uid == request.resource.data.patientId);
+    }
+
     match /materials/{materialId} {
       allow read: if request.auth != null;
       allow write: if isAdmin() || isProfessional();
