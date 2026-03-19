@@ -37,6 +37,12 @@ const getInitialProfile = (uid: string, email: string, name: string, role: UserR
     return { ...base, crp: '', specialty: '', approach: '', bio: '' };
 };
 
+const omitUndefinedFields = <T extends Record<string, unknown>>(data: T) => {
+    return Object.fromEntries(
+        Object.entries(data).filter(([, value]) => value !== undefined)
+    ) as T;
+};
+
 interface AuthContextType {
     user: UserProfile | null;
     isAuthenticated: boolean;
@@ -116,8 +122,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const profileSnap = await getDoc(profileRef);
 
             if (!profileSnap.exists()) {
-                await signOut(auth);
-                throw new Error('Perfil de usuario nao encontrado.');
+                const recoveredProfile = omitUndefinedFields({
+                    ...getInitialProfile(
+                        credentials.user.uid,
+                        credentials.user.email || email,
+                        credentials.user.displayName || email.split('@')[0],
+                        expectedRole
+                    ),
+                    originalRole: expectedRole
+                });
+
+                await setDoc(profileRef, recoveredProfile, { merge: true });
+                const recoveredProfileState: Record<string, unknown> = {
+                    ...recoveredProfile,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                setUser(recoveredProfileState as unknown as UserProfile);
+                toast.success('Perfil recuperado com sucesso.');
+                return;
             }
 
             const profile = profileSnap.data() as UserProfile;
@@ -133,17 +156,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const register = async (data: RegisterData) => {
-        const res = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        const normalizedRole: UserRole = data.role === 'professional' ? 'professional' : data.role === 'admin' ? 'admin' : 'patient';
-        const profile = getInitialProfile(res.user.uid, data.email, data.name, normalizedRole);
-        
-        // Merge with registration fields (CPF, CNS, etc.)
-        const finalProfile = { ...profile, ...data, role: normalizedRole, originalRole: normalizedRole };
-        delete (finalProfile as any).password;
-        
-        await setDoc(doc(db, COLLECTIONS.USERS, res.user.uid), finalProfile);
-        setUser(finalProfile as any);
-        toast.success('Cadastrado!');
+        try {
+            const res = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const normalizedRole: UserRole = data.role === 'professional' ? 'professional' : data.role === 'admin' ? 'admin' : 'patient';
+            const profile = getInitialProfile(res.user.uid, data.email, data.name, normalizedRole);
+
+            const finalProfile = omitUndefinedFields({
+                ...profile,
+                ...data,
+                role: normalizedRole,
+                originalRole: normalizedRole
+            });
+
+            delete (finalProfile as any).password;
+
+            await setDoc(doc(db, COLLECTIONS.USERS, res.user.uid), finalProfile);
+            setUser(finalProfile as any);
+            toast.success('Cadastrado!');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : '';
+            if (message.toLowerCase().includes('email-already-in-use')) {
+                throw new Error('Este e-mail ja esta em uso. Tente entrar ou redefinir sua senha.');
+            }
+            throw error;
+        }
     };
 
     const logout = async () => {
