@@ -8,6 +8,7 @@ import {
     query,
     where,
     serverTimestamp,
+    Timestamp 
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -19,8 +20,8 @@ export interface Subscription {
     dataInscricao: string;
     dataConclusao?: string;
     observacoes?: string;
-    createdAt?: any;
-    updatedAt?: any;
+    createdAt?: Timestamp | null;
+    updatedAt?: Timestamp | null;
 }
 
 const COLLECTION_NAME = 'inscricoesGrupo';

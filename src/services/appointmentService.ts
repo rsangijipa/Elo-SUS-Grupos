@@ -12,15 +12,17 @@ import {
     serverTimestamp,
     Timestamp
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
 import { Appointment } from '../types/appointment';
+import { withErrorHandling } from '../utils/errorHandler';
 
-const COLLECTION_NAME = 'appointments';
+const COLLECTION_NAME = COLLECTIONS.APPOINTMENTS;
 
 export const appointmentService = {
     // Get all appointments (optionally filtered by range or group - simplistic for now)
     getAll: async (): Promise<Appointment[]> => {
-        try {
+        return withErrorHandling(async () => {
             // In a real app, we might want to filter by date range to avoid fetching too much
             const q = query(collection(db, COLLECTION_NAME), orderBy('date', 'asc'));
             const querySnapshot = await getDocs(q);
@@ -34,14 +36,11 @@ export const appointmentService = {
                     date: data.date instanceof Timestamp ? data.date.toDate().toISOString() : data.date
                 } as Appointment;
             });
-        } catch (error: unknown) {
-            console.error('Error fetching appointments:', error);
-            return [];
-        }
+        }, [] as Appointment[]);
     },
 
     getById: async (id: string): Promise<Appointment | null> => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
@@ -53,14 +52,11 @@ export const appointmentService = {
                 } as Appointment;
             }
             return null;
-        } catch (error: unknown) {
-            console.error('Error fetching appointment:', error);
-            return null;
-        }
+        }, null);
     },
 
     create: async (appointment: Omit<Appointment, 'id'>): Promise<string> => {
-        try {
+        return withErrorHandling(async () => {
             // Ensure date is stored as Timestamp or ISO string. 
             // Storing as ISO string is easier for simple querying if we don't need complex date math on server
             // But Timestamp is better for sorting. Let's convert to ISO string for now to match other parts, 
@@ -77,14 +73,11 @@ export const appointmentService = {
                 updatedAt: serverTimestamp()
             });
             return docRef.id;
-        } catch (error: unknown) {
-            console.error('Error creating appointment:', error);
-            throw error;
-        }
+        });
     },
 
     update: async (id: string, data: Partial<Appointment>): Promise<void> => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             const updateData: Record<string, any> = {
                 ...data,
@@ -96,19 +89,13 @@ export const appointmentService = {
             }
 
             await updateDoc(docRef, updateData);
-        } catch (error: unknown) {
-            console.error('Error updating appointment:', error);
-            throw error;
-        }
+        });
     },
 
     delete: async (id: string): Promise<void> => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             await deleteDoc(docRef);
-        } catch (error: unknown) {
-            console.error('Error deleting appointment:', error);
-            throw error;
-        }
+        });
     }
 };

@@ -115,6 +115,7 @@ const AnamnesisPage: React.FC = () => {
                         {protocol === 'TABAGISMO' ? (
                             <TobaccoAnamnesisForm
                                 patientId={user?.id || ''}
+                                patientName={user?.name || ''}
                                 onSave={handleTobaccoSave}
                             />
                         ) : (

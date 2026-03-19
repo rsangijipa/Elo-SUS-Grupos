@@ -1,7 +1,16 @@
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import {
+    updatePassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    GoogleAuthProvider,
+    sendPasswordResetEmail,
+    signInWithPopup
+} from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { auth, db } from './firebase';
 import { UserProfile } from '../types/schema';
+import { handleFirebaseError } from '../utils/errorHandler';
 
 export const authService = {
     reauthenticateUser: async (password: string) => {
@@ -12,8 +21,7 @@ export const authService = {
         try {
             await reauthenticateWithCredential(user, credential);
         } catch (error: unknown) {
-            console.error("Error reauthenticating:", error);
-            throw new Error('Senha atual incorreta.');
+            throw new Error(handleFirebaseError(error) || 'Senha atual incorreta.');
         }
     },
     updateUserPassword: async (newPassword: string) => {
@@ -23,21 +31,27 @@ export const authService = {
         try {
             await updatePassword(user, newPassword);
         } catch (error: unknown) {
-            console.error("Error updating password:", error);
             if (error instanceof Error && (error as any).code === 'auth/requires-recent-login') {
                 throw new Error('REQ_LOGIN');
             }
-            throw error;
+            throw new Error(handleFirebaseError(error));
         }
     },
-    signInWithGoogle: async (): Promise<UserProfile> => {
+    sendResetPassword: async (email: string) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+        } catch (error: unknown) {
+            throw new Error(handleFirebaseError(error));
+        }
+    },
+    signInWithGoogle: async (expectedRole: UserProfile['role'] = 'patient'): Promise<UserProfile> => {
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
             // Check if user exists in Firestore
-            const userDocRef = doc(db, 'users', user.uid);
+            const userDocRef = doc(db, COLLECTIONS.USERS, user.uid);
             const userDoc = await getDoc(userDocRef);
 
             if (!userDoc.exists()) {
@@ -47,7 +61,8 @@ export const authService = {
                     id: user.uid,
                     name: user.displayName || 'Usuário Google',
                     email: user.email || '',
-                    role: 'patient',
+                    role: expectedRole,
+                    originalRole: expectedRole,
                     photoURL: user.photoURL,
                     createdAt: new Date().toISOString(),
                     // Default fields
@@ -61,14 +76,21 @@ export const authService = {
                 await setDoc(userDocRef, newUserData);
                 return newUserData;
             } else {
-                return userDoc.data() as UserProfile;
+                const existingUser = userDoc.data() as UserProfile;
+
+                if (existingUser.role !== expectedRole) {
+                    await auth.signOut();
+                    const actualLabel = existingUser.role === 'professional' ? 'profissional' : existingUser.role === 'patient' ? 'paciente' : 'administrador';
+                    throw new Error(`Este cadastro Google pertence ao perfil ${actualLabel}. Selecione esse perfil para entrar.`);
+                }
+
+                return existingUser;
             }
         } catch (error: unknown) {
-            console.error("Error signing in with Google:", error);
             if (error instanceof Error && (error as any).code === 'auth/popup-closed-by-user') {
                 throw new Error('Login cancelado pelo usuário.');
             }
-            throw error;
+            throw new Error(handleFirebaseError(error));
         }
     }
 };

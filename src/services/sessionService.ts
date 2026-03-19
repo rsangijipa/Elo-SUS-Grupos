@@ -3,17 +3,34 @@ import {
     addDoc,
     updateDoc,
     doc,
+    getDoc,
     getDocs,
     query,
     where,
     serverTimestamp,
-    orderBy
+    orderBy,
+    limit,
+    type QueryConstraint
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
 import type { Session, Attendance } from '../types/session';
+import type { FirestoreDate } from '../types/shared';
 
-const SESSIONS_COLLECTION = 'sessoesGrupo';
+const SESSIONS_COLLECTION = COLLECTIONS.SESSIONS;
 const ATTENDANCE_COLLECTION = 'presencasSessao';
+
+export interface SessionRecord {
+    id?: string;
+    groupId: string;
+    date: string;
+    attendance: Record<string, 'present' | 'absent' | 'justified'>;
+    evolution: string;
+    checklist: Record<string, boolean>;
+    facilitatorId: string;
+    createdAt?: FirestoreDate;
+    updatedAt?: FirestoreDate;
+}
 
 export const sessionService = {
     create: async (session: Omit<Session, 'id'>) => {
@@ -33,6 +50,52 @@ export const sessionService = {
         });
     },
 
+    upsert: async (session: SessionRecord): Promise<SessionRecord> => {
+        const existing = await sessionService.getByGroupAndDate(session.groupId, session.date);
+        let sessionId = existing?.id;
+
+        if (sessionId) {
+            await updateDoc(doc(db, SESSIONS_COLLECTION, sessionId), {
+                ...session,
+                updatedAt: serverTimestamp()
+            });
+        } else {
+            const docRef = await addDoc(collection(db, SESSIONS_COLLECTION), {
+                ...session,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+
+            sessionId = docRef.id;
+        }
+
+        const savedSnapshot = await getDoc(doc(db, SESSIONS_COLLECTION, sessionId));
+
+        return {
+            id: savedSnapshot.id,
+            ...savedSnapshot.data()
+        } as SessionRecord;
+    },
+
+    getByGroupAndDate: async (groupId: string, date: string): Promise<SessionRecord | null> => {
+        const constraints: QueryConstraint[] = [
+            where('groupId', '==', groupId),
+            where('date', '==', date),
+            limit(1)
+        ];
+        const q = query(collection(db, SESSIONS_COLLECTION), ...constraints);
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            return null;
+        }
+
+        return {
+            id: snapshot.docs[0].id,
+            ...snapshot.docs[0].data()
+        } as SessionRecord;
+    },
+
     getByGroup: async (grupoId: string) => {
         const q = query(
             collection(db, SESSIONS_COLLECTION),
@@ -44,14 +107,15 @@ export const sessionService = {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Session));
     },
 
-    getUpcoming: async (_limitCount = 10) => {
+    getUpcoming: async (limitCount = 10) => {
         // This requires a composite index in Firestore (status + data) or just client-side filtering for MVP
         // For MVP, let's fetch all future sessions
         const today = new Date().toISOString().split('T')[0];
         const q = query(
             collection(db, SESSIONS_COLLECTION),
             where('data', '>=', today),
-            orderBy('data', 'asc')
+            orderBy('data', 'asc'),
+            limit(limitCount)
         );
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Session));
@@ -84,9 +148,17 @@ export const sessionService = {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Attendance));
     },
 
-    generateSessions: async (group: any) => {
+    generateSessions: async (group: {
+        id: string;
+        dataInicio: string;
+        dataFimPrevista?: string;
+        diaSemanaPadrao: number;
+        horarioInicioPadrao: string;
+        duracaoMinutos: number;
+        periodicidade: 'semanal' | 'quinzenal' | 'mensal' | string;
+    }) => {
         const sessions: Omit<Session, 'id'>[] = [];
-        let currentDate = new Date(group.dataInicio + 'T00:00:00');
+        const currentDate = new Date(group.dataInicio + 'T00:00:00');
         const endDate = group.dataFimPrevista ? new Date(group.dataFimPrevista + 'T00:00:00') : new Date(currentDate.getFullYear(), currentDate.getMonth() + 3, currentDate.getDate()); // Default 3 months
 
         // Adjust start date to match the preferred day of week

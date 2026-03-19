@@ -1,3 +1,5 @@
+import type { FirestoreDate } from './shared';
+
 export type SessionStatus = 'prevista' | 'realizada' | 'cancelada' | 'adiada';
 
 export interface Session {
@@ -10,10 +12,8 @@ export interface Session {
     status: SessionStatus;
     temaDaSessao?: string;
     observacoesGerais?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    createdAt?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updatedAt?: any;
+    createdAt?: FirestoreDate;
+    updatedAt?: FirestoreDate;
 }
 
 export interface Attendance {

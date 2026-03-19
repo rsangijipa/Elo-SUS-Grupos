@@ -11,11 +11,18 @@ const colors = {
     danger: '#EF4444'
 };
 
+export interface UnitReportPatient {
+    name: string;
+    cns?: string;
+    riskLevel: string;
+    lastVisit?: string;
+}
+
 /**
  * 1. MODELO: RELATÓRIO GERENCIAL DE UNIDADE
  * Lista pacientes, riscos e status geral.
  */
-export const buildUnitReportPayload = (unitName: string, patients: any[]) => {
+export const buildUnitReportPayload = (unitName: string, patients: UnitReportPatient[]) => {
     const date = new Date().toLocaleDateString('pt-BR');
 
     const rows = patients.map(p => `
@@ -167,17 +174,30 @@ export const buildIdentityCardPayload = (patientName: string, groupName: string,
     };
 };
 
+export interface ClinicalReportPatient {
+    name: string;
+    cns?: string;
+    phone?: string;
+}
+
+export interface MoodHistoryEntry {
+    date: string | Date;
+    mood?: number;
+    tags: string[];
+    note?: string;
+}
+
 /**
  * 3. MODELO: RELATÓRIO CLÍNICO (PRONTUÁRIO)
  * Focado em texto, evolução e histórico.
  */
-export const buildClinicalReportPayload = (patient: any, moodHistory: any[]) => {
+export const buildClinicalReportPayload = (patient: ClinicalReportPatient, moodHistory: MoodHistoryEntry[], quizResult?: any) => {
     const date = new Date().toLocaleDateString('pt-BR');
 
     const moodRows = moodHistory.slice(0, 10).map(m => `
     <tr>
       <td>${new Date(m.date).toLocaleDateString()}</td>
-      <td>${m.mood}/5</td>
+      <td>${m.mood ?? '-'}/5</td>
       <td>${m.tags.join(', ')}</td>
       <td>${m.note || '-'}</td>
     </tr>
@@ -210,6 +230,7 @@ export const buildClinicalReportPayload = (patient: any, moodHistory: any[]) => 
           <h3>Avaliação Profissional</h3>
           <div class="box">
             <p>O paciente apresenta adesão regular ao tratamento. Recomendado continuidade no grupo terapêutico.</p>
+            ${quizResult ? `<p><strong>Resultado do Questionário:</strong> ${JSON.stringify(quizResult)}</p>` : ''}
           </div>
         </div>
 

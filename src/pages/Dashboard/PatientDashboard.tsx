@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import AIAgentWelcome from '../../components/Dashboard/AIAgentWelcome';
 import DailyChallenge from '../../components/Dashboard/DailyChallenge';
 import MoodTracker from '../../components/Widgets/MoodTracker';
+import MoodHistory from '../../components/Widgets/MoodHistory';
 import { useDailyMessage } from '../../hooks/useDailyMessage';
 
 import confetti from 'canvas-confetti';
@@ -370,10 +371,14 @@ export default function PatientDashboard() {
                         <CheckCircle2 className="text-green-500" />
                         Sua Rotina Hoje
                     </h2>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Mood Tracker */}
                         <div className="h-full">
                             <MoodTracker />
+                        </div>
+                        {/* Mood History */}
+                        <div className="h-full">
+                            <MoodHistory />
                         </div>
                         {/* Daily Challenge */}
                         <div className="h-full">

@@ -21,6 +21,11 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'professional';
     }
 
+    function isMemberOfGroup(groupId) {
+      return request.auth != null &&
+             request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.participants;
+    }
+
     // --- REGRAS DA COLEÇÃO DE USUÁRIOS ---
     match /users/{userId} {
       // Leitura: Todos logados podem ler perfis básicos (essencial para renderizar nomes em grupos/chat)
@@ -48,7 +53,7 @@ service cloud.firestore {
     }
 
     // --- REGRAS PARA GRUPOS E MATERIAIS ---
-    match /groups/{groupId} {
+    match /grupos/{groupId} {
       // Todos os usuários logados podem ver os grupos (para listar na Dashboard)
       allow read: if request.auth != null;
       
@@ -58,8 +63,22 @@ service cloud.firestore {
       // Subcoleções de grupos (ex: chat, posts)
       match /{document=**} {
         allow read: if request.auth != null;
-        allow write: if request.auth != null; // Refinar depois para membros do grupo
+        allow write: if isMemberOfGroup(groupId) || isAdmin() || isProfessional();
       }
+    }
+
+    match /sessions/{sessionId} {
+      allow read, write: if isAdmin() || isProfessional();
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if isAdmin() || isProfessional() ||
+                   (request.auth != null &&
+                    (
+                      request.auth.uid == resource.data.patientId ||
+                      request.auth.uid == resource.data.userId
+                    ));
+      allow create, update, delete: if isAdmin() || isProfessional();
     }
 
     match /materials/{materialId} {
@@ -69,8 +88,7 @@ service cloud.firestore {
 
     // --- REGRAS PARA DIAGNÓSTICO DE SAÚDE (System Health) ---
     match /_health_check/{docId} {
-      // Permite leitura e escrita para testes de latência e socket
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin();
     }
 
     // Regra padrão de negação (segurança por padrão)

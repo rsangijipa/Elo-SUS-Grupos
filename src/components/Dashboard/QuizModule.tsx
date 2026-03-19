@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { db } from '../../services/firebase';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { quizService } from '../../services/quizService';
+import { gamificationService } from '../../services/gamificationService';
 import { QuizResult } from '../../types/quiz';
 import { Brain, Lock, CheckCircle, AlertTriangle, ArrowRight, X, Heart, Shield, Volume2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -141,10 +140,7 @@ const QuizModule: React.FC = () => {
 
                 await quizService.saveQuizResult(user.id, result);
 
-                // Unlock Achievement
-                await updateDoc(doc(db, 'users', user.id), {
-                    achievements: arrayUnion('mind_explorer')
-                });
+                await gamificationService.unlockAchievement(user.id, 'mind_explorer');
 
                 await refreshData(); // Update UI immediately
                 toast.success('Avaliação concluída! Medalha desbloqueada.');
@@ -165,10 +161,7 @@ const QuizModule: React.FC = () => {
 
                 await quizService.saveQuizResult(user.id, result);
 
-                // Unlock Achievement
-                await updateDoc(doc(db, 'users', user.id), {
-                    achievements: arrayUnion('self_guardian')
-                });
+                await gamificationService.unlockAchievement(user.id, 'self_guardian');
 
                 await refreshData(); // Update UI immediately
 
@@ -265,6 +258,7 @@ const QuizModule: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => setIsModalOpen(false)}
+                                aria-label="Fechar questionario"
                                 className="p-1.5 hover:bg-slate-100 rounded-full transition-colors"
                             >
                                 <X size={20} className="text-slate-400 hover:text-slate-600" />
@@ -289,7 +283,8 @@ const QuizModule: React.FC = () => {
                                         <span className="flex-1">{q}</span>
                                         <button
                                             onClick={() => speakText(q)}
-                                            className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors"
+                                            aria-label={`Ouvir pergunta ${idx + 1}`}
+                                            className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors"
                                             title="Ouvir pergunta"
                                         >
                                             <Volume2 size={18} />

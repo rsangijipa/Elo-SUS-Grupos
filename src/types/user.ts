@@ -1,3 +1,5 @@
+import type { FirestoreDate } from './shared';
+
 export type UserRole = 'terapeuta' | 'coordenador' | 'administrador';
 
 export interface User {
@@ -17,10 +19,8 @@ export interface User {
     emergencyContact?: string;
     nextAppointment?: Date;
     youtubePlaylistId?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    createdAt: any; // Firestore Timestamp
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updatedAt?: any;
+    createdAt: FirestoreDate;
+    updatedAt?: FirestoreDate;
     // Additional fields used in AuthContext
     cpf?: string;
     cns?: string;
@@ -41,19 +41,16 @@ export interface User {
     // Gamification
     stats?: {
         loginStreak: number;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        lastLogin: any; // Firestore Timestamp or Date
+        lastLogin: FirestoreDate;
         totalSessions: number;
         completedChallenges?: number;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        lastChallengeDate?: any; // Firestore Timestamp or Date
+        lastChallengeDate?: FirestoreDate;
     };
     achievements?: string[]; // Array of unlocked achievement IDs
 
     // Health Screening (PHQ-2 + Anxiety)
     healthScreening?: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        date: any; // Firestore Timestamp
+        date: FirestoreDate;
         depressionAlert: boolean;
         anxietyAlert: boolean;
         score: number;
@@ -61,8 +58,7 @@ export interface User {
 
     // Pregnant/Postpartum Screening
     pregnantScreening?: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        date: any; // Firestore Timestamp
+        date: FirestoreDate;
         riskLevel: 'none' | 'baby_blues' | 'depression' | 'emergency';
         score: number;
     };

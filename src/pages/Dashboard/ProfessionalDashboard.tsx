@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users, Calendar, FileText, AlertCircle, Clock, ClipboardList, Filter, Search, ChevronRight, X } from 'lucide-react';
-// import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { patientService } from '../../services/patientService';
 import { groupService } from '../../services/groupService';
@@ -11,89 +10,101 @@ import { referralService, Referral } from '../../services/referralService';
 import { Group } from '../../types/group';
 import { Patient } from '../../types/patient';
 import { Appointment } from '../../types/appointment';
-import TobaccoInsightsWidget from '../../components/Widgets/TobaccoInsightsWidget';
 import TobaccoAnamnesisForm from '../Protocols/Tobacco/TobaccoAnamnesisForm';
-import HealthRadar from '../../components/Dashboard/HealthRadar';
-import HeatmapWidget from '../../components/Dashboard/HeatmapWidget';
 import { moodService, MoodLog } from '../../services/moodService';
 import AIAgentWelcome from '../../components/Dashboard/AIAgentWelcome';
-import TerritoryMap from '../../components/Dashboard/TerritoryMap';
+import { useFirestoreQuery } from '../../hooks/useFirestoreQuery';
+import KPICard from '../../components/Common/KPICard';
+import StatusBadge from '../../components/Common/StatusBadge';
+
+// Lazy-loaded heavy widgets for code-splitting
+const HealthRadar = React.lazy(() => import('../../components/Dashboard/HealthRadar'));
+const HeatmapWidget = React.lazy(() => import('../../components/Dashboard/HeatmapWidget'));
+const TerritoryMap = React.lazy(() => import('../../components/Dashboard/TerritoryMap'));
+const TobaccoInsightsWidget = React.lazy(() => import('../../components/Widgets/TobaccoInsightsWidget'));
+
+const DashboardSkeleton: React.FC = () => (
+    <div className="space-y-8 animate-pulse">
+        <div className="flex justify-between gap-4">
+            <div className="h-10 w-64 bg-slate-200 rounded-xl"></div>
+            <div className="h-10 w-40 bg-slate-200 rounded-xl"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 bg-slate-200 rounded-2xl"></div>
+            ))}
+        </div>
+        <div className="h-64 bg-slate-200 rounded-2xl"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 h-96 bg-slate-200 rounded-2xl"></div>
+            <div className="space-y-6">
+                <div className="h-48 bg-slate-200 rounded-2xl"></div>
+                <div className="h-48 bg-slate-200 rounded-2xl"></div>
+            </div>
+        </div>
+    </div>
+);
+
+const SectionSkeleton: React.FC<{ height?: string }> = ({ height = 'h-64' }) => (
+    <div className={`animate-pulse rounded-2xl bg-slate-200 ${height}`} />
+);
+
+const TriageTableSkeleton: React.FC = () => (
+    <div className="space-y-3 p-6 animate-pulse">
+        {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="h-14 rounded-xl bg-slate-100" />
+        ))}
+    </div>
+);
 
 const ProfessionalDashboard: React.FC = () => {
     const { user } = useAuth();
-    // const { groups, patients, appointments } = useData(); // CLEANUP: Removed implicit binding
-    // const navigate = useNavigate(); // Removed duplicate
-
-    // Local State for "Hard-Binding" (Protocol 1)
-    const [groups, setGroups] = useState<Group[]>([]);
-    const [patients, setPatients] = useState<Patient[]>([]);
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [statsLoading, setStatsLoading] = useState(true);
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'visao-geral' | 'triagem'>('visao-geral');
-    const [referrals, setReferrals] = useState<Referral[]>([]);
     const [moodMap, setMoodMap] = useState<Record<string, MoodLog | null>>({});
+    const [referrals, setReferrals] = useState<Referral[]>([]);
+    const [referralsLoading, setReferralsLoading] = useState(false);
+    const triageLoadedRef = useRef(false);
 
     const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
     const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
-    const [loading, setLoading] = useState(false);
 
     // Filters
     const [filterRisk, setFilterRisk] = useState<string>('all');
     const [filterOrigin, setFilterOrigin] = useState<string>('all');
 
+    const loadPatients = useCallback(() => patientService.getAll(user?.unidadeSaudeId), [user?.unidadeSaudeId]);
+    const loadGroups = useCallback(() => groupService.getAll(user?.unidadeSaudeId), [user?.unidadeSaudeId]);
+    const loadAppointments = useCallback(() => appointmentService.getAll(), []);
 
+    const { data: patients, loading: patientsLoading } = useFirestoreQuery<Patient>(loadPatients);
+    const { data: groups, loading: groupsLoading } = useFirestoreQuery<Group>(loadGroups);
+    const { data: appointments, loading: appointmentsLoading } = useFirestoreQuery<Appointment>(loadAppointments);
 
-    const [isLoadingData, setIsLoadingData] = useState(true);
+    const isInitialOverviewLoading = patientsLoading && groupsLoading && appointmentsLoading;
 
-    // Skeleton Component
-    const DashboardSkeleton = () => (
-        <div className="space-y-8 animate-pulse">
-            <div className="flex justify-between gap-4">
-                <div className="h-10 w-64 bg-slate-200 rounded-xl"></div>
-                <div className="h-10 w-40 bg-slate-200 rounded-xl"></div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => (
-                    <div key={i} className="h-32 bg-slate-200 rounded-2xl"></div>
-                ))}
-            </div>
-            <div className="h-64 bg-slate-200 rounded-2xl"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 h-96 bg-slate-200 rounded-2xl"></div>
-                <div className="space-y-6">
-                    <div className="h-48 bg-slate-200 rounded-2xl"></div>
-                    <div className="h-48 bg-slate-200 rounded-2xl"></div>
-                </div>
-            </div>
-        </div>
-    );
+    const loadTriageData = useCallback(async (force = false) => {
+        if (triageLoadedRef.current && !force) {
+            return;
+        }
+
+        setReferralsLoading(true);
+        try {
+            const data = await referralService.getAll();
+            setReferrals(data);
+            triageLoadedRef.current = true;
+        } catch {
+            toast.error('Erro ao carregar encaminhamentos de triagem.');
+        } finally {
+            setReferralsLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        const init = async () => {
-            setIsLoadingData(true);
-            try {
-                const [refData, patData, grpData, aptData] = await Promise.all([
-                    referralService.getAll(),
-                    patientService.getAll(),
-                    groupService.getAll(),
-                    appointmentService.getAll()
-                ]);
-
-                setReferrals(refData);
-                setPatients(patData);
-                setGroups(grpData);
-                setAppointments(aptData);
-            } catch (error) {
-                console.error("Failed to load dashboard data:", error);
-                toast.error("Erro ao carregar dados do dashboard.");
-            } finally {
-                setIsLoadingData(false);
-                setStatsLoading(false);
-            }
-        };
-        init();
-    }, []);
+        if (activeTab === 'triagem') {
+            void loadTriageData();
+        }
+    }, [activeTab, loadTriageData]);
 
     // Load Mood Data for Health Radar
     useEffect(() => {
@@ -121,13 +132,6 @@ const ProfessionalDashboard: React.FC = () => {
         loadMoods();
     }, [patients]);
 
-    const loadReferrals = async () => {
-        const data = await referralService.getAll();
-        setReferrals(data);
-    };
-
-
-
     const openTriage = (referral: Referral) => {
         setSelectedReferral(referral);
         setShowAnamnesisModal(true);
@@ -153,7 +157,7 @@ const ProfessionalDashboard: React.FC = () => {
 
                 setShowAnamnesisModal(false);
                 setSelectedReferral(null);
-                loadReferrals();
+                await loadTriageData(true);
                 toast.success('Triagem salva e convite enviado com sucesso!');
             } catch (error) {
                 console.error("Erro ao salvar triagem:", error);
@@ -165,7 +169,7 @@ const ProfessionalDashboard: React.FC = () => {
     const handleManualAcceptance = async (referralId: string) => {
         if (window.confirm('Confirmar entrada manual deste paciente no grupo?')) {
             await referralService.manualAcceptance(referralId, user?.name || 'Profissional');
-            loadReferrals();
+            await loadTriageData(true);
             toast.success('Paciente aceito manualmente.');
         }
     };
@@ -182,10 +186,18 @@ const ProfessionalDashboard: React.FC = () => {
         : patients.filter(p => myGroups.some(g => (g.participants || []).includes(p.id || '')));
     const myAppointments = appointments.filter(a => myGroupIds.includes(a.groupId));
 
-    const activeGroups = myGroups.filter(g => g.status === 'active').length;
-    const totalPatients = myPatients.length;
-    const waitingList = myPatients.filter(p => p.status === 'waiting').length;
-    const todaysAppointments = myAppointments.slice(0, 2);
+    const pendingReferralsCount = useMemo(
+        () => referrals.filter((referral) => referral.status === 'encaminhado').length,
+        [referrals]
+    );
+
+    const todaysAppointments = useMemo(() => myAppointments.slice(0, 2), [myAppointments]);
+
+    const { totalPatients, waitingList, activeGroups } = useMemo(() => ({
+        totalPatients: myPatients.length,
+        waitingList: myPatients.filter((patient) => patient.status === 'waiting').length,
+        activeGroups: myGroups.filter((group) => group.status === 'active').length
+    }), [myGroups, myPatients]);
 
     // Filter Referrals
     const filteredReferrals = referrals.filter(r => {
@@ -196,7 +208,7 @@ const ProfessionalDashboard: React.FC = () => {
 
     const uniqueOrigins = Array.from(new Set(referrals.map(r => r.originUnitName)));
 
-    if (isLoadingData) return <DashboardSkeleton />;
+    if (isInitialOverviewLoading) return <DashboardSkeleton />;
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -215,9 +227,9 @@ const ProfessionalDashboard: React.FC = () => {
                         className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'triagem' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Triagem
-                        {referrals.filter(r => r.status === 'encaminhado').length > 0 && (
+                        {pendingReferralsCount > 0 && (
                             <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                                {referrals.filter(r => r.status === 'encaminhado').length}
+                                {pendingReferralsCount}
                             </span>
                         )}
                     </button>
@@ -229,72 +241,63 @@ const ProfessionalDashboard: React.FC = () => {
                 <>
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div
+                        <KPICard
+                            title="Pacientes Ativos"
+                            value={totalPatients}
+                            subtitle="Acompanhados nos seus grupos"
+                            icon={<Users size={24} />}
+                            iconBg="bg-blue-50 text-[#0054A6]"
+                            trend={{ value: 12, label: 'mes' }}
                             onClick={() => navigate('/patients')}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:shadow-blue-100/50 transition-all duration-300"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-blue-50 rounded-xl text-[#0054A6]">
-                                    <Users size={24} />
-                                </div>
-                                <span className="text-xs font-bold px-2 py-1 bg-green-50 text-green-600 rounded-lg">
-                                    +12% mês
-                                </span>
-                            </div>
-                            <h3 className="text-slate-500 text-sm font-medium">Pacientes Ativos</h3>
-                            <p className="text-3xl font-bold text-slate-900 mt-1">{totalPatients}</p>
-                        </div>
+                            loading={patientsLoading}
+                        />
 
-                        <div
+                        <KPICard
+                            title="Grupos Terapêuticos"
+                            value={myGroups.length}
+                            subtitle={`${activeGroups} ativos`}
+                            icon={<Calendar size={24} />}
+                            iconBg="bg-purple-50 text-purple-600"
                             onClick={() => navigate('/groups')}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:shadow-blue-100/50 transition-all duration-300"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
-                                    <Calendar size={24} />
-                                </div>
-                                <span className="text-xs font-bold px-2 py-1 bg-blue-50 text-blue-600 rounded-lg">
-                                    {activeGroups} ativos
-                                </span>
-                            </div>
-                            <h3 className="text-slate-500 text-sm font-medium">Grupos Terapêuticos</h3>
-                            <p className="text-3xl font-bold text-slate-900 mt-1">{myGroups.length}</p>
-                        </div>
+                            loading={groupsLoading}
+                        />
 
-                        <div
+                        <KPICard
+                            title="Fila de Espera"
+                            value={waitingList}
+                            subtitle="Pacientes aguardando vaga"
+                            icon={<Clock size={24} />}
+                            iconBg="bg-orange-50 text-orange-600"
                             onClick={() => navigate('/patients')}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:shadow-blue-100/50 transition-all duration-300"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
-                                    <Clock size={24} />
-                                </div>
-                                <span className="text-xs font-bold px-2 py-1 bg-orange-50 text-orange-600 rounded-lg">
-                                    Atenção
-                                </span>
-                            </div>
-                            <h3 className="text-slate-500 text-sm font-medium">Fila de Espera</h3>
-                            <p className="text-3xl font-bold text-slate-900 mt-1">{waitingList}</p>
-                        </div>
+                            loading={patientsLoading}
+                        />
                     </div>
 
                     {/* Health Radar (Cross-Data Intelligence) */}
                     <div className="w-full">
-                        <HealthRadar patients={myPatients} moodMap={moodMap} />
+                        <Suspense fallback={<SectionSkeleton height="h-80" />}>
+                            {patientsLoading ? <SectionSkeleton height="h-80" /> : <HealthRadar patients={myPatients} moodMap={moodMap} />}
+                        </Suspense>
                     </div>
 
-                    {/* Territoy Map (New) */}
+                    {/* Territory Map */}
                     <div className="w-full">
-                        <TerritoryMap patients={myPatients} />
+                        <Suspense fallback={<SectionSkeleton height="h-80" />}>
+                            {patientsLoading ? <SectionSkeleton height="h-80" /> : <TerritoryMap patients={myPatients} />}
+                        </Suspense>
                     </div>
 
                     {/* Insights Widget */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="w-full">
-                            <TobaccoInsightsWidget />
+                            <Suspense fallback={<SectionSkeleton height="h-72" />}>
+                                {groupsLoading ? <SectionSkeleton height="h-72" /> : <TobaccoInsightsWidget />}
+                            </Suspense>
                         </div>
                         <div className="w-full">
-                            <HeatmapWidget patients={myPatients} />
+                            <Suspense fallback={<SectionSkeleton height="h-72" />}>
+                                {patientsLoading ? <SectionSkeleton height="h-72" /> : <HeatmapWidget patients={myPatients} />}
+                            </Suspense>
                         </div>
                     </div>
 
@@ -315,6 +318,7 @@ const ProfessionalDashboard: React.FC = () => {
                             </div>
 
                             <div className="space-y-4">
+                                {appointmentsLoading && <SectionSkeleton height="h-40" />}
                                 {todaysAppointments.map(apt => {
                                     const aptDate = new Date(apt.date);
                                     return (
@@ -358,7 +362,7 @@ const ProfessionalDashboard: React.FC = () => {
                                     );
                                 })}
 
-                                {todaysAppointments.length === 0 && (
+                                {!appointmentsLoading && todaysAppointments.length === 0 && (
                                     <div className="text-center py-8 text-slate-500">
                                         Nenhuma sessão agendada para hoje.
                                     </div>
@@ -465,6 +469,7 @@ const ProfessionalDashboard: React.FC = () => {
                         </div>
                     </div>
 
+                    {referralsLoading ? <TriageTableSkeleton /> : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm text-slate-600">
                             <thead className="bg-slate-50 text-slate-700 font-bold uppercase text-xs">
@@ -493,12 +498,7 @@ const ProfessionalDashboard: React.FC = () => {
                                             <div className="text-xs text-slate-500 truncate">{referral.mainComplaint || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${referral.riskLevel === 'alto' ? 'bg-red-100 text-red-700' :
-                                                referral.riskLevel === 'moderado' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-green-100 text-green-700'
-                                                }`}>
-                                                {referral.riskLevel}
-                                            </span>
+                                            <StatusBadge status={referral.riskLevel as 'alto' | 'moderado' | 'baixo'} />
                                             {referral.priority === 'urgente' && (
                                                 <span className="ml-2 px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-red-500 text-white">
                                                     Urgente
@@ -506,13 +506,7 @@ const ProfessionalDashboard: React.FC = () => {
                                             )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${referral.status === 'encaminhado' ? 'bg-blue-100 text-blue-700' :
-                                                referral.status === 'convidado' ? 'bg-purple-100 text-purple-700' :
-                                                    referral.status === 'concluido' ? 'bg-emerald-100 text-emerald-700' :
-                                                        'bg-slate-100 text-slate-700'
-                                                }`}>
-                                                {referral.status.replace('_', ' ')}
-                                            </span>
+                                            <StatusBadge status={referral.status as 'encaminhado' | 'convidado' | 'concluido' | 'cancelado'} label={referral.status.replace('_', ' ')} />
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -556,6 +550,7 @@ const ProfessionalDashboard: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                    )}
                 </div>
             )}
 
@@ -575,7 +570,7 @@ const ProfessionalDashboard: React.FC = () => {
                                     Encaminhado por {selectedReferral.referringProfessionalName} ({selectedReferral.originUnitName})
                                 </p>
                             </div>
-                            <button onClick={() => setShowAnamnesisModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                            <button onClick={() => setShowAnamnesisModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors" aria-label="Fechar modal de triagem">
                                 <X size={20} />
                             </button>
                         </div>
@@ -583,6 +578,7 @@ const ProfessionalDashboard: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
                             <TobaccoAnamnesisForm
                                 patientId={selectedReferral.patientId}
+                                patientName={selectedReferral.patientName}
                                 onSave={handleAnamnesisSave}
                             />
                         </div>

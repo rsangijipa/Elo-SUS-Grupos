@@ -48,8 +48,9 @@ async function verifyConnection() {
         await getDocs(q);
         console.log("✅ Conexão com Firebase estabelecida com sucesso!");
         process.exit(0);
-    } catch (error: any) {
-        if (error.code === 'permission-denied') {
+    } catch (error: unknown) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === 'permission-denied') {
             console.log("✅ Conexão com Firebase estabelecida! (Acesso negado pelas regras de segurança, o que é esperado sem login).");
             process.exit(0);
         }

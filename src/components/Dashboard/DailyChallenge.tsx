@@ -6,6 +6,8 @@ import { db } from '../../services/firebase';
 import { doc, updateDoc, increment, Timestamp, arrayUnion } from 'firebase/firestore';
 import { WEEKLY_CHALLENGES } from '../../data/weeklyChallenges';
 import { toast } from 'react-hot-toast';
+import { COLLECTIONS } from '../../constants/collections';
+import { toJsDate } from '../../utils/dateUtils';
 
 const DailyChallenge: React.FC = () => {
     const { user, refreshData } = useAuth();
@@ -15,10 +17,10 @@ const DailyChallenge: React.FC = () => {
 
     useEffect(() => {
         if (user?.stats?.lastChallengeDate) {
-            const lastDate = user.stats.lastChallengeDate.toDate ? user.stats.lastChallengeDate.toDate() : new Date(user.stats.lastChallengeDate);
+            const lastDate = toJsDate(user.stats.lastChallengeDate);
             const today = new Date();
 
-            if (lastDate.getDate() === today.getDate() &&
+            if (lastDate && lastDate.getDate() === today.getDate() &&
                 lastDate.getMonth() === today.getMonth() &&
                 lastDate.getFullYear() === today.getFullYear()) {
                 setIsCompletedToday(true);
@@ -46,7 +48,7 @@ const DailyChallenge: React.FC = () => {
             });
 
             // Update Firestore
-            const userRef = doc(db, 'users', user.id);
+            const userRef = doc(db, COLLECTIONS.USERS, user.id);
             await updateDoc(userRef, {
                 'stats.completedChallenges': increment(1),
                 'stats.lastChallengeDate': Timestamp.now()

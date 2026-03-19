@@ -1,47 +1,55 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    User as FirebaseUser
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { auth, db } from '../services/firebase';
 import { UserProfile } from '../types/schema';
-import { useNotifications } from './NotificationContext';
+import toast from 'react-hot-toast';
+import type { UserRole } from '../types/shared';
 
-const INITIAL_PROFESSIONAL_STATE = {
-    crp: '',
-    specialty: '',
-    approach: '',
-    bio: ''
-};
+export interface RegisterData {
+    name: string;
+    email: string;
+    password: string;
+    role: UserRole;
+    cpf?: string;
+    crp?: string;
+    cns?: string;
+}
 
-const INITIAL_PATIENT_STATE = {
-    cns: '',
-    emergencyContact: '',
-    phone: '',
-    address: '',
-    neighborhood: '',
-    unidadeSaudeId: '',
-    status: 'active' as const,
-    observacoes: ''
+// Helper to determine the initial state for a role
+const getInitialProfile = (uid: string, email: string, name: string, role: UserRole) => {
+    const base = {
+        uid, id: uid, email, name, role,
+        avatar: name.substring(0, 2).toUpperCase(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+    };
+    
+    if (role === 'patient') {
+        return { ...base, cns: '', status: 'active', neighborhood: '', phone: '' };
+    }
+    return { ...base, crp: '', specialty: '', approach: '', bio: '' };
 };
-import { patientService } from '../services/patientService';
 
 interface AuthContextType {
     user: UserProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password?: string) => Promise<void>;
-    register: (data: any) => Promise<void>;
+    login: (email: string, password?: string, expectedRole?: UserRole) => Promise<void>;
+    register: (data: RegisterData) => Promise<void>;
     logout: () => Promise<void>;
     updateProfile: (data: Partial<UserProfile>) => Promise<void>;
     refreshData: () => Promise<void>;
-    // Deprecated/Mock methods kept for compatibility but might need removal or refactor
+    /** @deprecated Disponivel apenas em DEV. */
     toggleRole: () => void;
-    switchDevRole: (type: 'referrer' | 'executor' | 'patient') => void;
+    /** @deprecated Disponivel apenas em DEV. */
+    switchDevRole: (type: 'patient' | 'executor' | 'referrer') => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,286 +57,145 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const { addNotification } = useNotifications();
 
     useEffect(() => {
+        let isSubscribed = true;
+        
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
-                    const userDocRef = doc(db, 'users', firebaseUser.uid);
-                    const userDoc = await getDoc(userDocRef);
+                    const docRef = doc(db, COLLECTIONS.USERS, firebaseUser.uid);
+                    const docSnap = await getDoc(docRef);
 
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        setUser({
-                            id: firebaseUser.uid,
-                            ...userData,
-                            email: userData.email || firebaseUser.email || ''
-                        } as UserProfile);
+                    if (docSnap.exists()) {
+                        if (isSubscribed) {
+                            setUser({ id: firebaseUser.uid, ...docSnap.data() } as UserProfile);
+                        }
+                    } else if (import.meta.env.DEV) {
+                        // RECOVERY MODE for DEV: If doc is missing but user exists in Auth, try to recreate it
+                        console.warn(`[AuthProvider] Missing profile for ${firebaseUser.uid}. Attempting recovery...`);
+                        const role: UserRole = firebaseUser.email?.includes('admin') ? 'admin' : 
+                                             firebaseUser.email?.includes('prof') ? 'professional' : 'patient';
+                        
+                        const recoveryProfile = getInitialProfile(
+                            firebaseUser.uid, 
+                            firebaseUser.email || '', 
+                            firebaseUser.displayName || 'Demo User', 
+                            role
+                        );
+                        
+                        await setDoc(docRef, recoveryProfile);
+                        if (isSubscribed) setUser(recoveryProfile as any);
                     } else {
-                        // Fallback if user exists in Auth but not in Firestore (shouldn't happen normally)
-                        console.warn('User authenticated but no Firestore document found.');
-                        setUser(null);
+                        // Prod behavior: clean logout if corrupted
+                        await signOut(auth);
+                        if (isSubscribed) setUser(null);
                     }
                 } catch (error) {
-                    console.error('Error fetching user profile:', error);
-                    setUser(null);
+                    console.error('[Auth] Profile error:', error);
+                    if (isSubscribed) setUser(null);
+                    setIsLoading(false);
+                    return;
                 }
             } else {
-                setUser(null);
+                if (isSubscribed) setUser(null);
             }
-            setIsLoading(false);
+            if (isSubscribed) setIsLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => { isSubscribed = false; unsubscribe(); };
     }, []);
 
-    // Inactivity Timeout Logic
-    useEffect(() => {
-        if (!user) return;
+    const login = async (email: string, password?: string, expectedRole?: UserRole) => {
+        if (!password) throw new Error('Senha obrigatoria');
 
-        const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
-        let timeoutId: ReturnType<typeof setTimeout>;
+        const credentials = await signInWithEmailAndPassword(auth, email, password);
 
-        const resetTimer = () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                console.log('User inactive for 1 minute. Logging out...');
-                logout();
-                addNotification({
-                    type: 'info',
-                    title: 'Sessão Expirada',
-                    message: 'Você foi desconectado por inatividade.'
-                });
-            }, INACTIVITY_LIMIT);
-        };
+        if (expectedRole) {
+            const profileRef = doc(db, COLLECTIONS.USERS, credentials.user.uid);
+            const profileSnap = await getDoc(profileRef);
 
-        const handleActivity = () => {
-            resetTimer();
-        };
-
-        // Initial timer start
-        resetTimer();
-
-        // Listen for user activity
-        window.addEventListener('mousemove', handleActivity);
-        window.addEventListener('keydown', handleActivity);
-        window.addEventListener('click', handleActivity);
-        window.addEventListener('scroll', handleActivity);
-        window.addEventListener('touchstart', handleActivity);
-
-        return () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            window.removeEventListener('mousemove', handleActivity);
-            window.removeEventListener('keydown', handleActivity);
-            window.removeEventListener('click', handleActivity);
-            window.removeEventListener('scroll', handleActivity);
-            window.removeEventListener('touchstart', handleActivity);
-        };
-    }, [user]);
-
-    const login = async (email: string, password?: string) => {
-        setIsLoading(true);
-        try {
-            // If password is not provided (e.g. from some old mock calls), use a default or error
-            // For the demo buttons, we will ensure they pass the password.
-            if (!password) {
-                throw new Error('Senha é obrigatória.');
+            if (!profileSnap.exists()) {
+                await signOut(auth);
+                throw new Error('Perfil de usuario nao encontrado.');
             }
-            await signInWithEmailAndPassword(auth, email, password);
-            addNotification({
-                type: 'success',
-                title: 'Login realizado',
-                message: 'Bem-vindo de volta!'
-            });
-        } catch (error: any) {
-            console.error('Login error:', error);
-            let message = 'Falha ao realizar login.';
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                message = 'E-mail ou senha incorretos.';
+
+            const profile = profileSnap.data() as UserProfile;
+            if (profile.role !== expectedRole) {
+                await signOut(auth);
+                const selectedLabel = expectedRole === 'professional' ? 'profissional' : expectedRole === 'patient' ? 'paciente' : 'administrador';
+                const actualLabel = profile.role === 'professional' ? 'profissional' : profile.role === 'patient' ? 'paciente' : 'administrador';
+                throw new Error(`Este cadastro pertence ao perfil ${actualLabel}. Use a opcao ${actualLabel} para entrar, nao ${selectedLabel}.`);
             }
-            addNotification({
-                type: 'alert',
-                title: 'Erro no Login',
-                message
-            });
-            setIsLoading(false); // Only set loading to false on error
-            throw error;
         }
+
+        toast.success('Bem-vindo!');
     };
 
-    const register = async (data: any) => {
-        setIsLoading(true);
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const firebaseUser = userCredential.user;
-
-            const baseState = data.role === 'patient' ? INITIAL_PATIENT_STATE : INITIAL_PROFESSIONAL_STATE;
-
-            const newUser: UserProfile = {
-                ...baseState,
-                uid: firebaseUser.uid,
-                id: firebaseUser.uid,
-                name: data.name,
-                email: data.email,
-                role: data.role || 'professional',
-                phoneNumber: data.phone || '',
-                // Fields from UserProfile schema that are mandatory or needed
-                tags: [],
-                createdAt: serverTimestamp(),
-                // Extended fields
-                cpf: data.cpf,
-                avatar: data.name.substring(0, 2).toUpperCase(),
-                unidadeSaudeId: 'all',
-                updatedAt: serverTimestamp()
-            } as unknown as UserProfile; // Cast to avoid strict schema mismatches if any optional missing
-
-            // If role is patient, merge patient state
-            if (data.role === 'patient') {
-                Object.assign(newUser, {
-                    cns: data.cns,
-                    birthDate: '',
-                    sexo: 'Outro',
-                    phone: data.phone || '', // duplicate mapped to phoneNumber
-                    address: data.address || '',
-                    neighborhood: data.neighborhood || '',
-                    status: 'active',
-                    observacoes: 'Cadastrado via App',
-                    emergencyContact: data.emergencyContact || ''
-                });
-            }
-
-            // Create user document in Firestore
-            await setDoc(doc(db, 'users', firebaseUser.uid), {
-                ...newUser,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
-
-            setUser(newUser);
-            addNotification({
-                type: 'success',
-                title: 'Conta criada',
-                message: 'Seu cadastro foi realizado com sucesso.'
-            });
-        } catch (error: any) {
-            console.error('Registration error:', error);
-            let message = 'Falha ao criar conta.';
-            if (error.code === 'auth/email-already-in-use') {
-                message = 'Este e-mail já está em uso.';
-            }
-            addNotification({
-                type: 'alert',
-                title: 'Erro no Cadastro',
-                message
-            });
-            setIsLoading(false); // Only set loading to false on error, otherwise wait for auth state change
-            throw error;
-        }
+    const register = async (data: RegisterData) => {
+        const res = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const normalizedRole: UserRole = data.role === 'professional' ? 'professional' : data.role === 'admin' ? 'admin' : 'patient';
+        const profile = getInitialProfile(res.user.uid, data.email, data.name, normalizedRole);
+        
+        // Merge with registration fields (CPF, CNS, etc.)
+        const finalProfile = { ...profile, ...data, role: normalizedRole, originalRole: normalizedRole };
+        delete (finalProfile as any).password;
+        
+        await setDoc(doc(db, COLLECTIONS.USERS, res.user.uid), finalProfile);
+        setUser(finalProfile as any);
+        toast.success('Cadastrado!');
     };
 
     const logout = async () => {
-        try {
-            await signOut(auth);
-            setUser(null);
-            addNotification({
-                type: 'success',
-                title: 'Logout',
-                message: 'Você saiu do sistema.'
-            });
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+        await signOut(auth);
+        setUser(null);
+        toast.success('Sessao encerrada');
     };
 
     const updateProfile = async (data: Partial<UserProfile>) => {
         if (!user) return;
         try {
-            const userDocRef = doc(db, 'users', user.id);
-            await setDoc(userDocRef, { ...data, updatedAt: serverTimestamp() }, { merge: true });
+            await setDoc(doc(db, COLLECTIONS.USERS, user.id), { ...data, updatedAt: serverTimestamp() }, { merge: true });
             setUser(prev => prev ? { ...prev, ...data } : null);
-            addNotification({
-                type: 'success',
-                title: 'Perfil atualizado',
-                message: 'Seus dados foram salvos.'
-            });
+            toast.success('Salvo!');
         } catch (error) {
-            console.error('Update profile error:', error);
-            addNotification({
-                type: 'alert',
-                title: 'Erro',
-                message: 'Não foi possível atualizar o perfil.'
-            });
+            toast.error('Erro ao salvar');
         }
     };
 
-    // Deprecated methods - kept empty or logging warning to prevent build errors if used elsewhere
-    const toggleRole = () => {
-        console.warn('toggleRole is deprecated in production mode.');
-    };
+    const devOnlyError = () => new Error('Disponivel apenas em DEV');
 
-    const switchDevRole = (type: 'referrer' | 'executor' | 'patient') => {
+    const toggleRole = () => {
+        if (!import.meta.env.DEV) {
+            throw devOnlyError();
+        }
         if (!user) return;
 
-        const originalRole = user.originalRole || user.role;
-        let newRole: 'professional' | 'patient' | 'admin' = 'professional';
-        let additionalData = {};
+        const nextRole = user.role === 'patient' ? 'professional' : 'patient';
+        console.warn(`[DEV][${new Date().toISOString()}] toggleRole chamado por ${user.id}`);
+        setUser({ ...user, role: nextRole } as UserProfile);
+    };
 
-        if (type === 'patient') {
-            newRole = 'patient';
-            additionalData = INITIAL_PATIENT_STATE;
-        } else {
-            // referrer or executor are both professionals
-            newRole = 'professional';
-            additionalData = INITIAL_PROFESSIONAL_STATE;
+    const switchDevRole = (type: 'patient' | 'executor' | 'referrer') => {
+        if (!import.meta.env.DEV) {
+            throw devOnlyError();
         }
+        if (!user) return;
 
-        // Preserve ID, Name, Email, and Original Role
-        const updatedUser: UserProfile = {
-            ...user,
-            ...additionalData,
-            id: user.id || user.uid,
-            name: user.name,
-            email: user.email,
-            role: newRole,
-            originalRole: originalRole,
-        } as unknown as UserProfile;
-
-        setUser(updatedUser);
-
-        addNotification({
-            type: 'info',
-            title: 'Modo de Teste',
-            message: `Perfil alternado para: ${type === 'patient' ? 'Paciente' : type === 'referrer' ? 'Encaminhador' : 'Executor'}`
-        });
+        const role: UserRole = type === 'patient' ? 'patient' : 'professional';
+        console.warn(`[DEV][${new Date().toISOString()}] switchDevRole(${type}) chamado por ${user.id}`);
+        setUser({ ...user, role, originalRole: user.originalRole || user.role } as UserProfile);
     };
 
     const refreshData = async () => {
         if (!user) return;
-        try {
-            const userDocRef = doc(db, 'users', user.id);
-            const userDoc = await getDoc(userDocRef);
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                setUser(prev => prev ? { ...prev, ...userData } as UserProfile : null);
-            }
-        } catch (error) {
-            console.error('Error refreshing user data:', error);
-        }
+        const d = await getDoc(doc(db, COLLECTIONS.USERS, user.id));
+        if (d.exists()) setUser({ id: user.id, ...d.data() } as any);
     };
 
     return (
         <AuthContext.Provider value={{
-            user,
-            isAuthenticated: !!user,
-            isLoading,
-            login,
-            register,
-            logout,
-            updateProfile,
-            refreshData,
-            toggleRole,
-            switchDevRole
+            user, isAuthenticated: !!user, isLoading, login, register, logout, updateProfile, refreshData, toggleRole, switchDevRole
         }}>
             {children}
         </AuthContext.Provider>
@@ -336,9 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+    const c = useContext(AuthContext);
+    if (!c) throw new Error('useAuth must be used within an AuthProvider');
+    return c;
 };

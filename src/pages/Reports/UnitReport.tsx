@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Filter, Download, AlertTriangle, Activity, Eye, Search } from 'lucide-react';
+import { ArrowLeft, Filter, Download, Search } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { moodService, MoodLog } from '../../services/moodService';
 import { pdfService } from '../../services/pdfService';
 import toast from 'react-hot-toast';
 import HealthRadar from '../../components/Dashboard/HealthRadar';
+import { toJsDate } from '../../utils/dateUtils';
+import StatusBadge from '../../components/Common/StatusBadge';
+import { OrganizationSettings } from '../../config/settings';
 
 const UnitReport: React.FC = () => {
     const navigate = useNavigate();
@@ -40,9 +43,11 @@ const UnitReport: React.FC = () => {
 
         let daysAbsent = 0;
         if (patient?.stats?.lastLogin) {
-            const lastLoginDate = new Date(patient.stats.lastLogin.seconds ? patient.stats.lastLogin.seconds * 1000 : patient.stats.lastLogin);
-            const diffTime = Math.abs(new Date().getTime() - lastLoginDate.getTime());
-            daysAbsent = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const lastLoginDate = toJsDate(patient.stats.lastLogin);
+            if (lastLoginDate) {
+                const diffTime = Math.abs(new Date().getTime() - lastLoginDate.getTime());
+                daysAbsent = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
         }
 
         const moodVal = moodLog?.value || 3;
@@ -60,6 +65,49 @@ const UnitReport: React.FC = () => {
         return matchesSearch && matchesRisk;
     });
 
+    const handleExportPdf = async () => {
+        try {
+            await pdfService.captureAndExport(
+                '#chart-container',
+                OrganizationSettings.municipalityName || 'Unidade de Saude',
+                [
+                    { label: 'Pacientes filtrados', value: filteredPatients.length },
+                    { label: 'Criticos', value: filteredPatients.filter((patient) => getRiskLevel(patient.id || '') === 'critical').length },
+                    { label: 'Suporte', value: filteredPatients.filter((patient) => getRiskLevel(patient.id || '') === 'support').length },
+                    { label: 'Monitorar', value: filteredPatients.filter((patient) => getRiskLevel(patient.id || '') === 'monitor').length }
+                ],
+                'Relatorio da Unidade'
+            );
+        } catch (error) {
+            toast.error('Erro ao gerar PDF', { id: 'pdf-unit' });
+        }
+    };
+
+    const handleExportCsv = () => {
+        toast.loading('Gerando CSV...', { id: 'csv-unit' });
+
+        const rows = filteredPatients.map((patient) => {
+            const risk = getRiskLevel(patient.id || '');
+            const mood = moodMap[patient.id || ''];
+            return [
+                patient.name,
+                patient.cns || '-',
+                mood?.value || '-',
+                patient.stats?.totalSessions || 0,
+                risk,
+                patient.neighborhood || '-'
+            ];
+        });
+
+        const dateStr = new Date().toISOString().split('T')[0];
+        pdfService.exportCsv(
+            ['Nome', 'CNS', 'Humor', 'Sessoes', 'Risco', 'Bairro'],
+            rows,
+            `relatorio_${(OrganizationSettings.municipalityName || 'unidade').replace(/\s+/g, '_').toLowerCase()}_${dateStr}.csv`
+        );
+        toast.success('CSV gerado com sucesso!', { id: 'csv-unit' });
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in">
             <div className="flex items-center gap-4">
@@ -76,7 +124,7 @@ const UnitReport: React.FC = () => {
             </div>
 
             {/* Overview Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div id="chart-container" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <HealthRadar patients={patients} moodMap={moodMap} />
                 </div>
@@ -89,20 +137,11 @@ const UnitReport: React.FC = () => {
                     </p>
                     <div className="space-y-3">
                         <button
-                            onClick={async () => {
-                                try {
-                                    toast.loading('Gerando PDF...', { id: 'pdf-unit' });
-                                    await pdfService.generateUnitReportPdf(filteredPatients, moodMap);
-                                    toast.success('Relatório baixado!', { id: 'pdf-unit' });
-                                } catch (error) {
-                                    console.error(error);
-                                    toast.error('Erro ao gerar PDF', { id: 'pdf-unit' });
-                                }
-                            }}
+                            onClick={() => void handleExportPdf()}
                             className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors border border-white/20">
                             Baixar PDF
                         </button>
-                        <button className="w-full py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition-colors">
+                        <button onClick={handleExportCsv} className="w-full py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition-colors">
                             Exportar CSV
                         </button>
                     </div>
@@ -165,10 +204,10 @@ const UnitReport: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             {mood ? (
-                                                <span className={`px-2 py-1 rounded-lg font-bold text-xs ${mood.value >= 4 ? 'bg-green-100 text-green-700' :
-                                                    mood.value >= 3 ? 'bg-blue-100 text-blue-700' :
-                                                        mood.value >= 2 ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
+                                                <span className={`px-2 py-1 rounded-lg font-bold text-xs ${mood.value >= 4 ? 'bg-status-active/10 text-status-active' :
+                                                    mood.value >= 3 ? 'bg-status-discharged/10 text-status-discharged' :
+                                                        mood.value >= 2 ? 'bg-status-waiting/10 text-status-waiting' :
+                                                            'bg-status-dropout/10 text-status-dropout'
                                                     }`}>
                                                     {mood.value}/5
                                                 </span>
@@ -188,24 +227,10 @@ const UnitReport: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {risk === 'critical' && (
-                                                <span className="flex items-center gap-1 text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded-full w-fit">
-                                                    <AlertTriangle size={14} /> Crítico
-                                                </span>
-                                            )}
-                                            {risk === 'support' && (
-                                                <span className="flex items-center gap-1 text-yellow-600 font-bold text-xs bg-yellow-50 px-2 py-1 rounded-full w-fit">
-                                                    <Activity size={14} /> Suporte
-                                                </span>
-                                            )}
-                                            {risk === 'monitor' && (
-                                                <span className="flex items-center gap-1 text-blue-600 font-bold text-xs bg-blue-50 px-2 py-1 rounded-full w-fit">
-                                                    <Eye size={14} /> Monitorar
-                                                </span>
-                                            )}
-                                            {risk === 'normal' && (
-                                                <span className="text-slate-400 text-xs font-medium">Normal</span>
-                                            )}
+                                            {risk === 'critical' && <StatusBadge status="critical" className="w-fit" label="Critico" />}
+                                            {risk === 'support' && <StatusBadge status="support" className="w-fit" />}
+                                            {risk === 'monitor' && <StatusBadge status="monitor" className="w-fit" />}
+                                            {risk === 'normal' && <StatusBadge status="normal" className="w-fit" />}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button

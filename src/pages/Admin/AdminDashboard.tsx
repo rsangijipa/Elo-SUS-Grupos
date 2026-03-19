@@ -5,7 +5,6 @@ import {
     Activity,
     AlertTriangle,
     Search,
-    MoreVertical,
     Plus,
     Mail,
     Shield,
@@ -17,6 +16,8 @@ import { patientService } from '../../services/patientService';
 import { groupService } from '../../services/groupService';
 import { toast } from 'react-hot-toast';
 import { UserProfile } from '../../types/schema';
+import { toJsDate } from '../../utils/dateUtils';
+import KPICard from '../../components/Common/KPICard';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -80,7 +81,8 @@ export default function AdminDashboard() {
                 await userService.updateStatus(user.id, newStatus);
                 toast.success(`Acesso de ${user.name} ${newStatus ? 'reativado' : 'desativado'}.`);
                 loadDashboardData(); // Refresh list
-            } catch (error) {
+            } catch (err) {
+                console.error("Error toggling status:", err);
                 toast.error("Erro ao atualizar status.");
             }
         }
@@ -125,60 +127,38 @@ export default function AdminDashboard() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Users size={64} className="text-blue-600" />
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total de Pacientes</p>
-                        <h3 className="text-3xl font-bold text-slate-800 mt-1">{stats.totalPatients}</h3>
-                        <div className="mt-2 flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 w-fit px-2 py-1 rounded-lg">
-                            <Activity size={12} />
-                            <span>Ativos na rede</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <UserCheck size={64} className="text-purple-600" />
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Profissionais</p>
-                        <h3 className="text-3xl font-bold text-slate-800 mt-1">{stats.activeProfessionals}</h3>
-                        <div className="mt-2 flex items-center gap-1 text-xs font-bold text-purple-600 bg-purple-50 w-fit px-2 py-1 rounded-lg">
-                            <Shield size={12} />
-                            <span>Equipe Técnica</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Activity size={64} className="text-orange-600" />
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Grupos Terapêuticos</p>
-                        <h3 className="text-3xl font-bold text-slate-800 mt-1">{stats.totalGroups}</h3>
-                        <div className="mt-2 flex items-center gap-1 text-xs font-bold text-orange-600 bg-orange-50 w-fit px-2 py-1 rounded-lg">
-                            <span>Em andamento</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <AlertTriangle size={64} className="text-red-600" />
-                    </div>
-                    <div className="relative z-10">
-                        <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Alertas de Risco</p>
-                        <h3 className="text-3xl font-bold text-slate-800 mt-1">{stats.riskAlerts}</h3>
-                        <div className="mt-2 flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 w-fit px-2 py-1 rounded-lg">
-                            <AlertTriangle size={12} />
-                            <span>Atenção Necessária</span>
-                        </div>
-                    </div>
-                </div>
+                <KPICard
+                    title="Total de Pacientes"
+                    value={stats.totalPatients}
+                    subtitle="Ativos na rede"
+                    icon={<Users size={24} />}
+                    iconBg="bg-blue-50 text-blue-600"
+                    loading={loading}
+                />
+                <KPICard
+                    title="Profissionais"
+                    value={stats.activeProfessionals}
+                    subtitle="Equipe tecnica"
+                    icon={<UserCheck size={24} />}
+                    iconBg="bg-purple-50 text-purple-600"
+                    loading={loading}
+                />
+                <KPICard
+                    title="Grupos Terapeuticos"
+                    value={stats.totalGroups}
+                    subtitle="Em andamento"
+                    icon={<Activity size={24} />}
+                    iconBg="bg-orange-50 text-orange-600"
+                    loading={loading}
+                />
+                <KPICard
+                    title="Alertas de Risco"
+                    value={stats.riskAlerts}
+                    subtitle="Atencao necessaria"
+                    icon={<AlertTriangle size={24} />}
+                    iconBg="bg-red-50 text-red-600"
+                    loading={loading}
+                />
             </div>
 
             {/* Professionals List */}
@@ -219,7 +199,7 @@ export default function AdminDashboard() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-800">{pro.name}</p>
-                                                <p className="text-xs text-slate-500">Cadastrado em {pro.createdAt ? new Date(pro.createdAt.seconds * 1000).toLocaleDateString() : '-'}</p>
+                                                <p className="text-xs text-slate-500">Cadastrado em {toJsDate(pro.createdAt)?.toLocaleDateString() || '-'}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -266,15 +246,16 @@ export default function AdminDashboard() {
             {/* Invite Modal */}
             {showInviteModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-2">Convidar Profissional</h2>
+                    <div role="dialog" aria-modal="true" aria-labelledby="invite-modal-title" className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                        <h2 id="invite-modal-title" className="text-xl font-bold text-slate-800 mb-2">Convidar Profissional</h2>
                         <p className="text-slate-500 text-sm mb-6">Envie um convite para um novo membro da equipe técnica.</p>
 
                         <form onSubmit={handleInvite}>
                             <div className="mb-4">
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Email do Profissional</label>
+                                <label htmlFor="invite-email" className="block text-sm font-bold text-slate-700 mb-2">Email do Profissional</label>
                                 <input
                                     type="email"
+                                    id="invite-email"
                                     required
                                     value={inviteEmail}
                                     onChange={(e) => setInviteEmail(e.target.value)}

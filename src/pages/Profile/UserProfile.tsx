@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { User as UserIcon, Mail, Phone, Calendar, MapPin, Shield, Key, Save, Camera, Edit2 } from 'lucide-react';
 import { UserProfile } from '../../types/schema';
 import { capitalizeName } from '../../utils/stringUtils';
+import { toJsDate } from '../../utils/dateUtils';
 
 const UserProfile: React.FC = () => {
     const { user, updateProfile, logout } = useAuth();
@@ -190,7 +191,7 @@ const UserProfile: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-3 text-slate-600">
                                 <Calendar size={16} className="text-slate-400" />
-                                <span className="text-sm">Membro desde {user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : '2024'}</span>
+                                <span className="text-sm">Membro desde {toJsDate(user?.createdAt)?.toLocaleDateString() || '2024'}</span>
                             </div>
                         </div>
                     </div>

@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_GEN_AI_KEY;
@@ -7,10 +6,17 @@ const API_KEY = import.meta.env.VITE_GOOGLE_GEN_AI_KEY;
 // Note: We use @google/generative-ai because @google-cloud/vertexai is Node.js only and does not work in Vite/Browser environments.
 const genAI = new GoogleGenerativeAI(API_KEY || '');
 
+interface RiskAnalysis {
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+    tfdEligible: boolean;
+    suggestedCID: string;
+    reasoning: string;
+}
+
 // Fallback Messages
 const FALLBACK_MESSAGES = {
     SUPPORT: "Hoje é um ótimo dia para cuidar de si mesmo. Lembre-se de respirar fundo e dar um passo de cada vez.",
-    RISK: { riskLevel: 'LOW', tfdEligible: false, suggestedCID: 'Z00.0', reasoning: 'Análise indisponível no momento.' },
+    RISK: { riskLevel: 'LOW', tfdEligible: false, suggestedCID: 'Z00.0', reasoning: 'Análise indisponível no momento.' } as RiskAnalysis,
     REPORT: "Relatório indisponível para simplificação no momento. Consulte seu médico para mais detalhes."
 };
 
@@ -43,8 +49,8 @@ export const AIService = {
      * Função B: O Auditor de Regulação
      * Análise de risco para o dashboard do profissional.
      */
-    async analyzeClinicalRisk(patientData: any, distanceKm: number): Promise<{ riskLevel: 'LOW' | 'MEDIUM' | 'HIGH', tfdEligible: boolean, suggestedCID: string, reasoning: string }> {
-        if (!API_KEY) return FALLBACK_MESSAGES.RISK as any;
+    async analyzeClinicalRisk(patientData: unknown, distanceKm: number): Promise<RiskAnalysis> {
+        if (!API_KEY) return FALLBACK_MESSAGES.RISK;
 
         try {
             const model = genAI.getGenerativeModel({
@@ -72,7 +78,7 @@ export const AIService = {
             return JSON.parse(response.text());
         } catch (error) {
             console.error("AI Agent 'Auditor' failed:", error);
-            return FALLBACK_MESSAGES.RISK as any;
+            return FALLBACK_MESSAGES.RISK;
         }
     },
 

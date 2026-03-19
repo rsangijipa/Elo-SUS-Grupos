@@ -1,5 +1,6 @@
 import { db } from './firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 
 export interface SessionFeedback {
     id?: string;
@@ -17,7 +18,7 @@ export const feedbackService = {
      */
     submitFeedback: async (groupId: string, feedback: SessionFeedback) => {
         try {
-            const feedbackRef = collection(db, 'groups', groupId, 'feedback');
+            const feedbackRef = collection(db, COLLECTIONS.GROUPS, groupId, 'feedback');
             await addDoc(feedbackRef, {
                 ...feedback,
                 createdAt: serverTimestamp()
@@ -34,7 +35,7 @@ export const feedbackService = {
      */
     hasGivenFeedback: async (groupId: string, sessionId: string, patientId: string): Promise<boolean> => {
         try {
-            const feedbackRef = collection(db, 'groups', groupId, 'feedback');
+            const feedbackRef = collection(db, COLLECTIONS.GROUPS, groupId, 'feedback');
             const q = query(
                 feedbackRef,
                 where('sessionId', '==', sessionId),

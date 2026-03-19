@@ -6,5 +6,5 @@ export interface Notification {
     status: 'enviada' | 'pendente' | 'falha';
     mensagem: string;
     dataEnvio: string;
-    createdAt?: any;
+    createdAt?: unknown;
 }

@@ -11,13 +11,6 @@ export interface VideoResult {
     thumbnail: string;
 }
 
-const FALLBACK_VIDEO: VideoResult = {
-    id: 'dQw4w9WgXcQ', // Rick Roll as placeholder, or better: a real mental health video
-    title: '5 Dicas para Saúde Mental',
-    description: 'Um vídeo curto sobre como manter o equilíbrio emocional.',
-    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
-};
-
 // Real mental health fallback if API fails
 const SAFE_FALLBACK: VideoResult = {
     id: '1i9OktOd7vo', // "O que é Saúde Mental?" - Minuto da Psicologia
@@ -31,9 +24,13 @@ export const youtubeService = {
         // 1. Check Cache
         const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
-            const { data, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < CACHE_DURATION) {
-                return data;
+            try {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    return data;
+                }
+            } catch (e) {
+                console.error('Error parsing YouTube cache:', e);
             }
         }
 

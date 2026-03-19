@@ -5,13 +5,14 @@ import TobaccoAnamnesisForm from '../pages/Protocols/Tobacco/TobaccoAnamnesisFor
 interface ProtocolRendererProps {
     protocol: GroupProtocol;
     patientId: string;
+    patientName: string;
     onSave: (data: any) => void;
 }
 
-export default function ProtocolRenderer({ protocol, patientId, onSave }: ProtocolRendererProps) {
+export default function ProtocolRenderer({ protocol, patientId, patientName, onSave }: ProtocolRendererProps) {
     switch (protocol) {
         case 'TABAGISMO':
-            return <TobaccoAnamnesisForm patientId={patientId} onSave={onSave} />;
+            return <TobaccoAnamnesisForm patientId={patientId} patientName={patientName} onSave={onSave} />;
         default:
             return (
                 <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">

@@ -11,52 +11,46 @@ import {
     getDoc,
     runTransaction
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
 import type { Group } from '../types/group';
 import { notificationService } from './notificationService';
+import { withErrorHandling } from '../utils/errorHandler';
 
-const COLLECTION_NAME = 'grupos';
+// Firestore production data uses the Portuguese collection name `grupos`.
+const COLLECTION_NAME = COLLECTIONS.GROUPS;
 
 export const groupService = {
     create: async (group: Omit<Group, 'id'>) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = await addDoc(collection(db, COLLECTION_NAME), {
                 ...group,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
             return docRef.id;
-        } catch (error) {
-            console.error("Erro em create:", error);
-            throw error;
-        }
+        });
     },
 
     update: async (id: string, group: Partial<Group>) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             await updateDoc(docRef, {
                 ...group,
                 updatedAt: serverTimestamp(),
             });
-        } catch (error) {
-            console.error("Erro em update:", error);
-            throw error;
-        }
+        });
     },
 
     delete: async (id: string) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             await deleteDoc(docRef);
-        } catch (error) {
-            console.error("Erro em delete:", error);
-            throw error;
-        }
+        });
     },
 
     getAll: async (unidadeSaudeId?: string) => {
-        try {
+        return withErrorHandling(async () => {
             let q = collection(db, COLLECTION_NAME);
 
             if (unidadeSaudeId) {
@@ -69,51 +63,42 @@ export const groupService = {
                 id: doc.id,
                 ...doc.data()
             } as Group));
-        } catch (error) {
-            console.error("Erro em getAll:", error);
-            throw error;
-        }
+        }, [] as Group[]);
     },
 
     getById: async (id: string) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             const snapshot = await getDoc(docRef);
             if (snapshot.exists()) {
                 return { id: snapshot.id, ...snapshot.data() } as Group;
             }
             return null;
-        } catch (error) {
-            console.error("Erro em getById:", error);
-            throw error;
-        }
+        }, null);
     },
 
     getByTherapist: async (terapeutaId: string) => {
-        try {
+        return withErrorHandling(async () => {
             const q = query(collection(db, COLLECTION_NAME), where('terapeutaResponsavelId', '==', terapeutaId));
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as Group));
-        } catch (error) {
-            console.error("Erro em getByTherapist:", error);
-            throw error;
-        }
+        }, [] as Group[]);
     },
 
     addParticipant: async (groupId: string, patientId: string, unitAddress: string) => {
-        try {
+        return withErrorHandling(async () => {
             await runTransaction(db, async (transaction) => {
                 const groupRef = doc(db, COLLECTION_NAME, groupId);
-                const patientRef = doc(db, 'users', patientId);
+                const patientRef = doc(db, COLLECTIONS.USERS, patientId);
 
                 const groupDoc = await transaction.get(groupRef);
                 const patientDoc = await transaction.get(patientRef);
 
-                if (!groupDoc.exists()) throw new Error("Group does not exist!");
-                if (!patientDoc.exists()) throw new Error("Patient does not exist!");
+                if (!groupDoc.exists()) throw new Error('Grupo nao encontrado.');
+                if (!patientDoc.exists()) throw new Error('Paciente nao encontrado.');
 
                 const groupData = groupDoc.data();
                 const participants = groupData.participants || [];
@@ -170,23 +155,19 @@ export const groupService = {
                 type: 'group_invite',
                 link: `/groups/${groupId}`
             });
-
-        } catch (e) {
-            console.error("Transaction failed: ", e);
-            throw e;
-        }
+        });
     },
 
     removeParticipant: async (groupId: string, participantId: string, dischargeData?: any) => {
-        try {
+        return withErrorHandling(async () => {
             await runTransaction(db, async (transaction) => {
                 const groupRef = doc(db, COLLECTION_NAME, groupId);
-                const patientRef = doc(db, 'users', participantId);
+                const patientRef = doc(db, COLLECTIONS.USERS, participantId);
 
                 const groupDoc = await transaction.get(groupRef);
                 const patientDoc = await transaction.get(patientRef);
 
-                if (!groupDoc.exists()) throw new Error("Group does not exist!");
+                if (!groupDoc.exists()) throw new Error('Grupo nao encontrado.');
 
                 const groupData = groupDoc.data();
                 const participants = groupData.participants || [];
@@ -221,14 +202,11 @@ export const groupService = {
                     }
                 }
             });
-        } catch (e) {
-            console.error("Transaction failed: ", e);
-            throw e;
-        }
+        });
     },
 
     getParticipants: async (groupId: string) => {
-        try {
+        return withErrorHandling(async () => {
             const groupRef = doc(db, COLLECTION_NAME, groupId);
             const groupSnap = await getDoc(groupRef);
 
@@ -243,7 +221,7 @@ export const groupService = {
                 // Or use 'in' batches if we expect < 30 participants usually.
                 // Let's use Promise.all with getDoc for now as it's straightforward.
 
-                const patientPromises = participantIds.map((id: string) => getDoc(doc(db, 'users', id)));
+                const patientPromises = participantIds.map((id: string) => getDoc(doc(db, COLLECTIONS.USERS, id)));
                 const patientSnaps = await Promise.all(patientPromises);
 
                 return patientSnaps
@@ -251,9 +229,6 @@ export const groupService = {
                     .map(snap => ({ id: snap.id, ...snap.data() }));
             }
             return [];
-        } catch (error) {
-            console.error("Erro em getParticipants:", error);
-            throw error;
-        }
+        }, [] as Array<Record<string, unknown>>);
     }
 };

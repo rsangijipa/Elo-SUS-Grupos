@@ -13,7 +13,7 @@ export interface Group {
     status: GroupStatus;
     cidCode?: string; // CID-10 Principal do Grupo
     participants?: string[]; // List of patient IDs
-    metrics?: Record<string, any>; // For protocol-specific aggregated data
+    metrics?: Record<string, string | number | boolean>;
     protocolConfig?: {
         totalSessions?: number;
         materials?: string[];

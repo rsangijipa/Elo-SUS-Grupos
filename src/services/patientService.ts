@@ -17,68 +17,77 @@ import {
     setDoc,
     type Query
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
 import type { Patient } from '../types/patient';
+import { withErrorHandling } from '../utils/errorHandler';
 
-const COLLECTION_NAME = 'patients';
+const COLLECTION_NAME = COLLECTIONS.PATIENTS;
+
+const buildAddressLabel = (patient: Partial<Patient>) => {
+    const baseAddress = [patient.street, patient.number, patient.complement].filter(Boolean).join(', ');
+    const fallbackAddress = patient.address || '';
+    const districtAddress = [patient.neighborhood, patient.city, patient.state, patient.zipCode].filter(Boolean).join(', ');
+    return [baseAddress || fallbackAddress, districtAddress].filter(Boolean).join(', ');
+};
 
 export const patientService = {
     create: async (patient: Omit<Patient, 'id'>) => {
-        try {
+        return withErrorHandling(async () => {
             let coordinates = null;
-            if (patient.address) {
+            const fullAddress = buildAddressLabel(patient);
+            if (fullAddress) {
                 const { MapService } = await import('./MapService'); // Dynamic import to avoid cycles or load issues
-                coordinates = await MapService.getCoordinates(`${patient.address}, ${patient.neighborhood || ''}`);
+                coordinates = await MapService.getCoordinates(fullAddress);
             }
 
             const docRef = await addDoc(collection(db, COLLECTION_NAME), {
                 ...patient,
+                address: patient.address || [patient.street, patient.number, patient.complement].filter(Boolean).join(', '),
                 coordinates: coordinates || undefined,
                 role: 'patient',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
             return docRef.id;
-        } catch (error) {
-            console.error("Erro em create:", error);
-            throw error;
-        }
+        });
     },
 
     createWithId: async (id: string, patient: Omit<Patient, 'id'>) => {
-        try {
+        return withErrorHandling(async () => {
             // Geocoding logic if address is present
             let coordinates = null;
-            if (patient.address) {
+            const fullAddress = buildAddressLabel(patient);
+            if (fullAddress) {
                 const { MapService } = await import('./MapService');
-                coordinates = await MapService.getCoordinates(`${patient.address}, ${patient.neighborhood || ''}`);
+                coordinates = await MapService.getCoordinates(fullAddress);
             }
 
             const docRef = doc(db, COLLECTION_NAME, id);
             await setDoc(docRef, {
                 ...patient,
+                address: patient.address || [patient.street, patient.number, patient.complement].filter(Boolean).join(', '),
                 coordinates: coordinates || undefined,
                 role: 'patient',
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             }, { merge: true });
-        } catch (error) {
-            console.error("Erro em createWithId:", error);
-            throw error;
-        }
+        });
     },
 
     update: async (id: string, patient: Partial<Patient>) => {
-        try {
+        return withErrorHandling(async () => {
             const updates: Record<string, unknown> = { ...patient };
 
             // Re-geocode if address changes
-            if (patient.address) {
+            const fullAddress = buildAddressLabel(patient);
+            if (fullAddress) {
                 const { MapService } = await import('./MapService');
-                const coordinates = await MapService.getCoordinates(`${patient.address}, ${patient.neighborhood || ''}`);
+                const coordinates = await MapService.getCoordinates(fullAddress);
                 if (coordinates) {
                     updates.coordinates = coordinates;
                 }
+                updates.address = patient.address || [patient.street, patient.number, patient.complement].filter(Boolean).join(', ');
             }
 
             const docRef = doc(db, COLLECTION_NAME, id);
@@ -86,24 +95,18 @@ export const patientService = {
                 ...updates,
                 updatedAt: serverTimestamp(),
             });
-        } catch (error) {
-            console.error("Erro em update:", error);
-            throw error;
-        }
+        });
     },
 
     delete: async (id: string) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             await deleteDoc(docRef);
-        } catch (error) {
-            console.error("Erro em delete:", error);
-            throw error;
-        }
+        });
     },
 
     getAll: async (unidadeSaudeId?: string) => {
-        try {
+        return withErrorHandling(async () => {
             let q: Query = collection(db, COLLECTION_NAME);
 
             if (unidadeSaudeId) {
@@ -117,30 +120,24 @@ export const patientService = {
                 id: doc.id,
                 ...doc.data()
             } as Patient));
-        } catch (error) {
-            console.error("Erro em getAll:", error);
-            throw error;
-        }
+        }, [] as Patient[]);
     },
 
     getById: async (id: string) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = doc(db, COLLECTION_NAME, id);
             const snapshot = await getDoc(docRef);
             if (snapshot.exists()) {
                 return { id: snapshot.id, ...snapshot.data() } as Patient;
             }
             return null;
-        } catch (error) {
-            console.error("Erro em getById:", error);
-            throw error;
-        }
+        }, null);
     },
 
     searchPatients: async (searchTerm: string): Promise<Patient[]> => {
         if (!searchTerm || searchTerm.length < 2) return [];
 
-        try {
+        return withErrorHandling(async () => {
             // Scalable Firestore Search (Prefix Search)
             // Note: This is case-sensitive. For case-insensitive, we strictly need a 'name_lower' field in DB.
             // As a fallback for this phase, we assume the user types matching case or we'd rely on 'name_lower' field implementation later.
@@ -160,10 +157,7 @@ export const patientService = {
                 id: doc.id,
                 ...doc.data()
             } as Patient));
-        } catch (error) {
-            console.error("Error searching patients:", error);
-            throw error;
-        }
+        }, [] as Patient[]);
     },
 
     searchPatientsByEmail: async (email: string): Promise<Patient[]> => {
@@ -177,20 +171,17 @@ export const patientService = {
             limit(1)
         );
 
-        try {
+        return withErrorHandling(async () => {
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as Patient));
-        } catch (error) {
-            console.error("Error searching patient by email:", error);
-            throw error;
-        }
+        }, [] as Patient[]);
     },
 
-    getPatientsPaginated: async (lastDoc?: unknown, limitCount: number = 20) => {
-        try {
+    getPatientsPaginated: async (lastDoc?: unknown, limitCount: number = 20): Promise<{ patients: Patient[]; lastDoc?: unknown }> => {
+        return withErrorHandling(async () => {
             let q = query(
                 collection(db, COLLECTION_NAME),
                 where('role', '==', 'patient'),
@@ -216,11 +207,8 @@ export const patientService = {
 
             return {
                 patients,
-                lastDoc: snapshot.docs[snapshot.docs.length - 1]
+                lastDoc: snapshot.docs[snapshot.docs.length - 1] as unknown
             };
-        } catch (error) {
-            console.error("Error fetching paginated patients:", error);
-            throw error;
-        }
+        }, { patients: [] as Patient[], lastDoc: null });
     }
 };

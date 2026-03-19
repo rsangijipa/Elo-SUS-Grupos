@@ -20,34 +20,47 @@ export default {
           900: '#1e3a8a',
         },
         brand: {
-          primary: '#7A5CFF',
-          secondary: '#4E8FFF',
-          accent: '#5EE6C8',
+          primary: '#0054A6',      // Azul SUS
+          secondary: '#00A99D',    // Verde saude
+          accent: '#F5821F',       // Laranja energia
+          health: '#00A99D',       // Verde saúde
           surface: '#F8F9FC',
           patient: {
             DEFAULT: '#6C4FFE', // Wellness Purple
             light: '#8B74FE',
             dark: '#5B3FD9',
             50: '#F6F8FE',
-            surface: '#FBFBFF', // Ultra light for backgrounds
+            surface: '#FBFBFF',
           },
           professional: {
             DEFAULT: '#0054A6', // SUS Blue
             light: '#2E74C0',
             dark: '#003F7D',
             50: '#EFF6FF',
-            surface: '#F5F9FF', // Ultra light for backgrounds
+            surface: '#F5F9FF',
+          },
+          admin: {
+            DEFAULT: '#DC2626',
+            light: '#EF4444',
+            dark: '#B91C1C',
           },
           secondary: {
-            pink: '#EC4899', // From Login gradient
-            cyan: '#06B6D4', // From Login gradient
-            orange: '#F97316', // From Login gradient
+            pink: '#EC4899',
+            cyan: '#06B6D4',
+            orange: '#F97316',
           },
           text: {
             DEFAULT: '#1e293b', // slate-800
             muted: '#64748b',   // slate-500
             light: '#94a3b8',   // slate-400
           }
+        },
+        status: {
+          active: '#22C55E',
+          waiting: '#F59E0B',
+          inactive: '#94A3B8',
+          discharged: '#3B82F6',
+          dropout: '#EF4444',
         }
       },
       animation: {

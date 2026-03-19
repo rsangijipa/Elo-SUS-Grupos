@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, User, Calendar, Phone, FileText, Hash, Save } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
-import { useLoadScript } from '@react-google-maps/api';
-import { AddressAutocomplete } from '../Shared/AddressAutocomplete';
-
-const LIBRARIES: ("places")[] = ["places"];
+const AddressAutocomplete = lazy(async () => {
+    const module = await import('../Shared/AddressAutocomplete');
+    return { default: module.AddressAutocomplete };
+});
 
 interface AddPatientModalProps {
     isOpen: boolean;
@@ -14,10 +14,6 @@ interface AddPatientModalProps {
 
 export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProps) {
     const { addPatient } = useData();
-    const { isLoaded } = useLoadScript({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-        libraries: LIBRARIES
-    });
 
     const [formData, setFormData] = useState({
         name: '',
@@ -78,18 +74,16 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
         setFormData(prev => ({ ...prev, originUnit: unitName }));
     };
 
-    if (!isLoaded) return null; // Or a spinner
-
     return createPortal(
         <div className="fixed inset-0 flex items-start justify-center z-[9999] animate-fade-in p-4 pt-20 bg-black/50 backdrop-blur-sm" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 relative z-[10000]">
+            <div role="dialog" aria-modal="true" aria-labelledby="add-patient-modal-title" className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 relative z-[10000]">
                 {/* Header */}
                 <div className="bg-[#0054A6] p-6 flex justify-between items-center text-white">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
+                    <h2 id="add-patient-modal-title" className="text-xl font-bold flex items-center gap-2">
                         <User size={24} />
                         Novo Paciente
                     </h2>
-                    <button onClick={onClose} className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors">
+                    <button onClick={onClose} aria-label="Fechar modal de paciente" className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors">
                         <X size={20} />
                     </button>
                 </div>
@@ -196,12 +190,14 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
 
                     {/* Address & Neighborhood */}
                     <div className="grid grid-cols-2 gap-4">
-                        <AddressAutocomplete
-                            label="Endereço"
-                            type="address"
-                            onSelect={handleAddressSelect}
-                            defaultValue={formData.address}
-                        />
+                        <Suspense fallback={<div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">Carregando busca de endereco...</div>}>
+                            <AddressAutocomplete
+                                label="Endereço"
+                                type="address"
+                                onSelect={handleAddressSelect}
+                                defaultValue={formData.address}
+                            />
+                        </Suspense>
 
                         <div className="space-y-1">
                             <label className="text-sm font-bold text-slate-700">Bairro</label>
@@ -216,13 +212,15 @@ export default function AddPatientModal({ isOpen, onClose }: AddPatientModalProp
                     </div>
 
                     {/* Origin Unit */}
-                    <AddressAutocomplete
-                        label="Unidade de Origem (UBS)"
-                        type="establishment"
-                        placeholder="Pesquisar UBS..."
-                        onSelect={(addr) => handleUnitSelect(addr)} // establishment type returns name/address
-                        defaultValue={formData.originUnit}
-                    />
+                    <Suspense fallback={<div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">Carregando busca de UBS...</div>}>
+                        <AddressAutocomplete
+                            label="Unidade de Origem (UBS)"
+                            type="establishment"
+                            placeholder="Pesquisar UBS..."
+                            onSelect={(addr) => handleUnitSelect(addr)}
+                            defaultValue={formData.originUnit}
+                        />
+                    </Suspense>
 
                     {/* Responsible (Optional) */}
                     <div className="space-y-1">

@@ -5,8 +5,8 @@ const SLIDES = [
         id: 1,
         title: "Conexão em grupo!",
         text: "Grupos terapêuticos ativos. Não caminhe sozinho.",
-        color: "text-[#7A5CFF]",
-        bgGradient: "from-[#7A5CFF]/20 to-transparent",
+        color: "text-[#0054A6]",
+        bgGradient: "from-[#0054A6]/20 to-transparent",
         image: "/elosusgrupos_setting_login.png"
     },
     {
@@ -21,8 +21,8 @@ const SLIDES = [
         id: 3,
         title: "Sua Jornada Valorizada",
         text: "Gamificação e conquistas para celebrar cada passo.",
-        color: "text-[#5EE6C8]",
-        bgGradient: "from-[#5EE6C8]/20 to-transparent",
+        color: "text-[#00A99D]",
+        bgGradient: "from-[#00A99D]/20 to-transparent",
         image: "/elosusgrupos_conquista_login.png"
     }
 ];

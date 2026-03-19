@@ -68,7 +68,7 @@ const SystemHealth: React.FC = () => {
         // 3. Socket Sync Check
         try {
             addLog("Testando Sincronização de Socket (Real-time)...", 'info');
-            await healthService.checkSocketSync((log) => addLog(log.message, log.status));
+            await healthService.checkSocketSync((log: HealthLog) => addLog(log.message, log.status));
             addLog("Socket Sync: OK (Recebido do Servidor)", 'ok');
             setStatus(prev => ({ ...prev, socket: 'ok', read: 'ok' })); // Assume read is ok if socket works
         } catch (error: any) {

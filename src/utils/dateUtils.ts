@@ -1,14 +1,17 @@
-export const toJsDate = (date: any): Date | null => {
+import type { FirestoreDate, FirestoreTimestamp } from '../types/shared';
+
+const isFirestoreTimestamp = (date: FirestoreDate | number | undefined): date is FirestoreTimestamp => {
+    return !!date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function';
+};
+
+export const toJsDate = (date: FirestoreDate | number | undefined): Date | null => {
     if (!date) return null;
-    // Check for Firestore Timestamp (has toDate method)
-    if (typeof date.toDate === 'function') {
+    if (isFirestoreTimestamp(date)) {
         return date.toDate();
     }
-    // Check if it's already a Date object
     if (date instanceof Date) {
         return date;
     }
-    // Attempt parsing string or number
     const parsed = new Date(date);
     return isNaN(parsed.getTime()) ? null : parsed;
 };
@@ -24,7 +27,7 @@ export const getAge = (birthDateString?: string) => {
     return Math.abs(ageDate.getUTCFullYear() - 1970);
 };
 
-export const formatDate = (dateString?: string | any) => {
+export const formatDate = (dateString?: FirestoreDate) => {
     const date = toJsDate(dateString);
     if (!date) return '-';
     return date.toLocaleDateString('pt-BR');

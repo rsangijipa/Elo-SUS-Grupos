@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useAuth } from './AuthContext';
+import { notificationService } from '../services/notificationService';
 
 export interface Notification {
     id: string;
@@ -8,34 +10,77 @@ export interface Notification {
     message: string;
     read: boolean;
     timestamp: Date;
+    link?: string;
 }
 
 interface NotificationContextType {
     notifications: Notification[];
     unreadCount: number;
-    markAsRead: (id: string) => void;
-    markAllAsRead: () => void;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
     addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+const mapNotificationType = (type: 'group_invite' | 'system' | 'alert' | 'success'): Notification['type'] => {
+    switch (type) {
+        case 'success':
+            return 'success';
+        case 'alert':
+            return 'alert';
+        default:
+            return 'info';
+    }
+};
+
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    // Initial fetch
     useEffect(() => {
-        // TODO: Integrate with backend notification service
-        setNotifications([]);
-    }, []);
+        if (!user?.id) {
+            setNotifications([]);
+            return;
+        }
+
+        const unsubscribe = notificationService.subscribeToNotifications(user.id, (items) => {
+            const mappedNotifications: Notification[] = items.map((item) => ({
+                id: item.id || Math.random().toString(36).slice(2, 9),
+                type: mapNotificationType(item.type),
+                title: item.title,
+                message: item.message,
+                read: item.read,
+                timestamp: item.createdAt?.toDate ? item.createdAt.toDate() : new Date(),
+                link: item.link
+            }));
+
+            setNotifications(mappedNotifications);
+        });
+
+        return () => unsubscribe();
+    }, [user?.id]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
-    const markAsRead = (id: string) => {
+    const markAsRead = async (id: string) => {
+        if (!user?.id) {
+            return;
+        }
+
+        await notificationService.markAsRead(user.id, id);
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     };
 
-    const markAllAsRead = () => {
+    const markAllAsRead = async () => {
+        if (!user?.id) {
+            return;
+        }
+
+        const unreadIds = notifications.filter((notification) => !notification.read).map((notification) => notification.id);
+        if (unreadIds.length > 0) {
+            await notificationService.markAllAsRead(user.id, unreadIds);
+        }
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     };
 

@@ -100,12 +100,12 @@ const CLINICAL_DOCUMENTS: ClinicalDocument[] = [
 ];
 
 export const contentService = {
-    getVideos: (tag?: string): Promise<Video[]> => {
+    getVideos: (): Promise<Video[]> => {
         // Simulate async call
         return Promise.resolve(RECOMMENDED_VIDEOS);
     },
 
-    getMaterials: (tag?: string): Promise<Material[]> => {
+    getMaterials: (): Promise<Material[]> => {
         return Promise.resolve(materialsData);
     },
 

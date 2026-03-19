@@ -6,6 +6,6 @@ export interface QuizResult {
     answers: (boolean | number)[]; // Array of answers (boolean for Yes/No, number for Scale)
     riskLevel?: 'low' | 'moderate' | 'high'; // Optional now as Self-Care uses feedback
     feedback?: string; // For Self-Care Quiz
-    createdAt: any; // Firestore Timestamp
+    createdAt: unknown; // Firestore Timestamp
     suggestedReferral?: string; // ex: 'group-anxiety'
 }

@@ -4,7 +4,7 @@ export interface Assessment {
     score: number;
     result: string; // e.g., "Dependência Elevada"
     date: string;
-    details?: any; // Specific answers
+    details?: unknown; // Specific answers
 }
 
 export interface Anamnesis {

@@ -8,6 +8,7 @@ import {
     limit,
     Timestamp
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
 
 export interface ChatMessage {
@@ -19,7 +20,7 @@ export interface ChatMessage {
     createdAt: any;
 }
 
-const GROUPS_COLLECTION = 'grupos';
+const GROUPS_COLLECTION = COLLECTIONS.GROUPS;
 
 export const chatService = {
     sendMessage: async (groupId: string, message: Omit<ChatMessage, 'id' | 'createdAt'>) => {

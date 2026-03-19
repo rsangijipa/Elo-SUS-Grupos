@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
     LayoutDashboard,
@@ -14,7 +14,8 @@ import {
     Shield,
     User,
     Briefcase,
-    Download
+    Download,
+    Sparkles
 } from 'lucide-react';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 
@@ -26,15 +27,33 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout, switchDevRole, updateProfile } = useAuth();
+    const { user, logout, switchDevRole } = useAuth();
     const { isInstallable, triggerInstall } = useInstallPrompt();
+
+    const getRoutePatterns = (path: string) => {
+        switch (path) {
+            case '/patients':
+                return ['/patients', '/patients/new', '/patients/:id', '/patients/edit/:id'];
+            case '/groups':
+                return ['/groups', '/groups/:id/manage'];
+            case '/reports':
+                return ['/reports', '/reports/unit'];
+            case '/admin':
+                return ['/admin', '/admin/health'];
+            default:
+                return [path];
+        }
+    };
 
     // Menu Configurations
     const professionalMenuItems = [
         { path: '/dashboard', label: 'Visão Geral', icon: LayoutDashboard },
         { path: '/patients', label: 'Pacientes', icon: Users },
         { path: '/groups', label: 'Grupos', icon: Calendar },
+        { path: '/schedule', label: 'Agenda', icon: Calendar },
         { path: '/materials', label: 'Materiais', icon: FileText },
+        { path: '/support', label: 'Central de Ajuda', icon: LifeBuoy },
+        { path: '/wellbeing', label: 'Bem-estar', icon: Sparkles },
         // Admin link only if admin
         ...(user?.role === 'admin' ? [{ path: '/admin', label: 'Admin', icon: Shield }] : [])
     ];
@@ -43,13 +62,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         { path: '/dashboard', label: 'Meu Espaço', icon: LayoutDashboard },
         { path: '/my-group', label: 'Meu Grupo', icon: Heart },
         { path: '/materials', label: 'Materiais', icon: FileText },
-        { path: '/reports', label: 'Minha Jornada', icon: Activity } // Mapping /progress to /reports
+        { path: '/wellbeing', label: 'Centro de Bem-estar', icon: Heart },
+        { path: '/reports', label: 'Minha Jornada', icon: Activity }
     ];
 
     // Select menu based on role
     const menuItems = user?.role === 'patient' ? patientMenuItems : professionalMenuItems;
 
-    const isActive = (path: string) => location.pathname.startsWith(path);
+    const isActive = (path: string) => {
+        return getRoutePatterns(path).some((pattern) =>
+            !!matchPath({ path: pattern, end: true }, location.pathname)
+        );
+    };
 
     const handleLogout = () => {
         logout();
@@ -67,8 +91,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             case '/my-group': return 'text-purple-600';
             case '/materials': return 'text-orange-600';
             case '/reports': return 'text-pink-600';
+            case '/schedule': return 'text-cyan-600';
+            case '/support': return 'text-emerald-600';
+            case '/wellbeing': return 'text-rose-600';
             case '/admin': return 'text-red-600';
-            default: return 'text-brand-professional';
+            default: return 'text-slate-600';
         }
     };
 
@@ -97,7 +124,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+                <nav role="navigation" aria-label="Menu principal" className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
                     {menuItems.map((item) => {
                         const active = isActive(item.path);
                         const iconColor = getIconColor(item.path, active);
@@ -107,20 +134,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => window.innerWidth < 768 && onClose()}
+                                aria-current={active ? 'page' : undefined}
+                                title={item.label}
                                 className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group overflow-hidden ${active
                                     ? 'bg-white shadow-md text-slate-800 font-bold border border-slate-100'
                                     : 'text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-700'
                                     }`}
                             >
                                 {/* Active Indicator Strip */}
-                                {active && (
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl ${item.path === '/dashboard' ? 'bg-blue-500' :
-                                        item.path === '/patients' ? 'bg-green-500' :
-                                            item.path === '/groups' ? 'bg-purple-500' :
-                                                item.path === '/materials' ? 'bg-orange-500' :
-                                                    item.path === '/reports' ? 'bg-pink-500' :
-                                                        item.path === '/admin' ? 'bg-red-500' :
-                                                            'bg-brand-professional'
+                                 {active && (
+                                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl ${item.path === '/dashboard' ? 'bg-blue-500' :
+                                         item.path === '/patients' ? 'bg-green-500' :
+                                             item.path === '/groups' ? 'bg-purple-500' :
+                                                item.path === '/schedule' ? 'bg-cyan-500' :
+                                                  item.path === '/materials' ? 'bg-orange-500' :
+                                                    item.path === '/support' ? 'bg-emerald-500' :
+                                                        item.path === '/wellbeing' ? 'bg-rose-500' :
+                                                     item.path === '/reports' ? 'bg-pink-500' :
+                                                         item.path === '/admin' ? 'bg-red-500' :
+                                                             'bg-brand-professional'
                                         }`}></div>
                                 )}
 
@@ -134,30 +166,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </Link>
                         );
                     })}
-
-                    {/* Support Link (Bottom of Nav) */}
-                    <div className="pt-4 mt-4 border-t border-slate-100">
-                        <Link
-                            to="/support"
-                            onClick={() => window.innerWidth < 768 && onClose()}
-                            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive('/support')
-                                ? 'bg-gradient-to-r from-brand-professional/10 to-brand-patient/5 text-brand-professional shadow-sm font-bold'
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-brand-professional'
-                                }`}
-                        >
-                            <LifeBuoy
-                                size={20}
-                                className={isActive('/support') ? 'text-brand-professional' : 'text-slate-400 group-hover:text-brand-professional transition-colors'}
-                            />
-                            Central de Ajuda
-                        </Link>
-                    </div>
                 </nav>
 
                 {/* User Footer */}
                 <div className="p-4 border-t border-slate-100 bg-brand-patient-surface">
                     {/* Profile Simulator (Test Mode) - ADMIN ONLY */}
-                    {user?.role === 'admin' && (
+                    {import.meta.env.DEV && user?.role === 'admin' && (
                         <div className="mb-4 bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2">Simulador de Perfil</p>
                             <div className="flex gap-2">

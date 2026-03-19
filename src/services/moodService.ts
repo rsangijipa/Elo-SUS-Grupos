@@ -7,9 +7,13 @@ import {
     limit,
     serverTimestamp,
     updateDoc,
-    doc
+    doc,
+    Timestamp 
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
+import { withErrorHandling } from '../utils/errorHandler';
+import { toJsDate } from '../utils/dateUtils';
 
 export interface MoodLog {
     id?: string;
@@ -17,14 +21,14 @@ export interface MoodLog {
     value: 1 | 2 | 3 | 4 | 5; // 1: Angry, 2: Sad, 3: Neutral, 4: Happy, 5: Very Happy
     tags: string[];
     note?: string;
-    aiAnalysis?: any; // Stores the JSON result from Gemini
+    aiAnalysis?: unknown; // Stores the JSON result from Gemini
     relatedGroupId?: string;
-    createdAt: any;
+    createdAt: Timestamp | null;
 }
 
 export const moodService = {
     logMood: async (data: Omit<MoodLog, 'id' | 'createdAt'>) => {
-        try {
+        return withErrorHandling(async () => {
             // 1. Save Mood Log
             const docRef = await addDoc(collection(db, `users/${data.patientId}/mood_logs`), {
                 ...data,
@@ -35,14 +39,11 @@ export const moodService = {
             await moodService.checkRiskAlert(data.patientId);
 
             return docRef.id;
-        } catch (error) {
-            console.error("Error logging mood:", error);
-            throw error;
-        }
+        });
     },
 
     getPatientHistory: async (patientId: string, limitCount: number = 15) => {
-        try {
+        return withErrorHandling(async () => {
             const q = query(
                 collection(db, `users/${patientId}/mood_logs`),
                 orderBy('createdAt', 'desc'),
@@ -54,14 +55,11 @@ export const moodService = {
                 id: doc.id,
                 ...doc.data()
             } as MoodLog));
-        } catch (error) {
-            console.error("Error fetching mood history:", error);
-            throw error;
-        }
+        }, [] as MoodLog[]);
     },
 
     checkRiskAlert: async (patientId: string) => {
-        try {
+        return withErrorHandling(async () => {
             // Get last 3 logs
             const history = await moodService.getPatientHistory(patientId, 3);
 
@@ -72,14 +70,45 @@ export const moodService = {
 
             // If average < 2 (mostly 1s and 2s), flag alert
             if (average < 2) {
-                const userRef = doc(db, 'users', patientId);
+                const userRef = doc(db, COLLECTIONS.USERS, patientId);
                 await updateDoc(userRef, {
                     hasAlert: true
                 });
             }
-        } catch (error) {
-            console.error("Error checking risk alert:", error);
-            // Don't throw here to avoid blocking the UI if risk check fails
-        }
+        }, undefined);
+    },
+
+    getConsecutiveMoodDays: async (patientId: string): Promise<number> => {
+        return withErrorHandling(async () => {
+            const history = await moodService.getPatientHistory(patientId, 30);
+            if (history.length === 0) {
+                return 0;
+            }
+
+            const normalizedDays = Array.from(new Set(history
+                .map((entry) => toJsDate(entry.createdAt))
+                .filter((date): date is Date => !!date)
+                .map((date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime())))
+                .sort((a, b) => b - a);
+
+            if (normalizedDays.length === 0) {
+                return 0;
+            }
+
+            let streak = 1;
+            for (let index = 1; index < normalizedDays.length; index += 1) {
+                const previousDay = normalizedDays[index - 1];
+                const currentDay = normalizedDays[index];
+                const diffDays = (previousDay - currentDay) / (1000 * 60 * 60 * 24);
+
+                if (diffDays === 1) {
+                    streak += 1;
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }, 0);
     }
 };

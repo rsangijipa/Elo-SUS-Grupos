@@ -1,3 +1,5 @@
+import type { FirestoreDate } from './shared';
+
 export interface Patient {
     id?: string;
     name: string;
@@ -15,14 +17,20 @@ export interface Patient {
     nomeResponsavel?: string;
     unidadeSaudeId?: string;
     address?: string;
+    street?: string;
+    number?: string;
+    complement?: string;
     neighborhood?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
     observacoes?: string;
-    createdAt?: Date | { toDate: () => Date } | any;
-    updatedAt?: Date | { toDate: () => Date } | any;
+    createdAt?: FirestoreDate;
+    updatedAt?: FirestoreDate;
     hasAlert?: boolean; // Flag for emotional risk alert
     stats?: {
         loginStreak: number;
-        lastLogin: any;
+        lastLogin: FirestoreDate;
         totalSessions?: number;
     };
     achievements?: string[]; // Array of achievement IDs

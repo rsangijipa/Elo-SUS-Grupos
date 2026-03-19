@@ -1,13 +1,24 @@
+// React
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { NotificationProvider } from './contexts/NotificationContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { DataProvider } from './contexts/DataContext';
-import { Toaster } from 'react-hot-toast';
-import LoadingFallback from './components/Common/LoadingFallback';
 
-// Lazy load pages
+// React Router
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
+// Contexts
+import { AccessibilityProvider } from './contexts/AccessibilityContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { DataProvider } from './contexts/DataContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { SettingsProvider } from './contexts/SettingsContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+
+// Global Components
+import RoleGuard from './components/Auth/RoleGuard';
+import LoadingFallback from './components/Common/LoadingFallback';
+import Layout from './components/Layout/Layout';
+import { Toaster } from 'react-hot-toast';
+
+// Lazy-loaded Pages
 const Login = lazy(() => import('./pages/Login/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Schedule = lazy(() => import('./pages/Schedule/Schedule'));
@@ -29,11 +40,9 @@ const AnamnesisPage = lazy(() => import('./pages/Anamnesis/AnamnesisPage'));
 const GroupManagement = lazy(() => import('./pages/Groups/GroupManagement'));
 const DeveloperTools = lazy(() => import('./pages/Developer/DeveloperTools'));
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 const SystemHealth = lazy(() => import('./pages/Admin/SystemHealth'));
 const MyGroup = lazy(() => import('./pages/MyGroup/MyGroup'));
-
-import RoleGuard from './components/Auth/RoleGuard';
-import Layout from './components/Layout/Layout';
 
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -49,15 +58,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
-import { AccessibilityProvider } from './contexts/AccessibilityContext';
-import { SettingsProvider } from './contexts/SettingsContext';
-
 function App() {
   return (
     <Router>
       <AccessibilityProvider>
-        <NotificationProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <NotificationProvider>
             <SettingsProvider>
               <ThemeProvider>
                 <DataProvider>
@@ -138,9 +144,13 @@ function App() {
                           </RoleGuard>
                         } />
                         <Route path="developer" element={
-                          <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
-                            <DeveloperTools />
-                          </RoleGuard>
+                          import.meta.env.DEV ? (
+                            <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
+                              <DeveloperTools />
+                            </RoleGuard>
+                          ) : (
+                            <Navigate to="/dashboard" replace />
+                          )
                         } />
                         <Route path="admin/health" element={
                           <RoleGuard allowed={['admin']} fallback={<Navigate to="/dashboard" replace />}>
@@ -150,14 +160,14 @@ function App() {
                       </Route>
 
                       {/* Catch all */}
-                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
                 </DataProvider>
               </ThemeProvider>
             </SettingsProvider>
-          </AuthProvider>
-        </NotificationProvider>
+          </NotificationProvider>
+        </AuthProvider>
       </AccessibilityProvider>
     </Router>
   );

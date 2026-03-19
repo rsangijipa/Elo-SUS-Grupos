@@ -1,5 +1,13 @@
 export type UserRole = 'professional' | 'patient' | 'admin';
 
+export type FirestoreTimestamp = {
+    toDate: () => Date;
+    seconds: number;
+    nanoseconds: number;
+};
+
+export type FirestoreDate = Date | FirestoreTimestamp | string | null;
+
 export type GroupStatus = 'active' | 'waiting' | 'paused' | 'completed';
 
 export interface SupportMessage {

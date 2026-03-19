@@ -4,15 +4,17 @@ import { TobaccoAnamnesis, INITIAL_FAGERSTROM_QUESTIONS, DependenceLevel } from 
 
 interface TobaccoAnamnesisFormProps {
     patientId: string;
+    patientName: string;
     initialData?: TobaccoAnamnesis;
     onSave: (data: TobaccoAnamnesis) => void;
 }
 
-export default function TobaccoAnamnesisForm({ patientId, initialData, onSave }: TobaccoAnamnesisFormProps) {
+export default function TobaccoAnamnesisForm({ patientId, patientName, initialData, onSave }: TobaccoAnamnesisFormProps) {
     const [activeTab, setActiveTab] = useState<'history' | 'fagerstrom' | 'physical'>('history');
     const [formData, setFormData] = useState<TobaccoAnamnesis>(initialData || {
         id: crypto.randomUUID(),
         patientId,
+        patientName,
         date: new Date().toISOString(),
         smokingHistory: {
             startAge: 0,

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Activity, Eye, ArrowRight } from 'lucide-react';
 import type { Patient } from '../../types/patient';
 import type { MoodLog } from '../../services/moodService';
+import { toJsDate } from '../../utils/dateUtils';
 
 interface HealthRadarProps {
     patients: Patient[];
@@ -32,9 +33,11 @@ const HealthRadar: React.FC<HealthRadarProps> = ({ patients, moodMap }) => {
             // Engagement Stats
             let daysAbsent = 999;
             if (p.stats?.lastLogin) {
-                const lastLoginDate = new Date(p.stats.lastLogin.seconds ? p.stats.lastLogin.seconds * 1000 : p.stats.lastLogin);
-                const diffTime = Math.abs(now.getTime() - lastLoginDate.getTime());
-                daysAbsent = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const lastLoginDate = toJsDate(p.stats.lastLogin);
+                if (lastLoginDate) {
+                    const diffTime = Math.abs(now.getTime() - lastLoginDate.getTime());
+                    daysAbsent = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
 
                 if (daysAbsent <= 3) activeCount++;
             }

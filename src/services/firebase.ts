@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import {
+    initializeFirestore,
+    persistentLocalCache,
+    persistentMultipleTabManager
+} from 'firebase/firestore';
 
 // Use environment variables if available, otherwise fall back to placeholders (or empty)
 const firebaseConfig = {
@@ -18,24 +22,15 @@ if (!firebaseConfig.apiKey) {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+    })
+});
 
-if (app && auth) {
-    // Enable persistence to prevent logout on refresh
-    setPersistence(auth, browserLocalPersistence)
-        .catch((error) => {
-            console.error("Firebase Persistence Error:", error);
-        });
-}
-
-if (db) {
-    enableIndexedDbPersistence(db).catch((err) => {
-        if (err.code == 'failed-precondition') {
-            console.warn('Persistência falhou: Múltiplas abas abertas.');
-        } else if (err.code == 'unimplemented') {
-            console.warn('Persistência não suportada neste navegador.');
-        }
+setPersistence(auth, browserLocalPersistence)
+    .catch((error) => {
+        console.error("Firebase Persistence Error:", error);
     });
-}
 
 export { auth, db };

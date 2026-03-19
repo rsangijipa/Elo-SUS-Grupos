@@ -114,7 +114,7 @@ export const tobaccoService = {
         }
     },
 
-    saveAnamnesis: async (data: any): Promise<void> => {
+    saveAnamnesis: async (data: Omit<TobaccoAnamnesis, 'id' | 'createdAt'>): Promise<void> => {
         try {
             await addDoc(collection(db, 'tobacco_anamnesis'), {
                 ...data,

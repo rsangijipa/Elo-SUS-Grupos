@@ -12,8 +12,9 @@ import { quizService } from '../../services/quizService';
 import { pdfService } from '../../services/pdfService';
 import { AIService } from '../../services/vertexAI';
 import { Patient } from '../../types/patient';
+import EmptyState from '../../components/Common/EmptyState';
 import HumanizedText from '../../components/Common/HumanizedText';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, toJsDate } from '../../utils/dateUtils';
 import { OrganizationSettings } from '../../config/settings';
 import DischargeModal from '../../components/DischargeModal';
 
@@ -22,6 +23,7 @@ const PatientDetail = () => {
     const navigate = useNavigate();
     const [patient, setPatient] = useState<Patient | null>(null);
     const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
     const [moodHistory, setMoodHistory] = useState<any[]>([]);
     const [quizResult, setQuizResult] = useState<any | null>(null);
     const [selfCareResult, setSelfCareResult] = useState<any | null>(null);
@@ -29,6 +31,7 @@ const PatientDetail = () => {
     const [aiAnalysis, setAiAnalysis] = useState<any | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'emotional'>('overview');
     const [showSimplified, setShowSimplified] = useState(false);
+    const [showDischargeModal, setShowDischargeModal] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -36,20 +39,51 @@ const PatientDetail = () => {
         }
     }, [id]);
 
+    useEffect(() => {
+        if (loading) {
+            document.title = 'Carregando paciente | EloSUS';
+            return;
+        }
+
+        if (notFound) {
+            document.title = 'Paciente nao encontrado | EloSUS';
+            return;
+        }
+
+        if (patient?.name) {
+            document.title = `${patient.name} | EloSUS`;
+            return;
+        }
+
+        document.title = 'EloSUS';
+    }, [loading, notFound, patient?.name]);
+
     const loadPatient = async (patientId: string) => {
+        setLoading(true);
+        setNotFound(false);
         try {
             const data = await patientService.getById(patientId);
-            setPatient(data);
-            if (data) {
-                const moodData = await moodService.getPatientHistory(patientId);
-                setMoodHistory(moodData);
-                const quizData = await quizService.getQuizResultById(patientId, 'mental-health-general-13');
-                const scData = await quizService.getQuizResultById(patientId, 'self-care-smart');
-                setQuizResult(quizData);
-                setSelfCareResult(scData);
+            if (!data) {
+                setPatient(null);
+                setMoodHistory([]);
+                setQuizResult(null);
+                setSelfCareResult(null);
+                setAiAnalysis(null);
+                setNotFound(true);
+                return;
             }
+
+            setPatient(data);
+            const moodData = await moodService.getPatientHistory(patientId);
+            setMoodHistory(moodData);
+            const quizData = await quizService.getQuizResultById(patientId, 'mental-health-general-13');
+            const scData = await quizService.getQuizResultById(patientId, 'self-care-smart');
+            setQuizResult(quizData);
+            setSelfCareResult(scData);
         } catch (error) {
             console.error('Error loading patient:', error);
+            setPatient(null);
+            setNotFound(true);
         } finally {
             setLoading(false);
         }
@@ -135,10 +169,51 @@ const PatientDetail = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Carregando prontuário...</div>;
-    if (!patient) return <div className="p-8 text-center text-slate-500">Paciente não encontrado.</div>;
+    if (loading) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="bg-white shadow-sm rounded-2xl p-8 border border-slate-100">
+                    <div className="flex items-center gap-4 mb-6">
+                        <button onClick={() => navigate('/patients')} className="text-slate-400 hover:text-[#0054A6] transition-colors" aria-label="Voltar para lista">
+                            <ArrowLeft size={24} />
+                        </button>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+                                <span>Pacientes</span>
+                                <ArrowRight size={14} />
+                                <span className="inline-block h-4 w-32 rounded bg-slate-200 animate-pulse" />
+                            </div>
+                            <div className="h-8 w-64 rounded bg-slate-200 animate-pulse" />
+                            <div className="h-5 w-80 rounded bg-slate-100 animate-pulse" />
+                        </div>
+                    </div>
+                    <div className="py-10 text-center text-slate-500">Carregando prontuario...</div>
+                </div>
+            </div>
+        );
+    }
 
-    const [showDischargeModal, setShowDischargeModal] = useState(false);
+    if (notFound || !patient) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                    <button onClick={() => navigate('/patients')} className="hover:text-[#0054A6] transition-colors">
+                        Pacientes
+                    </button>
+                    <ArrowRight size={14} />
+                    <span>Paciente nao encontrado</span>
+                </div>
+
+                <EmptyState
+                    title="Paciente nao encontrado"
+                    description="Nao localizamos um prontuario para este identificador. Ele pode ter sido removido ou o link nao e mais valido."
+                    icon={AlertTriangle}
+                    actionLabel="Voltar para lista"
+                    onAction={() => navigate('/patients')}
+                />
+            </div>
+        );
+    }
 
     const handleDischargeConfirm = async (data: any) => {
         if (!patient) return;
@@ -160,8 +235,16 @@ const PatientDetail = () => {
         }
     };
 
-    return (
+        return (
         <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                <button onClick={() => navigate('/patients')} className="hover:text-[#0054A6] transition-colors">
+                    Pacientes
+                </button>
+                <ArrowRight size={14} />
+                <span className="text-slate-700">{patient.name}</span>
+            </div>
+
             {/* Header */}
             <div className="bg-white shadow-sm rounded-2xl p-8 border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0054A6] to-[#6C4FFE]"></div>
@@ -408,9 +491,7 @@ const PatientDetail = () => {
                                 <div className="mb-6">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Visto por último em</p>
                                     <p className="text-sm font-medium text-slate-700">
-                                        {patient.stats?.lastLogin
-                                            ? new Date(patient.stats.lastLogin.seconds ? patient.stats.lastLogin.seconds * 1000 : patient.stats.lastLogin).toLocaleString()
-                                            : 'Nunca acessou'}
+                                        {toJsDate(patient.stats?.lastLogin)?.toLocaleString() || 'Nunca acessou'}
                                     </p>
                                 </div>
 

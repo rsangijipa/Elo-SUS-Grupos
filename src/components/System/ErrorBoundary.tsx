@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { CloudOff, RefreshCw, AlertTriangle } from 'lucide-react';
+import { CloudOff, RefreshCw, AlertTriangle, Home } from 'lucide-react';
 
 interface Props {
     children: ReactNode;
@@ -24,8 +24,8 @@ export class ErrorBoundary extends Component<Props, State> {
         console.error('Uncaught error:', error, errorInfo);
     }
 
-    private handleReload = () => {
-        window.location.reload();
+    private handleReset = () => {
+        this.setState({ hasError: false, error: null });
     };
 
     private handleReport = () => {
@@ -47,12 +47,12 @@ export class ErrorBoundary extends Component<Props, State> {
                         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-100 rounded-full blur-2xl opacity-50"></div>
 
                         <div className="relative mb-6">
-                            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CloudOff size={40} className="text-red-500" />
                             </div>
-                            <h1 className="text-2xl font-bold text-slate-800 mb-2">Ops, algo inesperado aconteceu.</h1>
+                            <h1 className="text-2xl font-bold text-slate-800 mb-2">Algo saiu do esperado</h1>
                             <p className="text-slate-500">
-                                Não se preocupe, seus dados estão seguros. Tente recarregar a página.
+                                Nao se preocupe: seus dados continuam seguros. Tente novamente para restaurar a tela.
                             </p>
                         </div>
 
@@ -66,11 +66,19 @@ export class ErrorBoundary extends Component<Props, State> {
 
                         <div className="space-y-3">
                             <button
-                                onClick={this.handleReload}
+                                onClick={this.handleReset}
                                 className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                             >
                                 <RefreshCw size={20} />
-                                Recarregar Aplicação
+                                Tentar novamente
+                            </button>
+
+                            <button
+                                onClick={() => window.location.assign('/dashboard')}
+                                className="w-full py-3 bg-white text-slate-600 font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                            >
+                                <Home size={16} />
+                                Voltar ao dashboard
                             </button>
 
                             <button

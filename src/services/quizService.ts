@@ -1,6 +1,7 @@
 import {
     collection,
     addDoc,
+    getCountFromServer,
     query,
     where,
     orderBy,
@@ -10,23 +11,22 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { QuizResult } from '../types/quiz';
+import { COLLECTIONS } from '../constants/collections';
+import { withErrorHandling } from '../utils/errorHandler';
 
 export const quizService = {
     saveQuizResult: async (userId: string, result: Omit<QuizResult, 'id' | 'createdAt'>) => {
-        try {
+        return withErrorHandling(async () => {
             const docRef = await addDoc(collection(db, `users/${userId}/quiz_results`), {
                 ...result,
                 createdAt: serverTimestamp()
             });
             return docRef.id;
-        } catch (error) {
-            console.error("Error saving quiz result:", error);
-            throw error;
-        }
+        });
     },
 
     getLatestQuizResult: async (userId: string): Promise<QuizResult | null> => {
-        try {
+        return withErrorHandling(async () => {
             const q = query(
                 collection(db, `users/${userId}/quiz_results`),
                 orderBy('createdAt', 'desc'),
@@ -40,14 +40,11 @@ export const quizService = {
                 id: doc.id,
                 ...doc.data()
             } as QuizResult;
-        } catch (error) {
-            console.error("Error fetching quiz result:", error);
-            return null;
-        }
+        }, null);
     },
 
     getQuizResultById: async (userId: string, quizId: string): Promise<QuizResult | null> => {
-        try {
+        return withErrorHandling(async () => {
             const q = query(
                 collection(db, `users/${userId}/quiz_results`),
                 where('quizId', '==', quizId),
@@ -62,9 +59,13 @@ export const quizService = {
                 id: doc.id,
                 ...doc.data()
             } as QuizResult;
-        } catch (error) {
-            console.error(`Error fetching quiz result for ${quizId}:`, error);
-            return null;
-        }
+        }, null);
+    },
+
+    getCompletedCount: async (userId: string): Promise<number> => {
+        return withErrorHandling(async () => {
+            const countSnapshot = await getCountFromServer(collection(db, COLLECTIONS.USERS, userId, 'quiz_results'));
+            return countSnapshot.data().count;
+        }, 0);
     }
 };

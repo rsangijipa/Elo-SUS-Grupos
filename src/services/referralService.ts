@@ -7,12 +7,11 @@ import {
     getDoc,
     query,
     where,
-    serverTimestamp,
     arrayUnion,
     runTransaction
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
-import { Patient } from '../types/patient';
 import { tobaccoService } from './tobaccoService';
 
 const COLLECTION_NAME = 'referrals';
@@ -58,8 +57,15 @@ export interface Referral {
     notes?: string;
 }
 
+interface UserForInvites {
+    id: string;
+    name?: string;
+    cns?: string;
+    email?: string;
+}
+
 export const referralService = {
-    getPendingInvites: async (user: any): Promise<Referral[]> => {
+    getPendingInvites: async (user: UserForInvites): Promise<Referral[]> => {
         try {
             // Query for all invited referrals
             // Note: In a large scale app, we would need composite indexes or cloud functions.
@@ -143,7 +149,7 @@ export const referralService = {
 
             // Update patient status to 'encaminhado' only if it's an existing patient
             if (referralData.patientId && referralData.patientId !== 'new') {
-                const userRef = doc(db, 'users', referralData.patientId);
+                const userRef = doc(db, COLLECTIONS.USERS, referralData.patientId);
                 await updateDoc(userRef, {
                     status: 'encaminhado',
                     updatedAt: new Date().toISOString()
@@ -214,10 +220,12 @@ export const referralService = {
             if (!referralData.groupId) throw new Error('No group linked to referral');
 
             // 2. Fetch Group to get Protocol
-            const groupRef = doc(db, 'grupos', referralData.groupId);
+            const groupRef = doc(db, COLLECTIONS.GROUPS, referralData.groupId);
             const groupSnap = await getDoc(groupRef);
             if (!groupSnap.exists()) throw new Error('Group not found');
             const groupData = groupSnap.data();
+
+            if (!groupData) throw new Error('Group data is empty');
 
             // 3. Gatekeeper: Check Requirements based on Protocol
             if (groupData.protocol === 'TABAGISMO') {
@@ -233,14 +241,8 @@ export const referralService = {
                 const tReferralDoc = await transaction.get(referralRef);
                 if (!tReferralDoc.exists()) throw new Error("Referral does not exist!");
 
-                // ... rest of transaction
-
-                if (!tReferralDoc.exists()) {
-                    throw new Error("Referral does not exist!");
-                }
-
-                const referralData = tReferralDoc.data() as Referral;
-                const targetGroupId = referralData.groupId;
+                const tReferralData = tReferralDoc.data() as Referral;
+                const targetGroupId = tReferralData.groupId;
 
                 if (!targetGroupId) {
                     throw new Error("No group linked to this referral invite.");
@@ -252,7 +254,7 @@ export const referralService = {
                     patientId: userId, // Link to the actual patient user
                     updatedAt: new Date().toISOString(),
                     timeline: [
-                        ...referralData.timeline,
+                        ...tReferralData.timeline,
                         {
                             status: 'accepted',
                             date: new Date().toISOString(),
@@ -268,14 +270,14 @@ export const referralService = {
                 });
 
                 // 2. Add Patient to Group Participants
-                const groupRef = doc(db, 'grupos', targetGroupId);
+                const tGroupRef = doc(db, COLLECTIONS.GROUPS, targetGroupId);
                 // Use arrayUnion to add unique value
-                transaction.update(groupRef, {
+                transaction.update(tGroupRef, {
                     participants: arrayUnion(userId)
                 });
 
                 // 3. Update Patient Status and Link Group
-                const userRef = doc(db, 'users', userId);
+                const userRef = doc(db, COLLECTIONS.USERS, userId);
                 transaction.update(userRef, {
                     status: 'active',
                     currentGroupId: targetGroupId,
@@ -346,5 +348,3 @@ export const referralService = {
         }
     }
 };
-
-

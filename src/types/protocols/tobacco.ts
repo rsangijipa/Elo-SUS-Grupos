@@ -12,7 +12,9 @@ export interface FagerstromQuestion {
 export interface TobaccoAnamnesis {
     id: string;
     patientId: string;
+    patientName: string;
     date: string; // ISO Date
+    createdAt?: string; // Standardized timestamp
 
     smokingHistory: {
         startAge: number;

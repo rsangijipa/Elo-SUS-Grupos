@@ -4,20 +4,19 @@ import {
     where,
     getDocs,
     limit,
-    orderBy,
-    startAt,
-    endAt,
     updateDoc,
     doc
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
 import { UserProfile } from '../types/schema';
+import { withErrorHandling } from '../utils/errorHandler';
 
 export const userService = {
     searchUsers: async (searchTerm: string): Promise<UserProfile[]> => {
         if (!searchTerm || searchTerm.length < 2) return [];
 
-        const usersRef = collection(db, 'users');
+        const usersRef = collection(db, COLLECTIONS.USERS);
         let q;
 
         // Email search (Exact match)
@@ -37,59 +36,47 @@ export const userService = {
             );
         }
 
-        try {
+        return withErrorHandling(async () => {
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as UserProfile));
-        } catch (error) {
-            console.error("Error searching users:", error);
-            return [];
-        }
+        }, [] as UserProfile[]);
     },
 
     getProfessionals: async () => {
-        try {
-            const q = query(collection(db, 'users'), where('role', '==', 'professional'));
+        return withErrorHandling(async () => {
+            const q = query(collection(db, COLLECTIONS.USERS), where('role', '==', 'professional'));
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as UserProfile));
-        } catch (error) {
-            console.error("Error fetching professionals:", error);
-            throw error;
-        }
+        }, [] as UserProfile[]);
     },
 
     updateStatus: async (userId: string, status: boolean) => {
-        try {
-            const userRef = doc(db, 'users', userId);
+        return withErrorHandling(async () => {
+            const userRef = doc(db, COLLECTIONS.USERS, userId);
             await updateDoc(userRef, {
                 active: status
             });
-        } catch (error) {
-            console.error("Error updating user status:", error);
-            throw error;
-        }
+        });
     },
 
     updateUserData: async (userId: string, data: Partial<UserProfile>) => {
-        try {
-            const userRef = doc(db, 'users', userId);
+        return withErrorHandling(async () => {
+            const userRef = doc(db, COLLECTIONS.USERS, userId);
             // Remove undefined fields to avoid Firestore errors
             const cleanData = Object.fromEntries(
-                Object.entries(data).filter(([_, v]) => v !== undefined)
+                Object.entries(data).filter(([, v]) => v !== undefined)
             );
 
             await updateDoc(userRef, {
                 ...cleanData,
                 updatedAt: new Date() // Use serverTimestamp() in real app, but Date is fine for now if consistent
             });
-        } catch (error) {
-            console.error("Error updating user data:", error);
-            throw error;
-        }
+        });
     }
 };

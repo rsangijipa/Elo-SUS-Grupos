@@ -1,3 +1,5 @@
+import type { FirestoreDate } from './shared';
+
 export interface UserProfile {
     uid: string;
     id: string; // Alias for uid
@@ -42,28 +44,28 @@ export interface UserProfile {
         completedChallenges: number;
         streakDays: number;
         loginStreak?: number;
-        lastLogin?: any;
+        lastLogin?: FirestoreDate;
         totalSessions?: number;
-        lastChallengeDate?: any;
+        lastChallengeDate?: FirestoreDate;
     };
 
     achievements?: string[];
 
     // Health Screenings
     healthScreening?: {
-        date: any;
+        date: FirestoreDate;
         depressionAlert: boolean;
         anxietyAlert: boolean;
         score: number;
     };
     pregnantScreening?: {
-        date: any;
+        date: FirestoreDate;
         riskLevel: 'none' | 'baby_blues' | 'depression' | 'emergency';
         score: number;
     };
 
-    createdAt: Date | any;
-    updatedAt?: Date | any;
+    createdAt: FirestoreDate;
+    updatedAt?: FirestoreDate;
 }
 
 export interface MoodLog {
@@ -76,14 +78,14 @@ export interface MoodLog {
         riskFlag: boolean;
         sentiment: 'positive' | 'negative' | 'neutral';
     };
-    createdAt: Date | any;
+    createdAt: FirestoreDate;
 }
 
 export interface GroupSession {
     id: string;
     groupId: string;
     topic: string;
-    date: string; // ISO or Timestamp
+    date: FirestoreDate;
     status: 'scheduled' | 'completed' | 'canceled';
     attendance: string[]; // Array of present userIds
 }

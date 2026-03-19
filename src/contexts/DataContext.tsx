@@ -1,18 +1,22 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Group } from '../types/group';
-import { Patient } from '../types/patient';
-import { Appointment } from '../types/appointment';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import type { Appointment } from '../types/appointment';
+import type { Group } from '../types/group';
+import type { Patient } from '../types/patient';
+import { COLLECTIONS } from '../constants/collections';
 import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
+import { appointmentService } from '../services/appointmentService';
+import { db } from '../services/firebase';
 import { groupService } from '../services/groupService';
 import { patientService } from '../services/patientService';
-import { appointmentService } from '../services/appointmentService';
-import { useNotifications } from './NotificationContext';
 
 interface DataContextType {
     groups: Group[];
     patients: Patient[];
     appointments: Appointment[];
     loading: boolean;
+    isInitialized: boolean;
     fetchGroups: () => Promise<void>;
     fetchPatients: () => Promise<void>;
     fetchAppointments: () => Promise<void>;
@@ -32,145 +36,170 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [groups, setGroups] = useState<Group[]>([]);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    const userUnitId = user?.unidadeSaudeId && user.unidadeSaudeId !== 'all'
+        ? user.unidadeSaudeId
+        : undefined;
 
     const fetchGroups = async () => {
-        setLoading(true);
-        try {
-            const data = await groupService.getAll();
-            setGroups(data);
-        } catch (error) {
-            console.error('Error loading groups:', error);
-            addNotification({ type: 'alert', title: 'Erro', message: 'Falha ao carregar grupos.' });
-        } finally {
-            setLoading(false);
-        }
+        const data = await groupService.getAll(userUnitId);
+        setGroups(data);
     };
 
     const fetchPatients = async () => {
-        setLoading(true);
-        try {
-            const data = await patientService.getAll();
-            setPatients(data);
-        } catch (error) {
-            console.error('Error loading patients:', error);
-            addNotification({ type: 'alert', title: 'Erro', message: 'Falha ao carregar pacientes.' });
-        } finally {
-            setLoading(false);
-        }
+        const data = await patientService.getAll(userUnitId);
+        setPatients(data);
     };
 
     const fetchAppointments = async () => {
-        setLoading(true);
-        try {
-            const data = await appointmentService.getAll();
-            setAppointments(data);
-        } catch (error) {
-            console.error('Error loading appointments:', error);
-            addNotification({ type: 'alert', title: 'Erro', message: 'Falha ao carregar agendamentos.' });
-        } finally {
-            setLoading(false);
-        }
+        const data = await appointmentService.getAll();
+        setAppointments(data);
     };
 
     const refreshData = async () => {
         await Promise.all([fetchGroups(), fetchPatients(), fetchAppointments()]);
     };
 
-    const addGroup = async (groupData: Omit<Group, 'id'>) => {
-        try {
-            await groupService.create(groupData);
-            await fetchGroups();
-            addNotification({
-                type: 'success',
-                title: 'Grupo criado',
-                message: 'O grupo foi criado com sucesso.'
-            });
-        } catch (error) {
-            console.error('Error adding group:', error);
-            throw error;
+    useEffect(() => {
+        if (!user) {
+            setGroups([]);
+            setPatients([]);
+            setAppointments([]);
+            setLoading(false);
+            setIsInitialized(false);
+            return;
         }
+
+        setLoading(true);
+        setIsInitialized(false);
+
+        const initialLoads = {
+            groups: false,
+            patients: false,
+            appointments: false
+        };
+
+        const markInitialized = (key: keyof typeof initialLoads) => {
+            initialLoads[key] = true;
+            if (Object.values(initialLoads).every(Boolean)) {
+                setLoading(false);
+                setIsInitialized(true);
+            }
+        };
+
+        const handleListenerError = (message: string) => {
+            setLoading(false);
+            addNotification({ type: 'alert', title: 'Erro', message });
+        };
+
+        const groupsQuery = userUnitId
+            ? query(collection(db, COLLECTIONS.GROUPS), where('unidadeSaudeId', '==', userUnitId))
+            : collection(db, COLLECTIONS.GROUPS);
+
+        const patientsQuery = userUnitId
+            ? query(collection(db, COLLECTIONS.PATIENTS), where('unidadeSaudeId', '==', userUnitId))
+            : query(collection(db, COLLECTIONS.PATIENTS), where('role', '==', 'patient'));
+
+        const appointmentsQuery = user.role === 'patient'
+            ? query(collection(db, COLLECTIONS.APPOINTMENTS), where('patientId', '==', user.id), orderBy('date', 'asc'))
+            : query(collection(db, COLLECTIONS.APPOINTMENTS), orderBy('date', 'asc'));
+
+        const unsubscribeGroups = onSnapshot(groupsQuery, (snapshot) => {
+            setGroups(snapshot.docs.map((docSnapshot) => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            } as Group)));
+            markInitialized('groups');
+        }, () => handleListenerError('Falha ao sincronizar grupos.'));
+
+        const unsubscribePatients = onSnapshot(patientsQuery, (snapshot) => {
+            setPatients(snapshot.docs.map((docSnapshot) => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            } as Patient)));
+            markInitialized('patients');
+        }, () => handleListenerError('Falha ao sincronizar pacientes.'));
+
+        const unsubscribeAppointments = onSnapshot(appointmentsQuery, (snapshot) => {
+            setAppointments(snapshot.docs.map((docSnapshot) => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            } as Appointment)));
+            markInitialized('appointments');
+        }, () => handleListenerError('Falha ao sincronizar agendamentos.'));
+
+        return () => {
+            unsubscribeGroups();
+            unsubscribePatients();
+            unsubscribeAppointments();
+        };
+    }, [addNotification, user, userUnitId]);
+
+    const addGroup = async (groupData: Omit<Group, 'id'>) => {
+        await groupService.create(groupData);
+        addNotification({
+            type: 'success',
+            title: 'Grupo criado',
+            message: 'O grupo foi criado com sucesso.'
+        });
     };
 
     const addPatient = async (patientData: Omit<Patient, 'id'>) => {
-        try {
-            await patientService.create(patientData);
-            await fetchPatients();
-            addNotification({
-                type: 'success',
-                title: 'Paciente cadastrado',
-                message: 'O paciente foi cadastrado com sucesso.'
-            });
-        } catch (error) {
-            console.error('Error adding patient:', error);
-            throw error;
-        }
+        await patientService.create(patientData);
+        addNotification({
+            type: 'success',
+            title: 'Paciente cadastrado',
+            message: 'O paciente foi cadastrado com sucesso.'
+        });
     };
 
     const updatePatient = async (id: string, data: Partial<Patient>) => {
-        try {
-            await patientService.update(id, data);
-            await fetchPatients();
-            addNotification({
-                type: 'success',
-                title: 'Paciente atualizado',
-                message: 'Os dados do paciente foram atualizados.'
-            });
-        } catch (error) {
-            console.error('Error updating patient:', error);
-            throw error;
-        }
+        await patientService.update(id, data);
+        addNotification({
+            type: 'success',
+            title: 'Paciente atualizado',
+            message: 'Os dados do paciente foram atualizados.'
+        });
     };
 
     const deletePatient = async (id: string) => {
-        try {
-            await patientService.delete(id);
-            await fetchPatients();
-            addNotification({
-                type: 'success',
-                title: 'Paciente removido',
-                message: 'O paciente foi removido com sucesso.'
-            });
-        } catch (error) {
-            console.error('Error deleting patient:', error);
-            throw error;
-        }
+        await patientService.delete(id);
+        addNotification({
+            type: 'success',
+            title: 'Paciente removido',
+            message: 'O paciente foi removido com sucesso.'
+        });
     };
 
     const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
-        try {
-            await appointmentService.create(appointmentData);
-            await fetchAppointments();
-            addNotification({
-                type: 'success',
-                title: 'Agendamento criado',
-                message: 'O agendamento foi salvo com sucesso.'
-            });
-        } catch (error) {
-            console.error('Error adding appointment:', error);
-            throw error;
-        }
+        await appointmentService.create(appointmentData);
+        addNotification({
+            type: 'success',
+            title: 'Agendamento criado',
+            message: 'O agendamento foi salvo com sucesso.'
+        });
     };
 
-    return (
-        <DataContext.Provider value={{
-            groups,
-            patients,
-            appointments,
-            loading,
-            fetchGroups,
-            fetchPatients,
-            fetchAppointments,
-            addGroup,
-            addPatient,
-            updatePatient,
-            deletePatient,
-            addAppointment,
-            refreshData
-        }}>
-            {children}
-        </DataContext.Provider>
-    );
+    const value = useMemo(() => ({
+        groups,
+        patients,
+        appointments,
+        loading,
+        isInitialized,
+        fetchGroups,
+        fetchPatients,
+        fetchAppointments,
+        addGroup,
+        addPatient,
+        updatePatient,
+        deletePatient,
+        addAppointment,
+        refreshData
+    }), [appointments, groups, isInitialized, loading, patients]);
+
+    return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
 
 export const useData = () => {

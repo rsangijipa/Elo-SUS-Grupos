@@ -5,11 +5,13 @@ import './index.css'
 import { setupDevEnvironment } from './services/devSeed';
 
 // Run seeding in development
-// try {
-//   setupDevEnvironment();
-// } catch (error) {
-//   console.error("Failed to run dev seeding:", error);
-// }
+if (import.meta.env.DEV) {
+  try {
+    setupDevEnvironment();
+  } catch (error) {
+    console.error("Failed to run dev seeding:", error);
+  }
+}
 
 import { ErrorBoundary } from './components/System/ErrorBoundary';
 

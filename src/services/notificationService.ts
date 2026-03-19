@@ -6,10 +6,12 @@ import {
     serverTimestamp,
     onSnapshot,
     query,
-    where,
-    orderBy
+    orderBy,
+    Timestamp 
 } from 'firebase/firestore';
+import { COLLECTIONS } from '../constants/collections';
 import { db } from './firebase';
+import { withErrorHandling } from '../utils/errorHandler';
 
 export interface Notification {
     id?: string;
@@ -17,46 +19,40 @@ export interface Notification {
     message: string;
     type: 'group_invite' | 'system' | 'alert' | 'success';
     read: boolean;
-    createdAt: any;
+    createdAt: Timestamp | null;
     link?: string;
 }
 
 export const notificationService = {
     sendNotification: async (userId: string, notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) => {
-        try {
-            const notificationsRef = collection(db, 'users', userId, 'notifications');
+        return withErrorHandling(async () => {
+            const notificationsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS);
             await addDoc(notificationsRef, {
                 ...notification,
                 read: false,
                 createdAt: serverTimestamp()
             });
-        } catch (error) {
-            console.error("Error sending notification:", error);
-        }
+        });
     },
 
     markAsRead: async (userId: string, notificationId: string) => {
-        try {
-            const notifRef = doc(db, 'users', userId, 'notifications', notificationId);
+        return withErrorHandling(async () => {
+            const notifRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS, notificationId);
             await updateDoc(notifRef, { read: true });
-        } catch (error) {
-            console.error("Error marking notification as read:", error);
-        }
+        });
     },
 
     markAllAsRead: async (userId: string, notificationIds: string[]) => {
-        try {
+        return withErrorHandling(async () => {
             const promises = notificationIds.map(id =>
-                updateDoc(doc(db, 'users', userId, 'notifications', id), { read: true })
+                updateDoc(doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS, id), { read: true })
             );
             await Promise.all(promises);
-        } catch (error) {
-            console.error("Error marking all as read:", error);
-        }
+        });
     },
 
     subscribeToNotifications: (userId: string, callback: (notifications: Notification[]) => void) => {
-        const notificationsRef = collection(db, 'users', userId, 'notifications');
+        const notificationsRef = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.NOTIFICATIONS);
         // Order by createdAt desc
         const q = query(notificationsRef, orderBy('createdAt', 'desc'));
 

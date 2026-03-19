@@ -13,7 +13,7 @@ export interface NewsItem {
 }
 
 export const newsService = {
-    getNews: async (audience: 'patient' | 'professional', page: number = 1): Promise<NewsItem[]> => {
+    getNews: async (audience: 'patient' | 'professional'): Promise<NewsItem[]> => {
         try {
             // Fetch from 'news' collection
             const q = query(

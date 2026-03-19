@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Building2, UserX } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Plus, Search, Edit, Trash2, UserX } from 'lucide-react';
 import EmptyState from '../../components/Common/EmptyState';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
@@ -7,82 +7,44 @@ import ReferralModal from '../../components/Modals/ReferralModal';
 import { patientService } from '../../services/patientService';
 import { getAge, formatDate } from '../../utils/dateUtils';
 import type { Patient } from '../../types/patient';
+import { useFirestoreQuery } from '../../hooks/useFirestoreQuery';
+import StatusBadge from '../../components/Common/StatusBadge';
 
 const PatientList: React.FC = () => {
     const { deletePatient: deletePatientContext } = useData();
-    const [localPatients, setLocalPatients] = useState<Patient[]>([]);
-    const [lastDoc, setLastDoc] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [loadingMore, setLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
-    // Initial load
-    useEffect(() => {
-        loadPatients();
-    }, []);
+    const loadPatients = useCallback(() => patientService.getAll(), []);
 
-    // Search effect with debounce could be better, but for now simple effect
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchTerm) {
-                handleSearch(searchTerm);
-            } else {
-                // Reset to paginated view if search is cleared
-                loadPatients(true);
-            }
-        }, 500);
+    const {
+        data: patients,
+        loading,
+        refetch
+    } = useFirestoreQuery<Patient>(loadPatients);
 
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
-
-    const loadPatients = async (reset = false) => {
-        try {
-            if (reset) {
-                setLoading(true);
-            } else {
-                setLoadingMore(true);
-            }
-
-            const currentLastDoc = reset ? null : lastDoc;
-            const result = await patientService.getPatientsPaginated(currentLastDoc);
-
-            if (reset) {
-                setLocalPatients(result.patients);
-            } else {
-                setLocalPatients(prev => [...prev, ...result.patients]);
-            }
-
-            setLastDoc(result.lastDoc);
-            setHasMore(result.patients.length === 20); // Assuming limit is 20
-        } catch (error) {
-            console.error("Error loading patients:", error);
-        } finally {
-            setLoading(false);
-            setLoadingMore(false);
+    const filteredPatients = useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+        if (!normalizedSearch) {
+            return patients;
         }
-    };
 
-    const handleSearch = async (term: string) => {
-        setLoading(true);
-        try {
-            const results = await patientService.searchPatients(term);
-            setLocalPatients(results);
-            setHasMore(false); // Disable load more during search
-        } catch (error) {
-            console.error("Error searching:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        return patients.filter((patient) => {
+            return patient.name.toLowerCase().includes(normalizedSearch)
+                || patient.cns?.toLowerCase().includes(normalizedSearch)
+                || patient.phone?.toLowerCase().includes(normalizedSearch);
+        });
+    }, [patients, searchTerm]);
 
-    const handleDelete = async (patient: any) => {
+    const handleDelete = async (patient: Patient) => {
         if (window.confirm('Tem certeza que deseja excluir este paciente?')) {
             try {
+                if (!patient.id) {
+                    return;
+                }
                 await deletePatientContext(patient.id);
-                setLocalPatients(prev => prev.filter(p => p.id !== patient.id));
+                refetch();
             } catch (error) {
                 console.error("Error deleting patient:", error);
             }
@@ -138,7 +100,7 @@ const PatientList: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-100">
-                            {loading && localPatients.length === 0 ? (
+                            {loading && filteredPatients.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center">
                                         <div className="flex justify-center">
@@ -146,7 +108,7 @@ const PatientList: React.FC = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : localPatients.length === 0 ? (
+                            ) : filteredPatients.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="py-12">
                                         <EmptyState
@@ -158,8 +120,8 @@ const PatientList: React.FC = () => {
                                         />
                                     </td>
                                 </tr>
-                            ) : (
-                                localPatients.map((patient) => (
+                             ) : (
+                                 filteredPatients.map((patient) => (
                                     <tr
                                         key={patient.id}
                                         className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
@@ -186,13 +148,7 @@ const PatientList: React.FC = () => {
                                             <div className="text-sm text-slate-700">{patient.phone}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${patient.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                patient.status === 'waiting' ? 'bg-yellow-100 text-yellow-700' :
-                                                    'bg-slate-100 text-slate-500'
-                                                }`}>
-                                                {patient.status === 'active' ? 'Ativo' :
-                                                    patient.status === 'waiting' ? 'Aguardando' : 'Inativo'}
-                                            </span>
+                                            <StatusBadge status={patient.status || 'inactive'} />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -200,6 +156,7 @@ const PatientList: React.FC = () => {
                                                     onClick={() => navigate(`/patients/edit/${patient.id}`)}
                                                     className="p-2 text-slate-400 hover:text-[#0054A6] hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Editar"
+                                                    aria-label={`Editar ${patient.name}`}
                                                 >
                                                     <Edit size={18} />
                                                 </button>
@@ -207,6 +164,7 @@ const PatientList: React.FC = () => {
                                                     onClick={() => handleDelete(patient)}
                                                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Excluir"
+                                                    aria-label={`Excluir ${patient.name}`}
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -219,25 +177,6 @@ const PatientList: React.FC = () => {
                     </table>
                 </div>
 
-                {/* Load More Button */}
-                {!searchTerm && hasMore && (
-                    <div className="p-4 border-t border-slate-100 flex justify-center">
-                        <button
-                            onClick={() => loadPatients()}
-                            disabled={loadingMore}
-                            className="text-[#0054A6] font-medium hover:text-[#004080] disabled:opacity-50 transition-colors flex items-center gap-2"
-                        >
-                            {loadingMore ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                                    Carregando...
-                                </>
-                            ) : (
-                                'Carregar Mais Pacientes'
-                            )}
-                        </button>
-                    </div>
-                )}
             </div>
 
             <ReferralModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
