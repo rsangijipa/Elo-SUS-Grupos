@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useZodForm } from '../../hooks/useZodForm';
 import { LoginSchema, RegisterSchema, type RegisterFormValues } from '../../schemas';
 import TermsModal from '../../components/Auth/TermsModal';
@@ -17,7 +16,6 @@ import { capitalizeName } from '../../utils/stringUtils';
 export default function Login() {
     const navigate = useNavigate();
     const { login, register, user } = useAuth();
-    const { setTheme } = useTheme();
 
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +30,7 @@ export default function Login() {
         password: '',
         confirmPassword: '',
         cpf: '',
-        crp: '',
+        // Note: crp is not part of RegisterData. Professionals request via requestProfessionalMode()
         cns: '',
         role: 'patient'
     };
@@ -41,9 +39,8 @@ export default function Login() {
 
     // Set default role to patient on mount
     useEffect(() => {
-        setTheme('patient');
         setFieldValue('role', 'patient');
-    }, [setFieldValue, setTheme]);
+    }, [setFieldValue]);
 
     // Redirection useEffect based on logged in user state
     useEffect(() => {
@@ -58,13 +55,12 @@ export default function Login() {
     }, [user, navigate]);
 
     const handleRoleChange = (newRole: 'patient' | 'professional') => {
-        setTheme(newRole);
         setFieldValue('role', newRole);
         setErrors({});
         setValues((current) => ({
             ...current,
             role: newRole,
-            crp: newRole === 'professional' ? current.crp || '' : '',
+            // crp field removed - not in RegisterData
             cns: newRole === 'patient' ? current.cns || '' : ''
         }));
     };
@@ -120,15 +116,14 @@ export default function Login() {
         setIsLoading(true);
         try {
             if (isLogin) {
-                await login(formData.email.trim().toLowerCase(), formData.password, formData.role);
+                await login(formData.email.trim().toLowerCase(), formData.password);
             } else {
                 await register({
                     name: capitalizeName(formData.name),
                     email: formData.email.trim().toLowerCase(),
                     password: formData.password,
-                    role: formData.role,
                     cpf: formData.cpf,
-                    crp: formData.role === 'professional' ? formData.crp : undefined,
+                    // Note: crp not part of RegisterData
                     cns: formData.role === 'patient' ? formData.cns : undefined
                 });
             }
@@ -206,7 +201,7 @@ export default function Login() {
                         </div>
 
                         {/* Role Toggle */}
-                        <RoleSwitcher theme={formData.role as any} onRoleChange={handleRoleChange} />
+                        <RoleSwitcher role={formData.role as any} onRoleChange={handleRoleChange} />
 
                         {/* Form */}
                         <div className="mt-6">

@@ -59,13 +59,15 @@ const SessionMode: React.FC = () => {
         const participantIds = new Set(sessionGroup.participants || []);
 
         return patients.filter((patient) => {
-            if (!patient.id) {
+            if (!patient.patientId) {
                 return false;
             }
 
+            // Check if patient is in the sessionGroup's participants
+            // Note: Patient.groupId doesn't exist. Patient.enrolledGroups is an array.
             return participantIds.size > 0
-                ? participantIds.has(patient.id)
-                : patient.groupId === sessionGroup.id;
+                ? participantIds.has(patient.patientId)
+                : patient.enrolledGroups?.some(eg => eg.groupId === sessionGroup.id) || false;
         });
     }, [patients, sessionGroup]);
 
@@ -236,7 +238,7 @@ const SessionMode: React.FC = () => {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
                             <h3 className="font-bold text-slate-800 text-lg">
-                                Ficha Clinica - {patients.find((patient) => patient.id === selectedPatientForProtocol)?.name}
+                                Ficha Clinica - {patients.find((patient) => patient.patientId === selectedPatientForProtocol)?.name}
                             </h3>
                             <button
                                 onClick={() => setSelectedPatientForProtocol(null)}
@@ -250,7 +252,7 @@ const SessionMode: React.FC = () => {
                             <ProtocolRenderer
                                 protocol={sessionGroup.protocol as never}
                                 patientId={selectedPatientForProtocol}
-                                patientName={patients.find(p => p.id === selectedPatientForProtocol)?.name || ''}
+                                patientName={patients.find(p => p.patientId === selectedPatientForProtocol)?.name || ''}
                                 onSave={handleSaveProtocolData}
                             />
                         </div>
@@ -296,7 +298,7 @@ const SessionMode: React.FC = () => {
                         </div>
                         <div className="divide-y divide-slate-100">
                             {sessionPatients.map((patient) => (
-                                <div key={patient.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                <div key={patient.patientId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
                                             {patient.name.substring(0, 2).toUpperCase()}
@@ -309,7 +311,7 @@ const SessionMode: React.FC = () => {
                                     <div className="flex gap-2">
                                         {sessionGroup.protocol && sessionGroup.protocol !== 'STANDARD' && (
                                             <button
-                                                onClick={() => setSelectedPatientForProtocol(patient.id || '')}
+                                                onClick={() => setSelectedPatientForProtocol(patient.patientId || '')}
                                                 className="p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-all mr-2"
                                                 title="Abrir ficha clinica"
                                                 aria-label={`Abrir ficha clinica de ${patient.name}`}
@@ -319,24 +321,24 @@ const SessionMode: React.FC = () => {
                                         )}
 
                                         <button
-                                            onClick={() => handleAttendance(patient.id || '', 'present')}
-                                            className={getAttendanceButtonClass(patient.id || '', 'present')}
+                                            onClick={() => handleAttendance(patient.patientId || '', 'present')}
+                                            className={getAttendanceButtonClass(patient.patientId || '', 'present')}
                                             title="Presente"
                                             aria-label={`Marcar ${patient.name} como presente`}
                                         >
                                             <CheckCircle size={20} />
                                         </button>
                                         <button
-                                            onClick={() => handleAttendance(patient.id || '', 'absent')}
-                                            className={getAttendanceButtonClass(patient.id || '', 'absent')}
+                                            onClick={() => handleAttendance(patient.patientId || '', 'absent')}
+                                            className={getAttendanceButtonClass(patient.patientId || '', 'absent')}
                                             title="Falta"
                                             aria-label={`Marcar ${patient.name} como falta`}
                                         >
                                             <XCircle size={20} />
                                         </button>
                                         <button
-                                            onClick={() => handleAttendance(patient.id || '', 'justified')}
-                                            className={getAttendanceButtonClass(patient.id || '', 'justified')}
+                                            onClick={() => handleAttendance(patient.patientId || '', 'justified')}
+                                            className={getAttendanceButtonClass(patient.patientId || '', 'justified')}
                                             title="Justificada"
                                             aria-label={`Marcar ${patient.name} como falta justificada`}
                                         >

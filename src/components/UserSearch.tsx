@@ -22,9 +22,9 @@ export default function UserSearch({ onSelect, placeholder = "Buscar por nome ou
             if (searchTerm.length >= 2) {
                 setLoading(true);
                 try {
-                    const patients = await patientService.searchPatients(searchTerm);
+                    const patients = await patientService.searchPatients('', searchTerm);
                     // Filter out excluded IDs
-                    const filtered = patients.filter(p => !excludeIds.includes(p.id!));
+                    const filtered = patients.filter(p => !excludeIds.includes(p.patientId!));
                     setResults(filtered);
                     setIsOpen(true);
                 } catch (error) {
@@ -77,7 +77,7 @@ export default function UserSearch({ onSelect, placeholder = "Buscar por nome ou
                 <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden max-h-64 overflow-y-auto animate-fade-in">
                     {results.map((patient) => (
                         <button
-                            key={patient.id}
+                            key={patient.patientId}
                             onClick={() => handleSelect(patient)}
                             className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50 last:border-0"
                         >

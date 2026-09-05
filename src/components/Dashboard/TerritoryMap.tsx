@@ -107,11 +107,12 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                     />
                 )}
 
-                {/* Patient Markers */}
+                {/* Patient Markers - REMOVED: patient.coordinates doesn't exist in schema */}
+                {/* 
                 {patients.map((patient) => (
                     patient.coordinates && (
                         <Marker
-                            key={patient.id}
+                            key={patient.patientId}
                             position={patient.coordinates}
                             icon={getMarkerIcon(patient.riskLevel)}
                             onClick={() => setSelectedPatient(patient)}
@@ -119,8 +120,10 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                         />
                     )
                 ))}
+                */}
 
-                {/* Info Window */}
+                {/* Info Window - REMOVED: properties don't exist */}
+                {/* 
                 {selectedPatient && selectedPatient.coordinates && (
                     <InfoWindow
                         position={selectedPatient.coordinates}
@@ -150,7 +153,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
 
                                 <div className="pt-2 border-t border-slate-100 mt-2">
                                     <a
-                                        href={`/patients/${selectedPatient.id}`}
+                                        href={`/patients/${selectedPatient.patientId}`}
                                         className="text-[#0054A6] font-bold hover:underline flex items-center gap-1"
                                     >
                                         Ver Prontuário <ArrowRight size={12} />
@@ -160,6 +163,7 @@ const TerritoryMap: React.FC<TerritoryMapProps> = ({ patients }) => {
                         </div>
                     </InfoWindow>
                 )}
+                */}
             </GoogleMap>
         </div>
     );

@@ -36,7 +36,7 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
             ...prev,
             patientName: patient.name,
             patientCns: patient.cns,
-            patientId: patient.id
+            patientId: patient.patientId
         }));
     };
 
@@ -146,7 +146,8 @@ export default function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
                                                 if (email && email.includes('@')) {
                                                     setLoading(true);
                                                     try {
-                                                        const patients = await patientService.searchPatientsByEmail(email);
+                                                        // Note: searchPatientsByEmail doesn't exist. Use searchPatients() instead with email as search term
+                                                        const patients = await patientService.searchPatients('', email);
                                                         if (patients.length > 0) {
                                                             handlePatientSelect(patients[0]);
                                                             addNotification({

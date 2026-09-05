@@ -48,8 +48,8 @@ const Schedule: React.FC = () => {
                     <p className="text-slate-500 mt-1">Gerencie seus atendimentos e grupos.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="btn-secondary flex items-center gap-2">
-                        <CalendarIcon size={18} />
+                    <button className="btn-secondary flex items-center gap-2 focus-ring" aria-label="Sincronizar agenda">
+                        <CalendarIcon size={18} aria-hidden="true" />
                         Sincronizar Agenda
                     </button>
                     <button

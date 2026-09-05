@@ -17,7 +17,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({
     isLogin,
-    theme,
+    theme: role,
     formData,
     onFieldChange,
     errors,
@@ -29,11 +29,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
 }) => {
     const getRingColor = (error?: string) => {
         if (error) return '#fecaca';
-        return theme === 'patient' ? '#d8b4fe' : '#93c5fd';
+        return role === 'patient' ? '#d8b4fe' : '#93c5fd';
     };
 
     const getIconColor = () => {
-        return theme === 'patient' ? '#6C4FFE' : '#0054A6';
+        return role === 'patient' ? '#6C4FFE' : '#0054A6';
     };
 
     const handlePasswordKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -93,7 +93,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                         type="email"
                         className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-xl focus:ring-2 focus:border-transparent outline-none transition-all font-medium text-slate-900 placeholder:text-slate-400 ${errors.email ? 'border-red-300 focus:ring-red-200' : 'border-slate-200'}`}
                         style={{ '--tw-ring-color': getRingColor(errors.email) } as React.CSSProperties}
-                        placeholder={theme === 'professional' ? "seu.email@saude.gov.br" : "seu.email@exemplo.com"}
+                        placeholder={role === 'professional' ? "seu.email@saude.gov.br" : "seu.email@exemplo.com"}
                         name="email"
                         value={formData.email}
                         onChange={onFieldChange}
@@ -102,7 +102,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 {errors.email && <p className="text-red-500 text-xs ml-1 font-medium">{errors.email}</p>}
             </div>
 
-            {!isLogin && theme === 'professional' && (
+            {!isLogin && role === 'professional' && (
                 <div className="space-y-1 animate-fade-in">
                     <label htmlFor="login-crp" className="block text-sm font-semibold text-slate-700 ml-1">Registro Profissional</label>
                     <div className="relative group">
@@ -121,7 +121,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 </div>
             )}
 
-            {!isLogin && theme === 'patient' && (
+            {!isLogin && role === 'patient' && (
                 <div className="space-y-1 animate-fade-in">
                     <label htmlFor="login-cns" className="block text-sm font-semibold text-slate-700 ml-1">Cartão SUS (CNS)</label>
                     <div className="relative group">
@@ -192,7 +192,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 <button
                     type="button"
                     onClick={onForgotPassword}
-                    className={`text-sm font-medium transition-colors ${theme === 'patient' ? 'text-brand-patient hover:text-brand-patient-dark' : 'text-brand-professional hover:text-brand-professional-dark'}`}
+                    className={`text-sm font-medium transition-colors ${role === 'patient' ? 'text-brand-patient hover:text-brand-patient-dark' : 'text-brand-professional hover:text-brand-professional-dark'}`}
                 >
                     Esqueceu a senha?
                 </button>
@@ -201,7 +201,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-black/5 transition-all flex items-center justify-center gap-2 btn-press hover:scale-[1.02] ${theme === 'patient'
+                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-black/5 transition-all flex items-center justify-center gap-2 btn-press hover:scale-[1.02] ${role === 'patient'
                     ? 'bg-[#6C4FFE] hover:bg-[#5B3FD9] text-white shadow-purple-200'
                     : 'bg-[#0054A6] hover:bg-[#003F7D] text-white shadow-blue-200'
                     } disabled:opacity-70 disabled:cursor-not-allowed`}

@@ -26,7 +26,7 @@ export default function Header({ onOpenSidebar }: { title?: string; onOpenSideba
     const buildBreadcrumb = () => {
         const patientMatch = matchPath('/patients/:id', location.pathname);
         if (patientMatch?.params.id) {
-            const patient = patients.find((item) => item.id === patientMatch.params.id);
+            const patient = patients.find((item) => item.patientId === patientMatch.params.id);
             return ['Pacientes', patient?.name || 'Carregando paciente'];
         }
 
@@ -47,7 +47,7 @@ export default function Header({ onOpenSidebar }: { title?: string; onOpenSideba
             <div className="flex h-20 items-center justify-between gap-3 md:hidden">
                 <button
                     onClick={onOpenSidebar}
-                    className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors focus-ring"
                     aria-label="Abrir menu"
                 >
                     <Menu size={24} />
@@ -77,11 +77,11 @@ export default function Header({ onOpenSidebar }: { title?: string; onOpenSideba
                         </div>
                     ) : (
                         <div className="flex items-center bg-slate-50 border border-slate-200 rounded-full px-4 py-2 max-w-xl transition-all focus-within:ring-2 focus-within:ring-primary-100 focus-within:border-primary-300">
-                            <Search size={18} className="text-slate-400 shrink-0" />
+                            <Search size={18} className="text-slate-400 shrink-0" aria-hidden="true" />
                             <input
                                 type="text"
                                 placeholder="Buscar..."
-                                className="bg-transparent border-none outline-none text-sm ml-2 w-full placeholder:text-slate-400 text-slate-700 min-w-0"
+                                className="bg-transparent border-none outline-none text-sm ml-2 w-full placeholder:text-slate-400 text-slate-700 min-w-0 focus-ring"
                             />
                         </div>
                     )}
@@ -91,21 +91,25 @@ export default function Header({ onOpenSidebar }: { title?: string; onOpenSideba
                     <span className={`rounded-full px-3 py-1 text-xs font-bold ${roleBadge.className}`}>{roleBadge.label}</span>
 
                     <div className="relative group">
-                        <button className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors font-bold" title="Acessibilidade" aria-label="Acessibilidade">
+                        <button 
+                            className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors font-bold focus-ring" 
+                            title="Acessibilidade" 
+                            aria-label="Acessibilidade"
+                        >
                             AA
                         </button>
                         <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 hidden group-hover:block group-focus-within:block animate-fade-in z-50">
                             <div className="space-y-1">
                                 <button
                                     onClick={toggleFontSize}
-                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg flex items-center justify-between"
+                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg flex items-center justify-between focus-ring"
                                 >
                                     <span>Tamanho da Fonte</span>
                                     <span className="font-bold">{fontSize === 'large' ? 'Grande' : 'Normal'}</span>
                                 </button>
                                 <button
                                     onClick={toggleHighContrast}
-                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg flex items-center justify-between"
+                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg flex items-center justify-between focus-ring"
                                 >
                                     <span>Alto Contraste</span>
                                     <div className={`w-8 h-4 rounded-full relative transition-colors ${highContrast ? 'bg-slate-800' : 'bg-slate-200'}`}>

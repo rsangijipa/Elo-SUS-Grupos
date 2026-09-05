@@ -88,7 +88,7 @@ const GroupManagement: React.FC = () => {
             }));
             setParticipants(participantsWithStatus);
             // Select all by default for messaging
-            setSelectedParticipantIds(participantsWithStatus.map(p => p.id!));
+            setSelectedParticipantIds(participantsWithStatus.map(p => p.patientId!));
         } catch (error) {
             console.error("Error loading participants:", error);
             addNotification({
@@ -131,21 +131,23 @@ const GroupManagement: React.FC = () => {
 
         try {
             // 1. Atualizar backend (Remover do grupo + Salvar histórico de alta)
-            await groupService.removeParticipant(id, participantToDischarge.id!, data);
+            await groupService.removeParticipant(id, participantToDischarge.patientId!, data);
 
             // 2. Gerar PDF
             pdfService.generateCounterReferencePDF(
                 {
                     name: participantToDischarge.name,
                     cns: participantToDischarge.cns,
-                    motherName: participantToDischarge.motherName,
-                    originUnit: participantToDischarge.originUnit
+                    // Note: motherName and originUnit don't exist in Patient schema
+                    // Using fallback values
+                    motherName: 'Não informado',
+                    originUnit: 'Não informado'
                 },
                 data
             );
 
             // 3. Atualizar UI
-            setParticipants(prev => prev.filter(p => p.id !== participantToDischarge.id));
+            setParticipants(prev => prev.filter(p => p.patientId !== participantToDischarge.patientId));
             addNotification({
                 type: 'success',
                 title: 'Contrarreferência Gerada',
@@ -166,7 +168,7 @@ const GroupManagement: React.FC = () => {
 
     const handleAttendance = (participantId: string, status: 'present' | 'absent' | 'excused') => {
         setParticipants(prev => prev.map(p =>
-            p.id === participantId ? { ...p, status } : p
+            p.patientId === participantId ? { ...p, status } : p
         ));
     };
 
@@ -187,8 +189,8 @@ const GroupManagement: React.FC = () => {
         try {
             const attendanceList: Record<string, any> = {};
             participants.forEach(p => {
-                if (p.id && p.status) {
-                    attendanceList[p.id] = {
+                if (p.patientId && p.status) {
+                    attendanceList[p.patientId] = {
                         status: p.status,
                         notes: '' // Could add notes field later
                     };
@@ -243,7 +245,7 @@ const GroupManagement: React.FC = () => {
 
         let sentCount = 0;
         participants.forEach(p => {
-            if (p.id && selectedParticipantIds.includes(p.id) && p.phone) {
+            if (p.patientId && selectedParticipantIds.includes(p.patientId) && p.phone) {
                 // Open WhatsApp for each selected participant
                 // Note: Browsers might block multiple popups. 
                 // A better UX might be to show a list of links to click, but the requirement was "open a new tab".
@@ -422,7 +424,7 @@ const GroupManagement: React.FC = () => {
                                                 type="checkbox"
                                                 checked={selectedParticipantIds.length === participants.length && participants.length > 0}
                                                 onChange={(e) => {
-                                                    if (e.target.checked) setSelectedParticipantIds(participants.map(p => p.id!));
+                                                    if (e.target.checked) setSelectedParticipantIds(participants.map(p => p.patientId!));
                                                     else setSelectedParticipantIds([]);
                                                 }}
                                                 className="rounded text-blue-600 focus:ring-blue-500"
@@ -445,12 +447,12 @@ const GroupManagement: React.FC = () => {
                                         </tr>
                                     ) : (
                                         participants.map((participant) => (
-                                            <tr key={participant.id} className="hover:bg-slate-50 transition-colors group">
+                                            <tr key={participant.patientId} className="hover:bg-slate-50 transition-colors group">
                                                 <td className="px-4 py-4">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedParticipantIds.includes(participant.id!)}
-                                                        onChange={() => toggleSelection(participant.id!)}
+                                                        checked={selectedParticipantIds.includes(participant.patientId!)}
+                                                        onChange={() => toggleSelection(participant.patientId!)}
                                                         className="rounded text-blue-600 focus:ring-blue-500"
                                                     />
                                                 </td>
@@ -481,7 +483,7 @@ const GroupManagement: React.FC = () => {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
-                                                            onClick={() => handleAttendance(participant.id!, 'present')}
+                                                            onClick={() => handleAttendance(participant.patientId!, 'present')}
                                                             className={`p-2 rounded-lg transition-all ${participant.status === 'present'
                                                                 ? 'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-200'
                                                                 : 'text-slate-300 hover:bg-emerald-50 hover:text-emerald-500'
@@ -491,7 +493,7 @@ const GroupManagement: React.FC = () => {
                                                             <CheckCircle2 size={20} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleAttendance(participant.id!, 'excused')}
+                                                            onClick={() => handleAttendance(participant.patientId!, 'excused')}
                                                             className={`p-2 rounded-lg transition-all ${participant.status === 'excused'
                                                                 ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-200'
                                                                 : 'text-slate-300 hover:bg-amber-50 hover:text-amber-500'
@@ -501,7 +503,7 @@ const GroupManagement: React.FC = () => {
                                                             <AlertCircle size={20} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleAttendance(participant.id!, 'absent')}
+                                                            onClick={() => handleAttendance(participant.patientId!, 'absent')}
                                                             className={`p-2 rounded-lg transition-all ${participant.status === 'absent'
                                                                 ? 'bg-red-100 text-red-600 ring-2 ring-red-200'
                                                                 : 'text-slate-300 hover:bg-red-50 hover:text-red-500'
@@ -725,7 +727,7 @@ const GroupManagement: React.FC = () => {
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 onAdd={handleAddParticipant}
-                currentParticipantIds={participants.map(p => p.id!)}
+                currentParticipantIds={participants.map(p => p.patientId!)}
             />
 
             {participantToDischarge && (
@@ -735,7 +737,7 @@ const GroupManagement: React.FC = () => {
                     onConfirm={handleConfirmDischarge}
                     patientName={participantToDischarge.name}
                     groupName={group?.name || 'Grupo'}
-                    originUnit={participantToDischarge.originUnit || 'Não Informada'}
+                    originUnit={'Não informada'}
                 />
             )}
         </div >

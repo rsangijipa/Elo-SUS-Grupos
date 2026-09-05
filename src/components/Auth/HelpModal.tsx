@@ -9,7 +9,6 @@ interface HelpModalProps {
 }
 
 const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
-    const { theme } = useTheme();
     const { addNotification } = useNotifications();
 
     const [helpData, setHelpData] = useState({
@@ -55,7 +54,6 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                             placeholder="Nome"
                             required
                             className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all"
-                            style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
                             value={helpData.name}
                             onChange={e => setHelpData({ ...helpData, name: e.target.value })}
                         />
@@ -64,7 +62,6 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                             placeholder="Sobrenome"
                             required
                             className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all"
-                            style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
                             value={helpData.surname}
                             onChange={e => setHelpData({ ...helpData, surname: e.target.value })}
                         />
@@ -74,7 +71,6 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                         placeholder="Seu email"
                         required
                         className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all"
-                        style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
                         value={helpData.email}
                         onChange={e => setHelpData({ ...helpData, email: e.target.value })}
                     />
@@ -83,13 +79,12 @@ const HelpModal: React.FC<HelpModalProps> = ({ onClose }) => {
                         required
                         rows={5}
                         className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-opacity-50 outline-none transition-all resize-none"
-                        style={{ borderColor: theme === 'patient' ? '#d8b4fe' : '#93c5fd' }}
                         value={helpData.message}
                         onChange={e => setHelpData({ ...helpData, message: e.target.value })}
                     />
                     <button
                         type="submit"
-                        className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${theme === 'patient' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        className="w-full py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
                     >
                         Enviar Mensagem <Send size={18} />
                     </button>

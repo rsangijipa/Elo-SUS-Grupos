@@ -56,7 +56,7 @@ const ProfessionalReports: React.FC = () => {
             p.name,
             p.cns || '-',
             p.status || '-',
-            p.neighborhood || '-'
+            '-' // neighborhood not in Patient type
         ]);
 
         const attendanceRows = groups.map(group => [

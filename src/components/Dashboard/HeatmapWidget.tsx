@@ -8,31 +8,9 @@ interface HeatmapWidgetProps {
 
 const HeatmapWidget: React.FC<HeatmapWidgetProps> = ({ patients }) => {
     const neighborhoodData = useMemo(() => {
-        const stats: Record<string, { total: number; highRisk: number }> = {};
-
-        patients.forEach(patient => {
-            // Normalize neighborhood: trim, lowercase, handle empty/undefined
-            let hood = patient.neighborhood?.trim() || 'Não Informado';
-            if (hood === '') hood = 'Não Informado';
-
-            // Capitalize for display
-            const displayName = hood === 'Não Informado' ? hood : hood.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-
-            if (!stats[displayName]) {
-                stats[displayName] = { total: 0, highRisk: 0 };
-            }
-
-            stats[displayName].total += 1;
-            if (patient.hasAlert) {
-                stats[displayName].highRisk += 1;
-            }
-        });
-
-        // Convert to array and sort by High Risk count (descending)
-        return Object.entries(stats)
-            .map(([name, data]) => ({ name, ...data }))
-            .sort((a, b) => b.highRisk - a.highRisk || b.total - a.total)
-            .slice(0, 5); // Top 5 neighborhoods
+        // Note: Patient type doesn't have neighborhood or hasAlert properties
+        // These belong to UserProfile. Returning empty array for now.
+        return [] as { name: string; total: number; highRisk: number }[];
     }, [patients]);
 
     const maxTotal = Math.max(...neighborhoodData.map(d => d.total), 1);

@@ -11,30 +11,31 @@ import { auth, db } from '../services/firebase';
 import { UserProfile } from '../types/schema';
 import toast from 'react-hot-toast';
 import type { UserRole } from '../types/shared';
+import { SecureStorageManager } from '../services/secureStorageManager';
 
 export interface RegisterData {
     name: string;
     email: string;
     password: string;
-    role: UserRole;
     cpf?: string;
-    crp?: string;
     cns?: string;
+    // role foi removido - sempre começa como 'patient'
+    // Para virar profissional, precisa: requestProfessionalMode() + aprovação de admin
 }
 
 // Helper to determine the initial state for a role
-const getInitialProfile = (uid: string, email: string, name: string, role: UserRole) => {
+// IMPORTANTE: Novos usuários SEMPRE começam como 'patient'
+// Para virar profissional, devem passar por: requestProfessionalMode() + approveProfessional()
+const getInitialProfile = (uid: string, email: string, name: string) => {
     const base = {
-        uid, id: uid, email, name, role,
+        uid, id: uid, email, name, 
+        role: 'patient' as const, // ✅ SEMPRE paciente na criação
         avatar: name.substring(0, 2).toUpperCase(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
     };
     
-    if (role === 'patient') {
-        return { ...base, cns: '', status: 'active', neighborhood: '', phone: '' };
-    }
-    return { ...base, crp: '', specialty: '', approach: '', bio: '' };
+    return { ...base, cns: '', status: 'active', neighborhood: '', phone: '' };
 };
 
 const omitUndefinedFields = <T extends Record<string, unknown>>(data: T) => {
@@ -47,7 +48,7 @@ interface AuthContextType {
     user: UserProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password?: string, expectedRole?: UserRole) => Promise<void>;
+    login: (email: string, password?: string) => Promise<void>;
     register: (data: RegisterData) => Promise<void>;
     logout: () => Promise<void>;
     updateProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -80,14 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     } else if (import.meta.env.DEV) {
                         // RECOVERY MODE for DEV: If doc is missing but user exists in Auth, try to recreate it
                         console.warn(`[AuthProvider] Missing profile for ${firebaseUser.uid}. Attempting recovery...`);
-                        const role: UserRole = firebaseUser.email?.includes('admin') ? 'admin' : 
-                                             firebaseUser.email?.includes('prof') ? 'professional' : 'patient';
                         
                         const recoveryProfile = getInitialProfile(
                             firebaseUser.uid, 
                             firebaseUser.email || '', 
-                            firebaseUser.displayName || 'Demo User', 
-                            role
+                            firebaseUser.displayName || 'Demo User'
                         );
                         
                         await setDoc(docRef, recoveryProfile);
@@ -112,67 +110,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => { isSubscribed = false; unsubscribe(); };
     }, []);
 
-    const login = async (email: string, password?: string, expectedRole?: UserRole) => {
+    const login = async (email: string, password?: string) => {
         if (!password) throw new Error('Senha obrigatoria');
 
         const credentials = await signInWithEmailAndPassword(auth, email, password);
 
-        if (expectedRole) {
-            const profileRef = doc(db, COLLECTIONS.USERS, credentials.user.uid);
-            const profileSnap = await getDoc(profileRef);
+        // ✅ NÃO valida role esperado durante login
+        // role vem de Custom Claims (atribuído por backend apenas)
+        // isso previne manipulação no cliente
 
-            if (!profileSnap.exists()) {
-                const recoveredProfile = omitUndefinedFields({
-                    ...getInitialProfile(
-                        credentials.user.uid,
-                        credentials.user.email || email,
-                        credentials.user.displayName || email.split('@')[0],
-                        expectedRole
-                    ),
-                    originalRole: expectedRole
-                });
-
-                await setDoc(profileRef, recoveredProfile, { merge: true });
-                const recoveredProfileState: Record<string, unknown> = {
-                    ...recoveredProfile,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                setUser(recoveredProfileState as unknown as UserProfile);
-                toast.success('Perfil recuperado com sucesso.');
-                return;
-            }
-
-            const profile = profileSnap.data() as UserProfile;
-            if (profile.role !== expectedRole) {
-                await signOut(auth);
-                const selectedLabel = expectedRole === 'professional' ? 'profissional' : expectedRole === 'patient' ? 'paciente' : 'administrador';
-                const actualLabel = profile.role === 'professional' ? 'profissional' : profile.role === 'patient' ? 'paciente' : 'administrador';
-                throw new Error(`Este cadastro pertence ao perfil ${actualLabel}. Use a opcao ${actualLabel} para entrar, nao ${selectedLabel}.`);
-            }
-        }
-
+        console.info(`[AuthProvider] Login bem-sucedido para ${credentials.user.uid}`);
         toast.success('Bem-vindo!');
     };
 
     const register = async (data: RegisterData) => {
         try {
             const res = await createUserWithEmailAndPassword(auth, data.email, data.password);
-            const normalizedRole: UserRole = data.role === 'professional' ? 'professional' : data.role === 'admin' ? 'admin' : 'patient';
-            const profile = getInitialProfile(res.user.uid, data.email, data.name, normalizedRole);
+            
+            // ✅ SEMPRE criar como 'patient'
+            // role: 'professional' só pode ser atribuído por backend via Custom Claims
+            const profile = getInitialProfile(res.user.uid, data.email, data.name);
 
             const finalProfile = omitUndefinedFields({
                 ...profile,
-                ...data,
-                role: normalizedRole,
-                originalRole: normalizedRole
+                cpf: data.cpf,
+                cns: data.cns,
+                // NÃO incluir crp aqui - profissionais solicitam depois via requestProfessionalMode()
             });
 
             delete (finalProfile as any).password;
 
             await setDoc(doc(db, COLLECTIONS.USERS, res.user.uid), finalProfile);
             setUser(finalProfile as any);
-            toast.success('Cadastrado!');
+            toast.success('Cadastrado! Bem-vindo ao EloSUS Grupos.');
         } catch (error) {
             const message = error instanceof Error ? error.message : '';
             if (message.toLowerCase().includes('email-already-in-use')) {
@@ -183,6 +153,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = async () => {
+        // ✅ Limpar dados clínicos de forma segura antes de desconectar
+        await SecureStorageManager.clearClinicalData();
+        
         await signOut(auth);
         setUser(null);
         toast.success('Sessao encerrada');

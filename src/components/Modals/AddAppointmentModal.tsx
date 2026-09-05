@@ -136,7 +136,7 @@ const AddAppointmentModal: React.FC<AddAppointmentModalProps> = ({ isOpen, onClo
                                 >
                                     <option value="">Selecione o paciente...</option>
                                     {patients.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                        <option key={p.patientId} value={p.patientId}>{p.name}</option>
                                     ))}
                                 </select>
                             </div>

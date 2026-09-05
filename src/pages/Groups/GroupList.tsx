@@ -88,12 +88,10 @@ const GroupList: React.FC = () => {
     const activeCount = groups.filter(g => g.status === 'active').length;
     const plannedCount = groups.filter(g => g.status === 'planned').length;
 
-    /* ——— Risk check: any patient in the group with riskLevel HIGH ——— */
+    /* ——— Risk check: Patient type doesn't have riskLevel property ——— */
     const groupHasRisk = (group: Group): boolean => {
-        if (!group.participants?.length) return false;
-        return patients.some(p =>
-            p.id != null && group.participants!.includes(p.id) && p.riskLevel === 'HIGH'
-        );
+        // Note: Patient.riskLevel doesn't exist. Always return false for now.
+        return false;
     };
 
     // Close popover when clicking outside

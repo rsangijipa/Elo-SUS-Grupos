@@ -16,7 +16,13 @@ const PatientList: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
-    const loadPatients = useCallback(() => patientService.getAll(), []);
+    // Note: PatientList should use DataContext.patients instead of direct patientService.getAll()
+    // For now, use the hook with getPatientsInUnit - ensure unitId is available from user context
+    const loadPatients = useCallback(async () => {
+        // TODO: Get unitId from user context
+        const result = await patientService.getPatientsInUnit('');
+        return result.patients;
+    }, []);
 
     const {
         data: patients,
@@ -40,10 +46,10 @@ const PatientList: React.FC = () => {
     const handleDelete = async (patient: Patient) => {
         if (window.confirm('Tem certeza que deseja excluir este paciente?')) {
             try {
-                if (!patient.id) {
+                if (!patient.patientId) {
                     return;
                 }
-                await deletePatientContext(patient.id);
+                await deletePatientContext(patient.patientId);
                 refetch();
             } catch (error) {
                 console.error("Error deleting patient:", error);
@@ -123,9 +129,9 @@ const PatientList: React.FC = () => {
                              ) : (
                                  filteredPatients.map((patient) => (
                                     <tr
-                                        key={patient.id}
+                                        key={patient.patientId}
                                         className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
-                                        onClick={() => navigate(`/patients/${patient.id}`)}
+                                        onClick={() => navigate(`/patients/${patient.patientId}`)}
                                     >
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -139,21 +145,21 @@ const PatientList: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-slate-700 font-medium">{formatDate(patient.birthDate)}</div>
+                                            <div className="text-sm text-slate-700 font-medium">{formatDate(patient.dateOfBirth)}</div>
                                             <div className="text-xs text-slate-400">
-                                                {getAge(patient.birthDate)} anos
+                                                {patient.dateOfBirth instanceof Date ? getAge(patient.dateOfBirth.toString()) : getAge(patient.dateOfBirth as any)} anos
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-slate-700">{patient.phone}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <StatusBadge status={patient.status || 'inactive'} />
+                                            <StatusBadge status={(patient.status === 'shared_care' ? 'active' : patient.status) || 'inactive'} />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <button
-                                                    onClick={() => navigate(`/patients/edit/${patient.id}`)}
+                                                    onClick={() => navigate(`/patients/edit/${patient.patientId}`)}
                                                     className="p-2 text-slate-400 hover:text-[#0054A6] hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Editar"
                                                     aria-label={`Editar ${patient.name}`}

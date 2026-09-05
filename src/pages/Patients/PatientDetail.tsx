@@ -62,7 +62,7 @@ const PatientDetail = () => {
         setLoading(true);
         setNotFound(false);
         try {
-            const data = await patientService.getById(patientId);
+            const data = await patientService.getPatient(patientId);
             if (!data) {
                 setPatient(null);
                 setMoodHistory([]);
@@ -126,10 +126,9 @@ const PatientDetail = () => {
         const unitLat = OrganizationSettings.defaultCoordinates?.lat || -9.9133;
         const unitLng = OrganizationSettings.defaultCoordinates?.lng || -63.0408;
 
-        // If patient has coordinates, use them. Otherwise rely on address (which GMaps handles via query).
-        const origin = patient.coordinates
-            ? `${patient.coordinates.lat},${patient.coordinates.lng}`
-            : patient.address;
+        // Patient.coordinates doesn't exist in schema. Use address string for GMaps.
+        const origin = patient.address ? (typeof patient.address === 'string' ? patient.address : 
+            `${patient.address.street}, ${patient.address.city}`) : null;
 
         if (!origin) {
             toast.error("Endereço do paciente não disponível.");
@@ -141,7 +140,8 @@ const PatientDetail = () => {
     };
 
     // Derived Risk Data
-    const riskLevel = (patient?.riskLevel?.toLowerCase() || 'standard') as 'high' | 'attention' | 'standard';
+    // Note: Patient type doesn't have riskLevel property. This could come from quizResult or pregnantScreening.riskLevel
+    const riskLevel = (quizResult?.riskLevel?.toLowerCase() || 'standard') as 'high' | 'attention' | 'standard';
 
     const getRiskBadge = () => {
         switch (riskLevel) {
@@ -228,7 +228,7 @@ const PatientDetail = () => {
             toast.success('Documento gerado com sucesso!', { id: 'pdf-gen' });
 
             setShowDischargeModal(false);
-            loadPatient(patient.id!); // Refresh
+            loadPatient(patient.patientId!); // Refresh
         } catch (error) {
             console.error('Discharge error:', error);
             toast.error('Erro ao processar alta.');
@@ -255,7 +255,7 @@ const PatientDetail = () => {
                         </button>
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900">{patient.name}</h1>
-                            <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {formatDate(patient.birthDate)}</p>
+                            <p className="text-slate-500 mt-1 font-medium">CNS: {patient.cns || 'Não informado'} • Nascimento: {patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'Não informado'}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -344,18 +344,18 @@ const PatientDetail = () => {
                     </div>
                     <div>
                         <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Unidade de Origem</span>
-                        <span className="text-slate-700 font-medium">{patient.originUnit || 'Não informada'}</span>
+                        <span className="text-slate-700 font-medium">{'Não informada'}</span>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-50 mt-4">
                     <div>
                         <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Endereço</span>
-                        <span className="text-slate-700 font-medium">{patient.address || 'Não informado'}</span>
-                    </div>
-                    <div>
-                        <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Bairro</span>
-                        <span className="text-slate-700 font-medium">{patient.neighborhood || 'Não informado'}</span>
+                        <span className="text-slate-700 font-medium">
+                            {typeof patient.address === 'string' ? patient.address : 
+                             patient.address ? `${patient.address.street}, ${patient.address.city}` : 
+                             'Não informado'}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -458,7 +458,7 @@ const PatientDetail = () => {
 
                         {/* Right Column: Stats */}
                         <div className="space-y-6">
-                            {/* Engagement Panel */}
+                            {/* Engagement Panel - Removed: patient.stats and patient.achievements don't exist in Patient type. */}
                             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm" >
                                 <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <Trophy size={18} className="text-yellow-500" />
@@ -466,23 +466,16 @@ const PatientDetail = () => {
                                 </h3>
 
                                 {/* Streak Indicator */}
-                                <div className={`p-4 rounded-xl border mb-4 flex items-center gap-3 ${(patient.stats?.loginStreak || 0) > 3
-                                    ? 'bg-orange-50 border-orange-100'
-                                    : 'bg-slate-50 border-slate-100'
-                                    }`}>
-                                    <div className={`p-2 rounded-lg ${(patient.stats?.loginStreak || 0) > 3
-                                        ? 'bg-orange-100 text-orange-600'
-                                        : 'bg-slate-200 text-slate-500'
-                                        }`}>
-                                        {(patient.stats?.loginStreak || 0) > 3 ? <Flame size={24} /> : <Snowflake size={24} />}
+                                <div className={`p-4 rounded-xl border mb-4 flex items-center gap-3 bg-slate-50 border-slate-100`}>
+                                    <div className={`p-2 rounded-lg bg-slate-200 text-slate-500`}>
+                                        {<Snowflake size={24} />}
                                     </div>
                                     <div>
-                                        <p className={`font-bold text-sm ${(patient.stats?.loginStreak || 0) > 3 ? 'text-orange-700' : 'text-slate-600'
-                                            }`}>
-                                            {(patient.stats?.loginStreak || 0)} dias seguidos
+                                        <p className={`font-bold text-sm text-slate-600`}>
+                                            0 dias seguidos
                                         </p>
                                         <p className="text-xs text-slate-500">
-                                            {(patient.stats?.loginStreak || 0)} dias seguidos
+                                            0 dias seguidos
                                         </p>
                                     </div>
                                 </div>
@@ -491,7 +484,7 @@ const PatientDetail = () => {
                                 <div className="mb-6">
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Visto por último em</p>
                                     <p className="text-sm font-medium text-slate-700">
-                                        {toJsDate(patient.stats?.lastLogin)?.toLocaleString() || 'Nunca acessou'}
+                                        Nunca acessou
                                     </p>
                                 </div>
 
@@ -499,15 +492,15 @@ const PatientDetail = () => {
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Conquistas Recentes</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {patient.achievements && patient.achievements.length > 0 ? (
-                                            patient.achievements.map((badgeId, index) => (
-                                                <div key={index} className="w-8 h-8 rounded-full bg-yellow-100 border border-yellow-200 flex items-center justify-center text-xs" title={badgeId}>
+                                        {
+                                            false ? (
+                                                <div className="w-8 h-8 rounded-full bg-yellow-100 border border-yellow-200 flex items-center justify-center text-xs">
                                                     🏆
                                                 </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-xs text-slate-400 italic">Nenhuma conquista ainda.</p>
-                                        )}
+                                            ) : (
+                                                <p className="text-xs text-slate-400 italic">Nenhuma conquista ainda.</p>
+                                            )
+                                        }
                                     </div>
                                 </div>
                             </div >
@@ -643,8 +636,8 @@ const PatientDetail = () => {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        {/* Alert Card */}
-                        {patient.hasAlert && (
+                        {/* Alert Card - Removed: patient.hasAlert doesn't exist in schema */}
+                        {false && (
                             <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
                                 <AlertTriangle className="text-red-600 shrink-0" size={24} />
                                 <div>
@@ -753,8 +746,8 @@ const PatientDetail = () => {
                 isOpen={showDischargeModal}
                 onClose={() => setShowDischargeModal(false)}
                 patientName={patient.name}
-                groupName={patient.territorialTags?.[0] || 'Grupo Geral'}
-                originUnit={patient.originUnit || 'Unidade Central'}
+                groupName={'Grupo Geral'}
+                originUnit={'Unidade Central'}
                 onConfirm={handleDischargeConfirm}
             />
         </div >

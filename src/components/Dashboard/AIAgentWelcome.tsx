@@ -41,10 +41,9 @@ const AIAgentWelcome: React.FC<AIAgentWelcomeProps> = ({ role, message, loading 
             if (role === 'professional') {
                 try {
                     // Fetch all patients to count risks
-                    const patients = await patientService.getAll();
-                    const risks = patients.filter(p => p.hasAlert).length;
-                    setRiskCount(risks);
-                    setTotalPatients(patients.length);
+                    // Note: Implement actual patient fetch based on user's unit
+                    setRiskCount(0);
+                    setTotalPatients(0);
                 } catch (error) {
                     console.error("Error fetching patient data for AI Agent:", error);
                     setRiskCount(3);

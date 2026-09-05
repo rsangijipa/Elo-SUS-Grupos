@@ -1,5 +1,0 @@
-
-> elosus-grupos@0.0.0 build
-> tsc -b && vite build
-
-src/pages/Developer/DeveloperTools.tsx(21,9): error TS2367: This comparison appears to be unintentional because the types '"professional" | "patient" | undefined' and '"admin"' have no overlap.

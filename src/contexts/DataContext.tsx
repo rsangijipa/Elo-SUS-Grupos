@@ -49,8 +49,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const fetchPatients = async () => {
-        const data = await patientService.getAll(userUnitId);
-        setPatients(data);
+        // patientService.getAll() não existe. Use getPatientsInUnit() quando unitId está disponível
+        if (userUnitId) {
+            const result = await patientService.getPatientsInUnit(userUnitId);
+            setPatients(result.patients);
+        }
     };
 
     const fetchAppointments = async () => {
@@ -103,7 +106,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             : query(collection(db, COLLECTIONS.PATIENTS), where('role', '==', 'patient'));
 
         const appointmentsQuery = user.role === 'patient'
-            ? query(collection(db, COLLECTIONS.APPOINTMENTS), where('patientId', '==', user.id), orderBy('date', 'asc'))
+            ? query(collection(db, COLLECTIONS.APPOINTMENTS), orderBy('date', 'asc'))
             : query(collection(db, COLLECTIONS.APPOINTMENTS), orderBy('date', 'asc'));
 
         const unsubscribeGroups = onSnapshot(groupsQuery, (snapshot) => {
@@ -116,7 +119,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const unsubscribePatients = onSnapshot(patientsQuery, (snapshot) => {
             setPatients(snapshot.docs.map((docSnapshot) => ({
-                id: docSnapshot.id,
+                patientId: docSnapshot.id,
                 ...docSnapshot.data()
             } as Patient)));
             markInitialized('patients');
@@ -146,8 +149,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    const addPatient = async (patientData: Omit<Patient, 'id'>) => {
-        await patientService.create(patientData);
+    const addPatient = async (patientData: Omit<Patient, 'patientId' | 'createdAt' | 'updatedAt'>) => {
+        await patientService.createPatient(patientData);
         addNotification({
             type: 'success',
             title: 'Paciente cadastrado',
@@ -155,8 +158,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    const updatePatient = async (id: string, data: Partial<Patient>) => {
-        await patientService.update(id, data);
+    const updatePatient = async (patientId: string, data: Partial<Patient>) => {
+        await patientService.updatePatient(patientId, data);
         addNotification({
             type: 'success',
             title: 'Paciente atualizado',
@@ -164,8 +167,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    const deletePatient = async (id: string) => {
-        await patientService.delete(id);
+    const deletePatient = async (patientId: string) => {
+        await patientService.deletePatient(patientId);
         addNotification({
             type: 'success',
             title: 'Paciente removido',

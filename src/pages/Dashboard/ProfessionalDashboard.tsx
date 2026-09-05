@@ -73,7 +73,14 @@ const ProfessionalDashboard: React.FC = () => {
     const [filterRisk, setFilterRisk] = useState<string>('all');
     const [filterOrigin, setFilterOrigin] = useState<string>('all');
 
-    const loadPatients = useCallback(() => patientService.getAll(user?.unidadeSaudeId), [user?.unidadeSaudeId]);
+    const loadPatients = useCallback(async () => {
+        // patientService.getAll() doesn't exist. Use getPatientsInUnit()
+        if (user?.unidadeSaudeId) {
+            const result = await patientService.getPatientsInUnit(user.unidadeSaudeId);
+            return result.patients;
+        }
+        return [];
+    }, [user?.unidadeSaudeId]);
     const loadGroups = useCallback(() => groupService.getAll(user?.unidadeSaudeId), [user?.unidadeSaudeId]);
     const loadAppointments = useCallback(() => appointmentService.getAll(), []);
 
@@ -115,13 +122,13 @@ const ProfessionalDashboard: React.FC = () => {
             // Optimization: In a real app with many patients, we would need a better strategy or backend aggregation
             // For now, we fetch latest mood for each patient in parallel
             const promises = patients.map(async (p) => {
-                if (!p.id) return;
+                if (!p.patientId) return;
                 try {
-                    const history = await moodService.getPatientHistory(p.id, 1);
-                    newMoodMap[p.id] = history.length > 0 ? history[0] : null;
+                    const history = await moodService.getPatientHistory(p.patientId, 1);
+                    newMoodMap[p.patientId] = history.length > 0 ? history[0] : null;
                 } catch (e) {
-                    console.error(`Failed to load mood for ${p.id}`, e);
-                    newMoodMap[p.id] = null;
+                    console.error(`Failed to load mood for ${p.patientId}`, e);
+                    newMoodMap[p.patientId] = null;
                 }
             });
 
@@ -183,7 +190,7 @@ const ProfessionalDashboard: React.FC = () => {
     // Real logic: check if patient ID is in any of myGroups.participants
     const myPatients = user?.role === 'admin'
         ? patients
-        : patients.filter(p => myGroups.some(g => (g.participants || []).includes(p.id || '')));
+        : patients.filter(p => myGroups.some(g => (g.participants || []).includes(p.patientId || '')));
     const myAppointments = appointments.filter(a => myGroupIds.includes(a.groupId));
 
     const pendingReferralsCount = useMemo(

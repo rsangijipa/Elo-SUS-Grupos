@@ -10,12 +10,37 @@
     --color-bg-neutral: #F6F8FE;
   }
 
+  /* Dark Mode */
+  html.dark {
+    color-scheme: dark;
+
+    --color-sus-blue: #4A90E2;
+    --color-wellness-purple: #9F7AEA;
+    --color-bg-neutral: #1a1a2e;
+  }
+
+  /* High Contrast Mode */
+  html.high-contrast {
+    --color-sus-blue: #000080;
+    --color-wellness-purple: #800080;
+    --color-bg-neutral: #ffffff;
+  }
+
   body {
     @apply bg-[#F6F8FE] text-slate-800 antialiased;
+  }
+
+  html.dark body {
+    @apply bg-slate-900 text-slate-100;
+  }
+
+  html.high-contrast body {
+    @apply bg-white text-black border-2 border-black;
   }
 }
 
 @layer utilities {
+  /* Colors */
   .text-sus-blue {
     color: var(--color-sus-blue);
   }
@@ -32,6 +57,7 @@
     background-color: var(--color-wellness-purple);
   }
 
+  /* Animations */
   .animate-fade-in {
     animation: fadeIn 0.4s ease-out forwards;
   }
@@ -43,6 +69,65 @@
 
   .btn-press {
     @apply active:scale-95 transition-transform duration-150 ease-in-out;
+  }
+
+  /* Accessibility: Focus States */
+  .focus-ring:focus {
+    @apply outline-none ring-2 ring-offset-2 ring-[#0054A6];
+  }
+
+  .focus-ring-danger:focus {
+    @apply outline-none ring-2 ring-offset-2 ring-red-600;
+  }
+
+  .focus-ring-sm:focus {
+    @apply outline-none ring-2 ring-offset-1 ring-[#0054A6];
+  }
+
+  /* Accessibility: Screen reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+  }
+
+  /* Accessibility: Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      @apply !animate-none !transition-none;
+    }
+  }
+
+  /* Accessibility: High contrast mode */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-sus-blue: #001f4d;
+      --color-wellness-purple: #4a0080;
+    }
+
+    body {
+      @apply border-2 border-black;
+    }
   }
 }
 
