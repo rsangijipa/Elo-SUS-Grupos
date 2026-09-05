@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EloSUS Offline</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: Inter, system-ui, sans-serif;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+        color: #1e293b;
+      }
+      .card {
+        width: min(92vw, 32rem);
+        background: #fff;
+        border: 1px solid #dbeafe;
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 20px 40px rgba(0, 84, 166, 0.1);
+        text-align: center;
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #0054a6;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      h1 { margin: 16px 0 8px; font-size: 32px; }
+      p { color: #64748b; line-height: 1.6; }
+      a {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 18px;
+        border-radius: 14px;
+        background: #0054a6;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <span class="badge">Modo offline</span>
+      <h1>Sem conexao no momento</h1>
+      <p>Voce ainda pode navegar pelo que ja estiver em cache. Quando a internet voltar, o EloSUS sincroniza automaticamente.</p>
+      <a href="/dashboard">Tentar novamente</a>
+    </main>
+  </body>
+</html>
